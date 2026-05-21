@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dexter DAO — Marketplace NFT</title>
+    <meta name="description" content="Compra y vende NFTs exclusivos del ecosistema Dexter DAO con tokens DXT." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #060610;
+            --card: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.08);
+            --accent: #00ffe5;
+            --gold: #ffd700;
+            --purple: #b06fff;
+            --pink: #ff3cac;
+            --text: #e8e8f0;
+            --muted: #666680;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,255,229,0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(176,111,255,0.10), transparent);
+        }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(6,6,16,0.7);
+        }
+        .logo { font-size: 1.4rem; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
+        .logo span { color: var(--purple); }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+
+        /* Wallet badge */
+        #wallet-badge {
+            font-size: 0.82rem;
+            background: rgba(0,255,229,0.08);
+            border: 1px solid rgba(0,255,229,0.25);
+            color: var(--accent);
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            font-family: monospace;
+            display: none;
+        }
+
+        /* Botones */
+        .btn {
+            border: none; cursor: pointer; font-family: 'Outfit', sans-serif;
+            font-weight: 700; border-radius: 10px; transition: all .2s;
+        }
+        .btn-connect {
+            background: linear-gradient(135deg, var(--accent), #00a8ff);
+            color: #000; padding: 0.5rem 1.3rem; font-size: 0.9rem;
+        }
+        .btn-connect:hover { transform: scale(1.04); opacity: 0.9; }
+        .btn-home {
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--text); padding: 0.5rem 1.1rem; font-size: 0.85rem;
+        }
+        .btn-home:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── MENSAJE NOTIFICACIÓN ── */
+        .notif {
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gold);
+            background: rgba(255,215,0,0.06);
+            border-bottom: 1px solid rgba(255,215,0,0.15);
+            display: {{if .Mensaje}}block{{else}}none{{end}};
+        }
+
+        /* ── BALANCE BAR ── */
+        .balance-bar {
+            text-align: center;
+            padding: 2rem 1rem 0.5rem;
+        }
+        .balance-bar p { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.3rem; }
+        #dxt-balance-display {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(0,255,229,0.4);
+        }
+
+        /* ── GRID ── */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem 4rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.8rem;
+        }
+
+        /* ── NFT CARD ── */
+        .nft-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: transform .3s, box-shadow .3s, border-color .3s;
+            position: relative;
+        }
+        .nft-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .nft-card.maestro:hover { border-color: var(--pink); box-shadow: 0 20px 60px rgba(255,60,172,0.2); }
+        .nft-card.astro:hover   { border-color: var(--accent); box-shadow: 0 20px 60px rgba(0,255,229,0.2); }
+        .nft-card.god:hover     { border-color: var(--gold); box-shadow: 0 20px 60px rgba(255,215,0,0.2); }
+        .nft-card.robot:hover   { border-color: var(--purple); box-shadow: 0 20px 60px rgba(176,111,255,0.2); }
+        .nft-card.supremo:hover { border-color: var(--gold); box-shadow: 0 20px 60px rgba(255,215,0,0.4); }
+
+        /* Rarity badge */
+        .rarity {
+            position: absolute; top: 12px; right: 12px;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 1px;
+            z-index: 10;
+        }
+        .rarity.common    { background: rgba(255,255,255,0.1); color: #aaa; }
+        .rarity.rare      { background: rgba(0,255,229,0.15); color: var(--accent); }
+        .rarity.epic      { background: rgba(255,215,0,0.15); color: var(--gold); }
+        .rarity.legendary { background: rgba(176,111,255,0.2); color: var(--purple); }
+        .rarity.unico     { background: linear-gradient(135deg, var(--gold), #ff8c00); color: #000; box-shadow: 0 0 10px rgba(255,215,0,0.5); font-weight: 900; }
+
+        .nft-img-wrap { position: relative; overflow: hidden; height: 220px; }
+        .nft-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform .4s;
+        }
+        .nft-card:hover .nft-img { transform: scale(1.06); }
+
+        .nft-body { padding: 1.2rem; }
+        .nft-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .nft-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
+
+        .nft-price-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .nft-price { font-size: 1.4rem; font-weight: 900; }
+        .nft-price span { font-size: 0.8rem; font-weight: 400; color: var(--muted); margin-left: 2px; }
+
+        /* Botón comprar / vender dentro del formulario */
+        .btn-buy {
+            width: 100%; padding: 0.75rem;
+            font-size: 0.95rem; font-weight: 700;
+            border-radius: 10px; border: none;
+            cursor: pointer; font-family: 'Outfit', sans-serif;
+            transition: all .2s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-buy:hover { transform: scale(1.02); opacity: 0.88; }
+
+        .maestro .btn-buy-buy { background: linear-gradient(135deg, var(--pink), #a0006a); color: #fff; }
+        .astro   .btn-buy-buy { background: linear-gradient(135deg, var(--accent), #0080c0); color: #000; }
+        .god     .btn-buy-buy { background: linear-gradient(135deg, var(--gold), #c08000); color: #000; }
+        .robot   .btn-buy-buy { background: linear-gradient(135deg, var(--purple), #5000aa); color: #fff; }
+        .supremo .btn-buy-buy { background: linear-gradient(135deg, var(--gold), #ff8c00); color: #000; }
+
+        .btn-sell { background: linear-gradient(135deg, #ff4444, #aa0000); color: #fff; }
+
+        .btn-buy:disabled {
+            background: #222 !important;
+            color: #555 !important;
+            cursor: not-allowed;
+            border: 1px solid #333;
+            transform: none !important;
+            opacity: 0.6;
+        }
+
+        .supply-info {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .supply-info span {
+            color: var(--text);
+            font-weight: 600;
+        }
+        .supply-info.sold-out span {
+            color: #ff3333;
+        }
+
+        /* Owned badge */
+        .owned-badge {
+            display: inline-block;
+            font-size: 0.75rem; font-weight: 700;
+            color: #00ff88; background: rgba(0,255,136,0.1);
+            border: 1px solid rgba(0,255,136,0.3);
+            border-radius: 999px; padding: 0.2rem 0.7rem;
+            margin-bottom: 0.6rem;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center; padding: 1.5rem;
+            font-size: 0.8rem; color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* ── ESTADO CONTRATO ── */
+        .contract-info {
+            text-align: center;
+            font-size: 0.75rem; color: var(--muted);
+            padding: 0.5rem 1rem 0;
+        }
+        .contract-info span { font-family: monospace; color: var(--accent); font-size: 0.7rem; }
+
+        /* Holographic Shine Effect */
+        .holo-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .holo-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(
+                115deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.03) 30%,
+                rgba(0, 255, 229, 0.2) 45%,
+                rgba(255, 60, 172, 0.25) 50%,
+                rgba(255, 215, 0, 0.2) 55%,
+                rgba(255, 255, 255, 0.03) 70%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(35deg) translateY(-100%);
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .holo-shine:hover::after {
+            transform: rotate(35deg) translateY(60%);
+        }
+
+        /* Stats Display inside cards */
+        .card-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+            justify-content: flex-start;
+        }
+        .stat-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stat-badge.el-agua { background: rgba(0, 255, 229, 0.1); border-color: rgba(0, 255, 229, 0.3); color: #00ffe5; }
+        .stat-badge.el-cosmico { background: rgba(176, 111, 255, 0.1); border-color: rgba(176, 111, 255, 0.3); color: #b06fff; }
+        .stat-badge.el-divino { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); color: #ffd700; }
+        .stat-badge.el-cyber { background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.3); color: #00ff00; }
+        .stat-badge.el-oro { background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2)); border-color: #ffd700; color: #ffd700; }
+
+        .stat-bar-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            height: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stat-bar {
+            height: 100%;
+            border-radius: 999px;
+            width: 0%;
+            transition: width 1s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">Dexter<span>DAO</span> <span style="font-size:0.8rem;color:var(--muted);font-weight:400;">Marketplace</span></div>
+    <div class="header-right">
+        <div id="wallet-badge">0x···</div>
+        <button class="btn btn-home" onclick="location.href='/'">← Dashboard</button>
+        <button class="btn btn-connect" id="btn-connect" onclick="conectarMetaMask()">Conectar MetaMask</button>
+    </div>
+</header>
+
+{{if .Mensaje}}
+<div class="notif">⚡ {{.Mensaje}}</div>
+{{end}}
+
+<!-- BANNER PRÓXIMO LANZAMIENTO -->
+<div id="drop-banner" style="
+    max-width: 1200px;
+    margin: 1.5rem auto 0;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, rgba(255, 60, 172, 0.06) 0%, rgba(176, 111, 255, 0.1) 50%, rgba(0, 255, 229, 0.06) 100%);
+    border: 1px solid rgba(176, 111, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+">
+    <!-- Luz de fondo neón -->
+    <div style="position: absolute; top: 0; left: 25%; width: 150px; height: 150px; background: rgba(0, 255, 229, 0.15); filter: blur(80px); pointer-events: none;"></div>
+    <div style="position: absolute; bottom: 0; right: 25%; width: 150px; height: 150px; background: rgba(255, 60, 172, 0.15); filter: blur(80px); pointer-events: none;"></div>
+
+    <div style="position: relative; z-index: 2;">
+        <span style="
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--pink);
+            background: rgba(255, 60, 172, 0.15);
+            padding: 0.3rem 0.8rem;
+            border-radius: 99px;
+            display: inline-block;
+            margin-bottom: 0.6rem;
+            border: 1px solid rgba(255, 60, 172, 0.25);
+        ">PRÓXIMO LANZAMIENTO MENSUAL</span>
+        <h2 style="font-size: 1.6rem; font-weight: 900; margin: 0; letter-spacing: -0.5px;">
+            Ajolote Guardián de la Red
+        </h2>
+        <p style="color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem;">
+            Una edición especial con atributos de fuego y poder devastador.
+        </p>
+    </div>
+
+    <!-- Temporizador -->
+    <div style="display: flex; gap: 0.8rem; position: relative; z-index: 2;">
+        <div style="text-align: center; background: rgba(0,0,0,0.5); padding: 0.6rem 1rem; border-radius: 12px; border: 1px solid var(--border); min-width: 65px;">
+            <div id="drop-days" style="font-size: 1.6rem; font-weight: 900; color: var(--accent);">00</div>
+            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--muted); margin-top: 2px;">Días</div>
+        </div>
+        <div style="text-align: center; background: rgba(0,0,0,0.5); padding: 0.6rem 1rem; border-radius: 12px; border: 1px solid var(--border); min-width: 65px;">
+            <div id="drop-hours" style="font-size: 1.6rem; font-weight: 900; color: var(--accent);">00</div>
+            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--muted); margin-top: 2px;">Hrs</div>
+        </div>
+        <div style="text-align: center; background: rgba(0,0,0,0.5); padding: 0.6rem 1rem; border-radius: 12px; border: 1px solid var(--border); min-width: 65px;">
+            <div id="drop-minutes" style="font-size: 1.6rem; font-weight: 900; color: var(--accent);">00</div>
+            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--muted); margin-top: 2px;">Min</div>
+        </div>
+        <div style="text-align: center; background: rgba(0,0,0,0.5); padding: 0.6rem 1rem; border-radius: 12px; border: 1px solid var(--border); min-width: 65px;">
+            <div id="drop-seconds" style="font-size: 1.6rem; font-weight: 900; color: var(--pink);">00</div>
+            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--muted); margin-top: 2px;">Seg</div>
+        </div>
+    </div>
+</div>
+
+<div class="balance-bar">
+    <p>Tu saldo DXT en servidor</p>
+    <div id="dxt-balance-display">— DXT</div>
+    <div class="contract-info">
+        Contrato DXT: <span id="contract-addr-display">No vinculado</span>
+    </div>
+</div>
+
+<main>
+    {{range .Items}}
+    <div class="nft-card {{.Key}} {{if ne .Key `ajolote`}}holo-shine{{end}}">
+        {{if eq .Key "ajolote"}}
+            <div class="rarity common">Común</div>
+        {{else if eq .Key "luna"}}
+            <div class="rarity rare">Raro</div>
+        {{else if eq .Key "quetzal"}}
+            <div class="rarity epic">Épico</div>
+        {{else if eq .Key "androide"}}
+            <div class="rarity legendary">Legendario</div>
+        {{else if eq .Key "supremo"}}
+            <div class="rarity unico">Único (1/1)</div>
+        {{end}}
+        <div class="nft-img-wrap">
+            <img src="{{.ImgPath}}" alt="{{.DisplayName}}" class="nft-img" />
+        </div>
+        <div class="nft-body">
+            <div class="nft-name">{{.DisplayName}}</div>
+            <div class="nft-desc">
+                {{.Description}}
+            </div>
+
+            <!-- Atributos y Estadísticas dinámicos -->
+            <div class="card-stats">
+                <span class="stat-badge 
+                    {{if eq .Elemento `Agua`}}el-agua{{else if eq .Elemento `Cósmico`}}el-cosmico{{else if eq .Elemento `Divino`}}el-divino{{else if eq .Elemento `Cyber`}}el-cyber{{else if eq .Elemento `Cósmico/Oro`}}el-oro{{end}}
+                ">
+                    {{if eq .Elemento `Agua`}}💧 Agua{{else if eq .Elemento `Cósmico`}}🌌 Cósmico{{else if eq .Elemento `Divino`}}✨ Divino{{else if eq .Elemento `Cyber`}}🤖 Cyber{{else if eq .Elemento `Cósmico/Oro`}}👑 Cósmico/Oro{{else}}{{.Elemento}}{{end}}
+                </span>
+                <span class="stat-badge" style="color: #ccc;">⚡ Poder: {{.Poder}}</span>
+                <span class="stat-badge" style="color: #ccc;">💎 Rareza: {{.RarezaPorc}}%</span>
+            </div>
+            
+            <div style="font-size:0.75rem; text-align:left; color:var(--muted); margin-bottom: 12px; margin-top: 5px;">
+                Poder:
+                <div class="stat-bar-container">
+                    <div class="stat-bar" style="width: {{.Poder}}%; 
+                        {{if eq .Elemento `Agua`}}background: #00ffe5;{{else if eq .Elemento `Cósmico`}}background: #b06fff;{{else if eq .Elemento `Divino`}}background: #ffd700;{{else if eq .Elemento `Cyber`}}background: #00ff00;{{else if eq .Elemento `Cósmico/Oro`}}background: linear-gradient(90deg, #ffd700, #ff8c00);{{else}}background: #fff;{{end}}
+                    "></div>
+                </div>
+            </div>
+
+            <div class="nft-price-row" style="margin-bottom:0.5rem;">
+                <div class="nft-price" style="
+                    {{if eq .Key `ajolote`}}color:var(--pink){{end}}
+                    {{if eq .Key `luna`}}color:var(--accent){{end}}
+                    {{if eq .Key `quetzal`}}color:var(--gold){{end}}
+                    {{if eq .Key `androide`}}color:var(--purple){{end}}
+                    {{if eq .Key `supremo`}}color:var(--gold){{end}}
+                ">
+                    {{.Price}}<span>DXT</span>
+                </div>
+            </div>
+
+            <!-- Supply/Stock Info -->
+            {{$soldOut := ge .Vendidos .MaxSupply}}
+            <div class="supply-info {{if $soldOut}}sold-out{{end}}" style="margin-bottom:1rem;">
+                <div>Suministro:</div>
+                <div><span>{{.Vendidos}} / {{.MaxSupply}}</span></div>
+            </div>
+
+            <form method="POST" action="/market">
+                <input type="hidden" name="buy" value="{{.Key}}" />
+                <button type="submit" class="btn-buy btn-buy-buy" {{if $soldOut}}disabled{{end}}>
+                    {{if $soldOut}}SOLD OUT{{else}}Comprar NFT{{end}}
+                </button>
+            </form>
+        </div>
+    </div>
+    {{end}}
+</main>
+
+<footer>
+    © {{.Year}} Dexter DAO — Powered by <a href="/">Go + Web3</a> &nbsp;|&nbsp;
+    Red: <span style="color:var(--accent);">Hardhat Local / Sepolia</span>
+</footer>
+
+<script>
+    // Dirección del contrato desplegado localmente (actualiza esto cuando despliegues a Sepolia)
+    const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+
+    // Mostrar dirección en el footer
+    if (CONTRACT_ADDRESS) {
+        document.getElementById('contract-addr-display').innerText =
+            CONTRACT_ADDRESS.slice(0, 6) + '···' + CONTRACT_ADDRESS.slice(-4);
+    }
+
+    async function conectarMetaMask() {
+        if (typeof window.ethereum === 'undefined') {
+            alert('MetaMask no detectado. Instala la extensión en tu navegador.');
+            return;
+        }
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const wallet = accounts[0];
+            const short = wallet.slice(0, 6) + '···' + wallet.slice(-4);
+
+            // Mostrar badge de wallet
+            const badge = document.getElementById('wallet-badge');
+            badge.innerText = short;
+            badge.style.display = 'inline-block';
+
+            document.getElementById('btn-connect').innerText = '✓ Conectado';
+            document.getElementById('btn-connect').style.background = 'linear-gradient(135deg,#00ff88,#009955)';
+
+            // Leer balance DXT del contrato
+            await leerBalance(wallet);
+        } catch (e) {
+            console.error(e);
+            alert('Conexión cancelada.');
+        }
+    }
+
+    async function leerBalance(wallet) {
+        if (!CONTRACT_ADDRESS || !window.ethereum) return;
+        try {
+            const walletPad = wallet.substring(2).padStart(64, '0');
+            const balHex = await window.ethereum.request({
+                method: 'eth_call',
+                params: [{ to: CONTRACT_ADDRESS, data: '0x70a08231' + walletPad }, 'latest']
+            });
+            const balBig = BigInt(balHex);
+            const bal = Number(balBig) / 1e18;
+            document.getElementById('dxt-balance-display').innerText =
+                bal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DXT';
+        } catch (e) {
+            console.warn('No se pudo leer balance del contrato:', e.message);
+        }
+    }
+
+    // Auto conectar si MetaMask ya está desbloqueado
+    window.addEventListener('load', async () => {
+        if (typeof window.ethereum !== 'undefined') {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                conectarMetaMask();
+            }
+        }
+
+        // Cuenta regresiva del próximo drop
+        const proximoDropUnix = {{.ProximoDropUnix}};
+        function actualizarCuentaRegresiva() {
+            const ahora = Math.floor(Date.now() / 1000);
+            let diferencia = proximoDropUnix - ahora;
+            
+            if (diferencia <= 0) {
+                document.getElementById('drop-days').innerText = "00";
+                document.getElementById('drop-hours').innerText = "00";
+                document.getElementById('drop-minutes').innerText = "00";
+                document.getElementById('drop-seconds').innerText = "00";
+                return;
+            }
+            
+            const dias = Math.floor(diferencia / 86400);
+            diferencia %= 86400;
+            const horas = Math.floor(diferencia / 3600);
+            diferencia %= 3600;
+            const minutos = Math.floor(diferencia / 60);
+            const segundos = diferencia % 60;
+            
+            document.getElementById('drop-days').innerText = dias < 10 ? '0' + dias : dias;
+            document.getElementById('drop-hours').innerText = horas < 10 ? '0' + horas : horas;
+            document.getElementById('drop-minutes').innerText = minutos < 10 ? '0' + minutos : minutos;
+            document.getElementById('drop-seconds').innerText = segundos < 10 ? '0' + segundos : segundos;
+        }
+        
+        if (proximoDropUnix > 0) {
+            actualizarCuentaRegresiva();
+            setInterval(actualizarCuentaRegresiva, 1000);
+        }
+    });
+</script>
+</body>
+</html>

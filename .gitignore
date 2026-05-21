@@ -1,0 +1,27 @@
+# Binarios / Ejecutables
+*.exe
+*.exe~
+main
+test_server
+
+# Configuración y Variables de Entorno
+.env
+.env.*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Datos Dinámicos / Base de datos local
+db.json
+balance.txt
+historial.txt
+inventario.txt
+
+# VS Code y Cache
+.vscode/
+.cache/
+cache/
+.DS_Store

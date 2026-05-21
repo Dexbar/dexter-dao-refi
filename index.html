@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>DEXTER DAO - WALL STREET</title>
+	<style>
+		@keyframes move-background { from { background-position: 0 0; } to { background-position: -10000px 5000px; } }
+		@keyframes pulse-glow {
+			0% { box-shadow: 0 0 10px currentColor; }
+			50% { box-shadow: 0 0 30px currentColor, inset 0 0 10px currentColor; }
+			100% { box-shadow: 0 0 10px currentColor; }
+		}
+		
+		body { 
+			font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #050505; color: #fff; 
+			background-image: radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px); background-size: 550px 550px;
+			animation: move-background 200s linear infinite; 
+		}
+		
+		h1 { text-align: center; color: #00ff00; text-shadow: 0 0 15px #00ff00; }
+		.container { max-width: 1200px; margin: auto; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; position: relative; z-index: 1; }
+		
+		/* Efecto Glassmorphism Pro */
+		.card { 
+			background: rgba(10, 10, 10, 0.7); padding: 20px; border-radius: 15px; 
+			border: 1px solid rgba(0, 255, 0, 0.5); flex: 1; min-width: 320px; 
+			backdrop-filter: blur(10px); transition: 0.3s;
+		}
+		.card:hover { border-color: #00ff00; box-shadow: 0 0 20px rgba(0,255,0,0.3); }
+		
+		.gov-card { border-color: rgba(255, 204, 0, 0.5); }
+		.gov-card:hover { border-color: #ffcc00; box-shadow: 0 0 20px rgba(255,204,0,0.3); }
+
+		.discord-card { border-color: rgba(88, 101, 242, 0.5); }
+		.discord-card:hover { border-color: #5865F2; box-shadow: 0 0 20px rgba(88,101,242,0.3); }
+
+		.nft-card { 
+			background: rgba(15, 15, 15, 0.8); padding: 15px; border-radius: 15px; 
+			text-align: center; width: 260px; transition: 0.4s; backdrop-filter: blur(10px);
+		}
+		.nft-card:hover { transform: translateY(-10px); }
+		
+		.nft-card.maestro { color: #ff00ff; border: 1px solid rgba(255,0,255,0.5); }
+		.nft-card.maestro:hover { animation: pulse-glow 2s infinite; border-color:#ff00ff; }
+		
+		.nft-card.astro { color: #00ffff; border: 1px solid rgba(0,255,255,0.5); }
+		.nft-card.astro:hover { animation: pulse-glow 2s infinite; border-color:#00ffff; }
+		
+		.nft-card.god { color: #ffd700; border: 1px solid rgba(255,215,0,0.5); }
+		.nft-card.god:hover { animation: pulse-glow 2s infinite; border-color:#ffd700; }
+
+		.nft-card.robot { color: #00ff00; border: 1px solid rgba(0,255,0,0.5); }
+		.nft-card.robot:hover { animation: pulse-glow 2s infinite; border-color:#00ff00; }
+
+		.nft-card.chinampero { color: #00ff66; border: 1px solid rgba(0,255,102,0.5); }
+		.nft-card.chinampero:hover { animation: pulse-glow 2s infinite; border-color:#00ff66; }
+
+		.nft-card.supremo { color: #ffd700; border: 1px solid rgba(255,215,0,0.8); background: linear-gradient(135deg, rgba(6,6,16,0.9), rgba(255,215,0,0.08)); }
+		.nft-card.supremo:hover { animation: pulse-glow 1.5s infinite; border-color:#ffffff; box-shadow: 0 0 25px rgba(255,215,0,0.6); }
+
+		.nft-img { width: 100%; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; transition: 0.3s; }
+		.nft-card:hover .nft-img { border-color: currentColor; }
+
+		.balance { font-size: 3em; color: #00ff00; font-weight: bold; text-shadow: 0 0 10px #00ff00; }
+		
+		button { color: #000; border: none; padding: 12px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+		button:hover { opacity: 0.8; transform: scale(1.02); }
+		
+		input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,0.5); border: 1px solid currentColor; color: #fff; box-sizing: border-box; border-radius: 8px; }
+		input:focus { outline: none; box-shadow: 0 0 10px currentColor; }
+
+		.btn-gov { background: #ffcc00; margin-bottom: 5px; }
+		.btn-discord { background: #5865F2; color: #fff; }
+		.btn-minar { background: #00ff00; }
+		
+		ul { text-align: left; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; height: 150px; overflow-y: auto; list-style-type: none; margin: 0; padding-left: 10px;}
+		li { font-size: 0.85em; color: #aaa; margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+		li span.date { color: #555; margin-right: 10px; font-family: monospace; }
+
+		/* Holographic Shine Effect */
+		.holo-shine {
+			position: relative;
+			overflow: hidden;
+		}
+		.holo-shine::after {
+			content: '';
+			position: absolute;
+			top: -50%; left: -50%;
+			width: 200%; height: 200%;
+			background: linear-gradient(
+				115deg,
+				rgba(255, 255, 255, 0) 0%,
+				rgba(255, 255, 255, 0.03) 30%,
+				rgba(0, 255, 229, 0.2) 45%,
+				rgba(255, 60, 172, 0.25) 50%,
+				rgba(255, 215, 0, 0.2) 55%,
+				rgba(255, 255, 255, 0.03) 70%,
+				rgba(255, 255, 255, 0) 100%
+			);
+			transform: rotate(35deg) translateY(-100%);
+			transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+			pointer-events: none;
+			z-index: 5;
+		}
+		.holo-shine:hover::after {
+			transform: rotate(35deg) translateY(60%);
+		}
+
+		/* Stats Display inside cards */
+		.card-stats {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin: 10px 0;
+			justify-content: center;
+		}
+		.stat-badge {
+			font-size: 0.75rem;
+			padding: 2px 8px;
+			border-radius: 4px;
+			font-weight: bold;
+			background: rgba(255, 255, 255, 0.05);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+		.stat-badge.el-agua { background: rgba(0, 255, 229, 0.1); border-color: rgba(0, 255, 229, 0.3); color: #00ffe5; }
+		.stat-badge.el-cosmico { background: rgba(176, 111, 255, 0.1); border-color: rgba(176, 111, 255, 0.3); color: #b06fff; }
+		.stat-badge.el-divino { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); color: #ffd700; }
+		.stat-badge.el-cyber { background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.3); color: #00ff00; }
+		.stat-badge.el-oro { background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2)); border-color: #ffd700; color: #ffd700; }
+
+		.stat-bar-container {
+			width: 100%;
+			background: rgba(255, 255, 255, 0.05);
+			border-radius: 999px;
+			height: 6px;
+			margin-top: 5px;
+			overflow: hidden;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+		.stat-bar {
+			height: 100%;
+			border-radius: 999px;
+			width: 0%;
+			transition: width 1s ease-out;
+		}
+
+		/* Recompensa Diaria Card & Button */
+		.daily-card { border-color: rgba(0, 255, 229, 0.5); }
+		.daily-card:hover { border-color: #00ffe5; box-shadow: 0 0 20px rgba(0,255,229,0.3); }
+		.btn-claim { background: linear-gradient(135deg, #00ffe5, #0088cc); color: #000; font-size: 0.9rem; }
+		.btn-claim:disabled { background: #222 !important; color: #555 !important; cursor: not-allowed; border: 1px solid #333; transform: none !important; opacity: 0.6; }
+	</style>
+</head>
+<body>
+	<h1>🏦 DEXTER DAO: SISTEMA CENTRAL 🏦</h1>
+	
+	<!-- BARRA SUPERIOR -->
+	<div style="text-align: right; max-width: 1200px; margin: 0 auto 20px auto;">
+		<span style="color: #aaa; margin-right: 15px;">Cuenta Web3: <strong style="color: #f6851b; text-shadow: 0 0 10px #f6851b;">{{.User}}</strong></span>
+		<form method="POST" style="display:inline;"><input type="hidden" name="accion" value="logout"><button type="submit" style="background:#333; color:#fff; width:auto; padding: 5px 15px;">DESCONECTAR</button></form>
+	</div>
+
+	<div class="container">
+		<!-- PANEL PRINCIPAL -->
+		<div class="card" style="color:#00ff00;">
+			<div class="balance">{{.Balance}} TK</div>
+			<div style="color:#00ffff; font-size:1.2em; margin-bottom: 15px;">≈ ${{.ValorPesos}}.00 MXN</div>
+			<p style="color:#ffcc00; font-style: italic;">{{.Mensaje}}</p>
+			
+			<form method="POST">
+				<input type="number" name="horas" placeholder="Ingresa horas de chamba..." required>
+				<button type="submit" class="btn-minar">MINAR TOKENS</button>
+			</form>
+			
+			<h3 style="margin-top: 25px;">📜 REGISTRO DE TRANSACCIONES</h3>
+			<ul>
+				{{range .Historial}}
+					<li>{{.}}</li>
+				{{else}}
+					<li>Sin movimientos todavía.</li>
+				{{end}}
+			</ul>
+		</div>
+
+		<!-- GOBERNANZA -->
+		<div class="card gov-card">
+			<h2 style="color:#ffcc00; margin-top: 0;">🗳️ GOBERNANZA</h2>
+			<p>Elige el futuro del proyecto:</p>
+			<form method="POST">
+				<button type="submit" name="votar" value="robot" class="btn-gov">NUEVO NFT: ROBOT ({{.VotosRobot}})</button>
+				<button type="submit" name="votar" value="pago" class="btn-gov">SUBIR PAGO ({{.VotosPago}})</button>
+			</form>
+		</div>
+
+		<!-- CONEXIÓN BLOCKCHAIN EN VIVO -->
+		<div class="card gov-card" style="border-color: #00ff00; min-width: 320px;">
+			<h2 style="color:#00ff00; margin-top: 0;">🌐 BLOCKCHAIN DXT</h2>
+			<p>Conecta tu mercado local con tu Smart Contract real de Remix o Sepolia:</p>
+			<form method="POST" style="margin-bottom: 0;">
+				<input type="hidden" name="actualizar_contrato" value="1">
+				<input type="text" id="contract-address" name="contract_address" value="{{.ContractAddress}}" placeholder="Pega la dirección de tu contrato (0x...)" style="margin-bottom: 10px; color: #00ff00; border-color: #00ff00;">
+				<button type="submit" style="background: #00ff00; color: #000;">GUARDAR Y VINCULAR CONTRATO</button>
+			</form>
+			
+			<div id="contract-info" style="margin-top: 15px; display: none; text-align: left; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid #00ff00;">
+				<p style="margin: 5px 0;">🪙 <strong>Token:</strong> <span id="token-name">Cargando...</span> (<span id="token-symbol">...</span>)</p>
+				<p style="margin: 5px 0;">💰 <strong>Saldo en Blockchain:</strong> <span id="blockchain-balance" style="color: #00ff00; font-weight: bold; font-size: 1.2em;">0.00</span> <span id="token-symbol-balance">DXT</span></p>
+				<p style="margin: 5px 0; font-size: 0.75em; color: #666; word-break: break-all;">Contrato: <span id="token-address" style="font-family: monospace;"></span></p>
+			</div>
+		</div>
+
+		<!-- ALERTAS DISCORD -->
+		<div class="card discord-card" style="min-width: 320px;">
+			<h2 style="color:#5865F2; margin-top: 0;">🔌 ALERTAS EN DISCORD</h2>
+			<p>Vincula un Webhook de tu canal de Discord para recibir notificaciones de transacciones en tiempo real con imágenes de tus NFTs:</p>
+			<form method="POST">
+				<input type="hidden" name="actualizar_webhook" value="1">
+				<input type="text" name="webhook_url" value="{{.DiscordWebhook}}" placeholder="Pega tu Discord Webhook URL..." style="margin-bottom: 10px; color: #5865F2; border-color: #5865F2;">
+				<button type="submit" class="btn-discord">VINCULAR WEBHOOK</button>
+			</form>
+			{{if .DiscordWebhook}}
+				<p style="color:#00ff00; font-size:0.85em; margin-top:10px; text-align:center;">✓ Discord Webhook Vinculado Exitosamente</p>
+			{{else}}
+				<p style="color:#666; font-size:0.85em; margin-top:10px; text-align:center;">Webhook no configurado en este perfil.</p>
+			{{end}}
+		</div>
+
+		<!-- RECOMPENSA DIARIA -->
+		<div class="card daily-card">
+			<h2 style="color:#00ffe5; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+				🎁 Recompensa Diaria
+			</h2>
+			<p style="color: #aaa; font-size: 0.9em; margin-bottom: 15px;">
+				Reclama 100 TK gratis cada 24 horas para seguir coleccionando ajolotes en la plataforma.
+			</p>
+			
+			<div id="claim-container" style="text-align: center; background: rgba(0, 255, 229, 0.05); padding: 15px; border-radius: 10px; border: 1px dashed rgba(0, 255, 229, 0.3);">
+				<div style="font-size: 1.8em; font-weight: bold; color: #00ffe5; margin-bottom: 10px;">+100 TK</div>
+				<form method="POST">
+					<input type="hidden" name="recompensa_diaria" value="1">
+					<button type="submit" id="btn-claim" class="btn-claim" style="margin-top: 0;">Reclamar Recompensa</button>
+				</form>
+				<div id="claim-timer" style="margin-top: 10px; font-weight: bold; color: #ff3cac; font-size: 0.95em; display: none;">
+					Siguiente en: <span id="timer-countdown">--:--:--</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- GALERÍA NFT -->
+		<div class="nft-card maestro">
+			<h3>MAESTRO #001</h3>
+			<img src="/img-maestro" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-agua">💧 Agua</span>
+				<span class="stat-badge">⚡ Poder: 75</span>
+				<span class="stat-badge">💎 Rareza: 80%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 75%; background: #00ffe5;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneAjolote}}
+					<button type="submit" name="vender" value="ajolote" style="background:#ff3333; color:#fff;">REVENDER (250 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="ajolote" style="background:#ff00ff; color:#fff;">COMPRAR (200 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card astro holo-shine">
+			<h3>ASTRONAUTA ⭐</h3>
+			<img src="/img-astronauta" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-cosmico">🌌 Cósmico</span>
+				<span class="stat-badge">⚡ Poder: 85</span>
+				<span class="stat-badge">💎 Rareza: 90%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 85%; background: #b06fff;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneLuna}}
+					<button type="submit" name="vender" value="luna" style="background:#ff3333; color:#fff;">REVENDER (600 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="luna" style="background:#00ffff; color:#000;">COMPRAR (500 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card god holo-shine">
+			<h3>DIOS QUETZAL 👑</h3>
+			<img src="/img-quetzal" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-divino">✨ Divino</span>
+				<span class="stat-badge">⚡ Poder: 95</span>
+				<span class="stat-badge">💎 Rareza: 96%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 95%; background: #ffd700;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneQuetzal}}
+					<button type="submit" name="vender" value="quetzal" style="background:#ff3333; color:#fff;">REVENDER (1500 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="quetzal" style="background:#ffd700; color:#000;">COMPRAR (1000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card robot holo-shine">
+			<h3>CYBER ANDROIDE 🤖</h3>
+			<img src="/img-androide" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-cyber">🤖 Cyber</span>
+				<span class="stat-badge">⚡ Poder: 98</span>
+				<span class="stat-badge">💎 Rareza: 99%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 98%; background: #00ff00;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneAndroide}}
+					<button type="submit" name="vender" value="androide" style="background:#ff3333; color:#fff;">REVENDER (3000 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="androide" style="background:#00ff00; color:#000;">COMPRAR (2000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card chinampero holo-shine">
+			<h3>AJOLOTE CHINAMPERO 🌾</h3>
+			<img src="/img-chinampero" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-cyber" style="background: rgba(0,255,102,0.1); border-color: rgba(0,255,102,0.3); color: #00ff66;">🌾 Tierra/Planta</span>
+				<span class="stat-badge">⚡ Poder: 92</span>
+				<span class="stat-badge">💎 Rareza: 95%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 92%; background: #00ff66;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneChinampero}}
+					<button type="submit" name="vender" value="chinampero" style="background:#ff3333; color:#fff;">REVENDER (2000 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="chinampero" style="background:#00ff66; color:#000;">COMPRAR (1500 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card supremo holo-shine">
+			<h3>👑 AJOLOTE SUPREMO</h3>
+			<img src="/img-supremo" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-oro">👑 Cósmico/Oro</span>
+				<span class="stat-badge">⚡ Poder: 100</span>
+				<span class="stat-badge">💎 Rareza: 100%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 100%; background: linear-gradient(95deg, #ffd700, #ff8c00);"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneSupremo}}
+					<button type="submit" name="vender" value="supremo" style="background:#ff3333; color:#fff;">REVENDER (7500 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="supremo" style="background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000;">COMPRAR (5000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+	</div>
+
+	<script>
+		// Intentar autoconectar si el usuario ya tiene un contrato guardado en el servidor Go
+		window.addEventListener('load', async () => {
+			const serverContract = "{{.ContractAddress}}";
+			if (serverContract && serverContract.startsWith('0x') && serverContract.length === 42) {
+				vincularContrato(serverContract);
+			} else {
+				// Fallback al localStorage
+				const savedContract = localStorage.getItem('dxt_contract_address');
+				if (savedContract) {
+					document.getElementById('contract-address').value = savedContract;
+					vincularContrato(savedContract);
+				}
+			}
+
+			// Temporizador de recompensa diaria
+			let tiempoRestante = {{.TiempoRestante}};
+			if (tiempoRestante > 0) {
+				const btnClaim = document.getElementById('btn-claim');
+				const timerDiv = document.getElementById('claim-timer');
+				const countdownSpan = document.getElementById('timer-countdown');
+				
+				btnClaim.disabled = true;
+				btnClaim.innerText = 'RECLAMADO HOY';
+				timerDiv.style.display = 'block';
+				
+				const interval = setInterval(() => {
+					tiempoRestante--;
+					if (tiempoRestante <= 0) {
+						clearInterval(interval);
+						btnClaim.disabled = false;
+						btnClaim.innerText = 'RECLAMAR RECOMPENSA';
+						timerDiv.style.display = 'none';
+					} else {
+						let hrs = Math.floor(tiempoRestante / 3600);
+						let mins = Math.floor((tiempoRestante % 3600) / 60);
+						let secs = tiempoRestante % 60;
+						
+						countdownSpan.innerText = 
+							(hrs < 10 ? '0' : '') + hrs + ':' +
+							(mins < 10 ? '0' : '') + mins + ':' +
+							(secs < 10 ? '0' : '') + secs;
+					}
+				}, 1000);
+			}
+		});
+
+		async function vincularContrato(contractAddr = null) {
+			if (!contractAddr) {
+				contractAddr = document.getElementById('contract-address').value.trim();
+			}
+			
+			if (!contractAddr || !contractAddr.startsWith('0x') || contractAddr.length !== 42) {
+				alert('Por favor ingresa una dirección de contrato válida (0x...)');
+				return;
+			}
+
+			if (typeof window.ethereum === 'undefined') {
+				alert('MetaMask no está detectado. Asegúrate de estar en una pestaña normal o permitir MetaMask en incógnito.');
+				return;
+			}
+
+			try {
+				document.getElementById('contract-info').style.display = 'block';
+				document.getElementById('token-name').innerText = 'Conectando...';
+				document.getElementById('token-symbol').innerText = '...';
+				document.getElementById('blockchain-balance').innerText = '...';
+
+				const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+				if (accounts.length === 0) {
+					alert('Por favor abre tu MetaMask e inicia sesión.');
+					return;
+				}
+				const wallet = accounts[0];
+
+				// 1. Obtener decimales
+				// selector decimals(): 0x313ce567
+				const decimalsHex = await window.ethereum.request({
+					method: 'eth_call',
+					params: [{ to: contractAddr, data: '0x313ce567' }, 'latest']
+				});
+				const decimals = parseInt(decimalsHex, 16) || 18;
+
+				// 2. Obtener Balance
+				// selector balanceOf(address): 0x70a08231
+				const walletPadding = wallet.substring(2).padStart(64, '0');
+				const balanceHex = await window.ethereum.request({
+					method: 'eth_call',
+					params: [{ to: contractAddr, data: '0x70a08231' + walletPadding }, 'latest']
+				});
+				
+				// Convertir balance
+				const balanceBigInt = BigInt(balanceHex);
+				const balanceFormatted = Number(balanceBigInt) / (10 ** decimals);
+
+				// 3. Obtener Símbolo
+				// selector symbol(): 0x95d89b41
+				let symbol = "DXT";
+				try {
+					const symbolHex = await window.ethereum.request({
+						method: 'eth_call',
+						params: [{ to: contractAddr, data: '0x95d89b41' }, 'latest']
+					});
+					if (symbolHex && symbolHex !== '0x') {
+						const length = parseInt(symbolHex.substring(66, 130), 16);
+						if (length > 0 && length < 32) {
+							const stringData = symbolHex.substring(130, 130 + length * 2);
+							let parsedSymbol = '';
+							for (let i = 0; i < stringData.length; i += 2) {
+								parsedSymbol += String.fromCharCode(parseInt(stringData.substring(i, i + 2), 16));
+							}
+							if (parsedSymbol) symbol = parsedSymbol;
+						}
+					}
+				} catch (e) {
+					console.log("No se pudo obtener el símbolo, usando DXT por defecto");
+				}
+
+				// 4. Obtener Nombre
+				// selector name(): 0x06fdde03
+				let tokenName = "Dexter Token";
+				try {
+					const nameHex = await window.ethereum.request({
+						method: 'eth_call',
+						params: [{ to: contractAddr, data: '0x06fdde03' }, 'latest']
+					});
+					if (nameHex && nameHex !== '0x') {
+						const length = parseInt(nameHex.substring(66, 130), 16);
+						if (length > 0 && length < 64) {
+							const stringData = nameHex.substring(130, 130 + length * 2);
+							let parsedName = '';
+							for (let i = 0; i < stringData.length; i += 2) {
+								parsedName += String.fromCharCode(parseInt(stringData.substring(i, i + 2), 16));
+							}
+							if (parsedName) tokenName = parsedName;
+						}
+					}
+				} catch (e) {
+					console.log("No se pudo obtener el nombre, usando Dexter Token por defecto");
+				}
+
+				// Actualizar interfaz
+				document.getElementById('token-name').innerText = tokenName;
+				document.getElementById('token-symbol').innerText = symbol;
+				document.getElementById('token-symbol-balance').innerText = symbol;
+				document.getElementById('blockchain-balance').innerText = balanceFormatted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+				document.getElementById('token-address').innerText = contractAddr;
+				
+				// Guardar en el navegador
+				localStorage.setItem('dxt_contract_address', contractAddr);
+
+			} catch (error) {
+				console.error(error);
+				alert('Error al leer el contrato. Asegúrate de que el contrato esté en la red seleccionada en tu MetaMask.');
+				document.getElementById('contract-info').style.display = 'none';
+			}
+		}
+	</script>
+</body>
+</html>

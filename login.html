@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>DEXTER DAO - WEB3 LOGIN</title>
+	<style>
+		body { 
+			background: #000; color: #00ff00; font-family: 'Segoe UI', sans-serif; 
+			display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
+			background-image: radial-gradient(#00ff00 1px, transparent 1px); background-size: 50px 50px;
+			background-position: 0 0; animation: grid-move 20s linear infinite;
+		}
+		@keyframes grid-move { from { background-position: 0 0; } to { background-position: 50px 50px; } }
+		
+		.box { 
+			background: rgba(10,10,10,0.9); padding: 40px; border-radius: 15px; 
+			border: 1px solid #f6851b; box-shadow: 0 0 30px rgba(246,133,27,0.3); 
+			backdrop-filter: blur(10px); text-align: center; width: 350px;
+		}
+		h2 { margin-top: 0; letter-spacing: 2px; color: #f6851b; text-shadow: 0 0 10px #f6851b; }
+		button { 
+			background: #f6851b; color: #fff; border: none; padding: 15px; width: 100%; 
+			font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; 
+			text-transform: uppercase; letter-spacing: 1px; margin-top: 20px;
+		}
+		button:hover { background: #fff; color: #f6851b; box-shadow: 0 0 20px #fff; transform: scale(1.05); }
+	</style>
+</head>
+<body>
+	<div class="box">
+		<h2>🦊 DEXTER DAO</h2>
+		<p style="color:#aaa; font-size:0.9em;">Autenticación Descentralizada (Web3)</p>
+		
+		<form id="login-form" method="POST">
+			<input type="hidden" name="wallet" id="wallet-input">
+			<button type="button" id="btn-metamask">CONECTAR WALLET</button>
+		</form>
+		<p style="color:#555; font-size:0.75em; margin-top:20px;">Tu llave criptográfica es tu identidad. No se requieren correos electrónicos.</p>
+	</div>
+
+	<script>
+		document.getElementById('btn-metamask').addEventListener('click', async () => {
+			if (typeof window.ethereum !== 'undefined') {
+				try {
+					// Pedir permiso a MetaMask
+					const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+					if (accounts.length > 0) {
+						// Si acepta, agarramos la cuenta y mandamos el formulario a Go
+						document.getElementById('wallet-input').value = accounts[0];
+						document.getElementById('login-form').submit();
+					}
+				} catch (error) {
+					alert("Conexión cancelada por el usuario.");
+				}
+			} else {
+				alert("¡Necesitas instalar MetaMask para entrar a esta DApp!");
+			}
+		});
+	</script>
+</body>
+</html>

@@ -21,6 +21,13 @@ module.exports = {
           ? [process.env.PRIVATE_KEY]
           : [],
     },
+    alfajores: {
+      url: "https://alfajores-forno.celo-testnet.org",
+      accounts:
+        process.env.PRIVATE_KEY && process.env.PRIVATE_KEY.length === 66
+          ? [process.env.PRIVATE_KEY]
+          : [],
+    },
   },
   paths: {
     sources: "./contracts",

@@ -228,7 +228,7 @@ type PageData struct {
 const RUTA_MAESTRO = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_maestro_nft_1778945173814.png`
 const RUTA_ASTRONAUTA = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_astronauta_legendario_1778912778060.png`
 const RUTA_QUETZAL = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_quetzalcoatl_nft_1778943251774.png`
-const RUTA_ANDROIDE = `C:\Users\USER\brain\40e45755-294b-45a9-88b0-aa21a458cdc4\ajolote_androide_1779299408180.png`
+const RUTA_ANDROIDE = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_androide_1779299408180.png`
 const RUTA_SUPREMO = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_supremo_1779386438430.png`
 const RUTA_CHINAMPERO = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\axolote_chinampero_1779406931630.png`
 

@@ -427,11 +427,17 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("horas") != "" {
 			horas, _ := strconv.Atoi(r.FormValue("horas"))
 			if horas > 0 {
-				pago := horas * 10
+				basePago := 10
+				bonoMsg := ""
+				if tieneItem(perfil.Inventario, "chinampero") {
+					basePago = 15
+					bonoMsg = " (Bono 1.5x Chinampero Activo! 🌾)"
+				}
+				pago := horas * basePago
 				perfil.Balance += pago
-				agregarHistorial(&perfil, fmt.Sprintf("+%d TK minados (%d hrs)", pago, horas))
-				mensajeNotif = fmt.Sprintf("¡Chamba registrada! +%d TK", pago)
-				enviarDiscord(perfil.DiscordWebhook, "⛏️ Chamba Minera Registrada", fmt.Sprintf("Billetera: `%s`\n**Horas trabajadas:** %d hrs\n**Tokens minados:** +%d TK\n**Saldo actual:** %d TK", displayWallet, horas, pago, perfil.Balance), 16766720, "") // Oro
+				agregarHistorial(&perfil, fmt.Sprintf("+%d TK minados (%d hrs)%s", pago, horas, bonoMsg))
+				mensajeNotif = fmt.Sprintf("¡Chamba registrada! +%d TK%s", pago, bonoMsg)
+				enviarDiscord(perfil.DiscordWebhook, "⛏️ Chamba Minera Registrada", fmt.Sprintf("Billetera: `%s`\n**Horas trabajadas:** %d hrs\n**Tokens minados:** +%d TK%s\n**Saldo actual:** %d TK", displayWallet, horas, pago, bonoMsg, perfil.Balance), 16766720, "") // Oro
 			}
 		}
 

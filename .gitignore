@@ -23,5 +23,11 @@ inventario.txt
 # VS Code y Cache
 .vscode/
 .cache/
-cache/
 .DS_Store
+
+# Hardhat / Solidity
+artifacts/
+cache/
+*.log
+scratch/
+backups/

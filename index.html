@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>DEXTER DAO - WALL STREET</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 	<style>
 		@keyframes move-background { from { background-position: 0 0; } to { background-position: -10000px 5000px; } }
 		@keyframes pulse-glow {
@@ -148,6 +149,115 @@
 		.daily-card:hover { border-color: #00ffe5; box-shadow: 0 0 20px rgba(0,255,229,0.3); }
 		.btn-claim { background: linear-gradient(135deg, #00ffe5, #0088cc); color: #000; font-size: 0.9rem; }
 		.btn-claim:disabled { background: #222 !important; color: #555 !important; cursor: not-allowed; border: 1px solid #333; transform: none !important; opacity: 0.6; }
+
+		/* Estilos del Santuario de Ajolotes */
+		.sanctuary-card {
+			flex: 0 0 100%;
+			min-height: 380px;
+			background: radial-gradient(circle at center, rgba(10, 20, 45, 0.5), rgba(5, 5, 15, 0.95));
+			border: 1px solid rgba(0, 255, 229, 0.35);
+			box-shadow: 0 0 25px rgba(0, 255, 229, 0.1), inset 0 0 30px rgba(0, 255, 229, 0.05);
+			border-radius: 20px;
+			padding: 24px;
+			position: relative;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			backdrop-filter: blur(12px);
+			transition: border-color 0.3s, box-shadow 0.3s;
+		}
+		.sanctuary-card:hover {
+			border-color: #00ffe5;
+			box-shadow: 0 0 35px rgba(0, 255, 229, 0.2), inset 0 0 40px rgba(0, 255, 229, 0.08);
+		}
+		.sanctuary-pond {
+			width: 100%;
+			height: 260px;
+			background: rgba(0, 0, 0, 0.4);
+			border: 1px dashed rgba(255, 255, 255, 0.1);
+			border-radius: 12px;
+			position: relative;
+			overflow: hidden;
+			margin-top: 15px;
+		}
+		
+		/* Animación de partículas flotantes de fondo */
+		.pond-bubbles {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0; left: 0;
+			pointer-events: none;
+			z-index: 1;
+		}
+		.bubble-particle {
+			position: absolute;
+			background: rgba(0, 255, 229, 0.15);
+			border-radius: 50%;
+			bottom: -20px;
+			animation: float-bubble 8s infinite linear;
+		}
+		@keyframes float-bubble {
+			0% { transform: translateY(0) scale(1); opacity: 0; }
+			10% { opacity: 0.8; }
+			90% { opacity: 0.8; }
+			100% { transform: translateY(-300px) scale(1.3); opacity: 0; }
+		}
+
+		/* Avatares de Ajolotes Nadando/Flotando */
+		.floating-axolotl {
+			position: absolute;
+			width: 110px;
+			height: 110px;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.03);
+			border: 2px solid currentColor;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 8px;
+			cursor: grab;
+			z-index: 10;
+			user-select: none;
+			transition: box-shadow 0.2s, border-color 0.2s;
+			box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+		}
+		.floating-axolotl:active {
+			cursor: grabbing;
+			transform: scale(1.08);
+		}
+		.floating-axolotl img {
+			width: 75px;
+			height: 75px;
+			object-fit: cover;
+			border-radius: 50%;
+			pointer-events: none;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+		}
+		.floating-axolotl span {
+			font-size: 0.65rem;
+			font-weight: bold;
+			margin-top: 4px;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			pointer-events: none;
+		}
+
+		/* El movimiento de nado dinámico ahora se maneja vía JS para mayor realismo */
+
+		/* Brillo neón específico por elemento */
+		.glow-agua { color: #00ffe5; filter: drop-shadow(0 0 8px rgba(0, 255, 229, 0.6)); }
+		.glow-cosmico { color: #b06fff; filter: drop-shadow(0 0 8px rgba(176, 111, 255, 0.6)); }
+		.glow-divino { color: #ffd700; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)); }
+		.glow-cyber { color: #00ff00; filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.6)); }
+		.glow-oro { color: #ff8c00; filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.8)); }
+
+		@keyframes float-soft-stationary {
+			0%, 100% { transform: translateY(0) rotate(0deg); }
+			50% { transform: translateY(-8px) rotate(2deg); }
+		}
 	</style>
 </head>
 <body>
@@ -160,6 +270,83 @@
 	</div>
 
 	<div class="container">
+		<!-- SANTUARIO VIRTUAL DE AJOLOTES -->
+		<div class="sanctuary-card">
+			<div>
+				<h2 style="color: #00ffe5; margin: 0; display: flex; align-items: center; gap: 10px;">
+					🏝️ Santuario de Ajolotes Dexter DAO
+				</h2>
+				<p style="color: #888; font-size: 0.85em; margin: 4px 0 0 0;">
+					Un hábitat interactivo para tus ajolotes Web3 activos. Adquiere más ajolotes para verlos nadar y flotar aquí. Puedes arrastrarlos con el ratón.
+				</p>
+			</div>
+			
+			<div class="sanctuary-pond" id="sanctuary-pond">
+				<!-- Burbujas de fondo -->
+				<div class="pond-bubbles" id="pond-bubbles"></div>
+				
+				<!-- Renderizado condicional de ajolotes poseídos -->
+				{{$noOwned := true}}
+				
+				{{if .TieneAjolote}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-agua ax-float-1" title="Maestro #001" style="left: 15%; top: 20%;">
+						<img src="/img-maestro" alt="Maestro" />
+						<span>Maestro</span>
+					</div>
+				{{end}}
+
+				{{if .TieneLuna}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-cosmico ax-float-2" title="Astronauta" style="left: 70%; top: 45%;">
+						<img src="/img-astronauta" alt="Astronauta" />
+						<span>Cosmos</span>
+					</div>
+				{{end}}
+
+				{{if .TieneQuetzal}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-divino ax-float-3" title="Dios Quetzal" style="left: 40%; top: 55%;">
+						<img src="/img-quetzal" alt="Dios Quetzal" />
+						<span>Quetzal</span>
+					</div>
+				{{end}}
+
+				{{if .TieneAndroide}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-cyber ax-float-4" title="Cyber Androide" style="left: 80%; top: 15%;">
+						<img src="/img-androide" alt="Cyber Androide" />
+						<span>Androide</span>
+					</div>
+				{{end}}
+
+				{{if .TieneSupremo}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-oro ax-float-5" title="Ajolote Supremo" style="left: 20%; top: 40%;">
+						<img src="/img-supremo" alt="Ajolote Supremo" />
+						<span>Supremo</span>
+					</div>
+				{{end}}
+
+				{{if .TieneChinampero}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-agua ax-float-6" title="Ajolote Chinampero" style="left: 50%; top: 10%; color: #00ff88;">
+						<img src="/img-chinampero" alt="Ajolote Chinampero" />
+						<span>Chinampero</span>
+					</div>
+				{{end}}
+				
+				{{if $noOwned}}
+					<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #555; z-index: 5; pointer-events: auto;">
+						<div style="font-size: 3rem; margin-bottom: 10px;">🏝️</div>
+						<div style="font-size: 0.9em; font-weight: bold; color: #888;">Tu Santuario está vacío</div>
+						<div style="font-size: 0.75em; color: #666; margin-top: 4px;">Visita la tienda y adquiere tus primeros ajolotes para verlos nadar aquí.</div>
+						<button type="button" onclick="location.href='/market'" style="background: linear-gradient(135deg, #00ffe5, #0088cc); color: #000; font-size: 0.75em; padding: 6px 16px; border-radius: 6px; width: auto; margin-top: 12px; font-weight: bold;">IR AL MERCADO</button>
+					</div>
+				{{end}}
+			</div>
+		</div>
+
 		<!-- PANEL PRINCIPAL -->
 		<div class="card" style="color:#00ff00;">
 			<div class="balance">{{.Balance}} TK</div>
@@ -172,7 +359,7 @@
 			</form>
 			
 			<h3 style="margin-top: 25px;">📜 REGISTRO DE TRANSACCIONES</h3>
-			<ul>
+			<ul id="tx-history-list">
 				{{range .Historial}}
 					<li>{{.}}</li>
 				{{else}}
@@ -184,11 +371,34 @@
 		<!-- GOBERNANZA -->
 		<div class="card gov-card">
 			<h2 style="color:#ffcc00; margin-top: 0;">🗳️ GOBERNANZA</h2>
-			<p>Elige el futuro del proyecto:</p>
-			<form method="POST">
-				<button type="submit" name="votar" value="robot" class="btn-gov">NUEVO NFT: ROBOT ({{.VotosRobot}})</button>
-				<button type="submit" name="votar" value="pago" class="btn-gov">SUBIR PAGO ({{.VotosPago}})</button>
-			</form>
+			
+			<!-- Sección de simulación Web2 -->
+			<div style="border-bottom: 1px solid rgba(255,204,0,0.2); padding-bottom: 15px; margin-bottom: 15px;">
+				<h3 style="color: #ffcc00; font-size: 0.95em; margin-top: 0; text-transform: uppercase;">Simulación Local (Web2)</h3>
+				<p style="font-size: 0.85em; color: #ccc;">Votos rápidos en base de datos local:</p>
+				<form method="POST">
+					<button type="submit" name="votar" value="robot" class="btn-gov">NUEVO NFT: ROBOT ({{.VotosRobot}})</button>
+					<button type="submit" name="votar" value="pago" class="btn-gov">SUBIR PAGO ({{.VotosPago}})</button>
+				</form>
+			</div>
+
+			<!-- Sección de Blockchain Real (Gobernanza dApp) -->
+			<div>
+				<h3 style="color: #00ffe5; font-size: 0.95em; margin-top: 0; text-transform: uppercase;">Gobernanza en Blockchain (dApp)</h3>
+				<p style="font-size: 0.85em; color: #ccc; margin-bottom: 12px;">Tu voto se calcula según tus tokens DXT en blockchain:</p>
+				
+				<!-- Contenedor de Propuestas Dinámicas -->
+				<div id="gov-proposals-container">
+					<p style="font-size: 0.85em; color: #888; text-align: center; padding: 10px;">Cargando propuestas desde el contrato inteligente...</p>
+				</div>
+
+				<!-- Sección de Creación de Propuestas (Visible solo para el Owner) -->
+				<div id="gov-create-section" style="display: none; border-top: 1px solid rgba(0, 255, 229, 0.2); padding-top: 15px; margin-top: 15px;">
+					<h4 style="color: #00ffe5; margin: 0 0 10px 0; font-size: 0.9em; text-transform: uppercase;">Postular Nueva Propuesta (Solo Creador/Owner)</h4>
+					<input type="text" id="new-proposal-desc" placeholder="Ej: 🎨 Diseñar nueva tarjeta de Ajolote..." style="width: 100%; padding: 8px; font-size: 0.85em; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 255, 229, 0.3); color: #fff; border-radius: 4px; margin-bottom: 8px;">
+					<button type="button" id="btn-create-proposal" onclick="crearPropuestaBlockchain()" style="background: #00ffe5; color: #000; font-size: 0.8em; padding: 6px 12px; border-radius: 4px; width: 100%; font-weight: bold;">ENVIAR POSTULACIÓN A BLOCKCHAIN</button>
+				</div>
+			</div>
 		</div>
 
 		<!-- CONEXIÓN BLOCKCHAIN EN VIVO -->
@@ -241,6 +451,30 @@
 				</form>
 				<div id="claim-timer" style="margin-top: 10px; font-weight: bold; color: #ff3cac; font-size: 0.95em; display: none;">
 					Siguiente en: <span id="timer-countdown">--:--:--</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- RECIBIR DONATIVOS (REAL) -->
+		<div class="card gov-card" style="border-color: #ffd700; min-width: 320px; text-align: center;">
+			<h2 style="color:#ffd700; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+				📥 Recibir Donativos (Real)
+			</h2>
+			<p style="color: #aaa; font-size: 0.95em; margin-bottom: 15px;">
+				Comparte este código QR o copia tu dirección de billetera pública para recibir donaciones reales en Sepolia o Mainnet.
+			</p>
+			
+			<div style="background: rgba(255, 215, 0, 0.04); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255, 215, 0, 0.3); display: flex; flex-direction: column; align-items: center; gap: 12px;">
+				<img id="qr-donacion" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data={{.WalletCompleta}}" alt="QR Billetera" style="border: 4px solid #fff; border-radius: 8px; width: 160px; height: 160px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);" />
+				
+				<div style="width: 100%;">
+					<div style="font-size: 0.75em; color: #888; margin-bottom: 4px;">Dirección de tu Billetera:</div>
+					<div id="wallet-full-address" style="font-family: monospace; font-size: 0.8em; color: #ffd700; word-break: break-all; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 6px; border: 1px solid rgba(255, 215, 0, 0.15);">
+						{{.WalletCompleta}}
+					</div>
+					<button type="button" onclick="copiarDireccionCompleta()" style="background: #ffd700; color: #000; font-size: 0.85em; padding: 10px; border-radius: 8px; margin-top: 8px; font-weight: bold; width: 100%;">
+						📋 Copiar Dirección
+					</button>
 				</div>
 			</div>
 		</div>
@@ -398,6 +632,25 @@
 	</div>
 
 	<script>
+		// Direcciones de contratos inteligentes cargadas desde Go
+		const DXT_TOKEN_ADDRESS = "{{.TokenAddress}}";
+		const DEXTER_NFT_ADDRESS = "{{.NFTAddress}}";
+		const DEXTER_GOV_ADDRESS = "{{.GovAddress}}";
+		const DEXTER_NETWORK = "{{.Network}}";
+
+		// Configuración dinámica de red
+		let TARGET_CHAIN_ID = 31337;
+		let TARGET_CHAIN_HEX = "0x7a69";
+		let TARGET_NETWORK_NAME = "Hardhat Local";
+		let TARGET_RPC_URL = "http://localhost:8545";
+
+		if (DEXTER_NETWORK === "sepolia") {
+			TARGET_CHAIN_ID = 11155111;
+			TARGET_CHAIN_HEX = "0xaa36a7";
+			TARGET_NETWORK_NAME = "Red de prueba Sepolia";
+			TARGET_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com";
+		}
+
 		// Intentar autoconectar si el usuario ya tiene un contrato guardado en el servidor Go
 		window.addEventListener('load', async () => {
 			const serverContract = "{{.ContractAddress}}";
@@ -409,6 +662,14 @@
 				if (savedContract) {
 					document.getElementById('contract-address').value = savedContract;
 					vincularContrato(savedContract);
+				}
+			}
+
+			// Cargar gobernanza on-chain si la dirección está disponible
+			if (DEXTER_GOV_ADDRESS && typeof window.ethereum !== 'undefined') {
+				const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+				if (accounts.length > 0) {
+					cargarGobernanzaBlockchain();
 				}
 			}
 
@@ -442,7 +703,281 @@
 					}
 				}, 1000);
 			}
+
+			// Procesar enlaces en el historial
+			procesarHistorialEnlaces();
 		});
+
+		function procesarHistorialEnlaces() {
+			const list = document.getElementById('tx-history-list');
+			if (!list) return;
+			const items = list.getElementsByTagName('li');
+			for (let i = 0; i < items.length; i++) {
+				const item = items[i];
+				const text = item.innerHTML;
+				
+				const fullTxRegex = /(Tx:\s*)(0x[a-fA-F0-9]{64})/i;
+				const truncatedTxRegex = /(Tx:\s*)(0x[a-fA-F0-9]{8}\.\.\.)/i;
+				
+				let explorerUrl = "";
+				if (DEXTER_NETWORK === "sepolia") {
+					explorerUrl = "https://sepolia.etherscan.io/tx/";
+				} else if (DEXTER_NETWORK === "alfajores") {
+					explorerUrl = "https://celo-alfajores.blockscout.com/tx/";
+				}
+				
+				if (explorerUrl) {
+					if (fullTxRegex.test(text)) {
+						item.innerHTML = text.replace(fullTxRegex, (match, p1, p2) => {
+							const truncated = p2.slice(0, 10) + "...";
+							return `${p1}<a href="${explorerUrl}${p2}" target="_blank" style="color: #00ffe5; text-decoration: none; font-family: monospace;">${truncated}</a>`;
+						});
+					}
+				} else {
+					if (fullTxRegex.test(text)) {
+						item.innerHTML = text.replace(fullTxRegex, (match, p1, p2) => {
+							const truncated = p2.slice(0, 10) + "...";
+							return `${p1}<span style="color: #888; font-family: monospace;" title="Transacción Local: ${p2}">${truncated}</span>`;
+						});
+					}
+				}
+			}
+		}
+
+		async function getReadProvider(browserProvider) {
+			try {
+				const network = await browserProvider.getNetwork();
+				if (Number(network.chainId) === TARGET_CHAIN_ID) {
+					const localProv = new ethers.JsonRpcProvider(TARGET_RPC_URL);
+					await localProv.getNetwork();
+					return localProv;
+				}
+			} catch (e) {
+				console.warn("No se pudo conectar directamente al JsonRpcProvider de la red", e);
+			}
+			return browserProvider;
+		}
+
+		async function cargarGobernanzaBlockchain() {
+			if (!DEXTER_GOV_ADDRESS || typeof window.ethereum === 'undefined') return;
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const readProvider = await getReadProvider(provider);
+				
+				const govAbi = [
+					"function getProposalsCount() external view returns (uint256)",
+					"function getProposal(uint256 proposalId) external view returns (uint256 id, string memory description, uint256 voteCount, uint256 votesCountRaw)",
+					"function hasVoted(uint256 proposalId, address voter) external view returns (bool)",
+					"function owner() external view returns (address)"
+				];
+				const govContract = new ethers.Contract(DEXTER_GOV_ADDRESS, govAbi, readProvider);
+
+				// Obtener billetera conectada (si existe) para comprobar si ha votado y si es owner
+				let userAddress = "";
+				try {
+					const signer = await provider.getSigner();
+					userAddress = await signer.getAddress();
+				} catch (e) {}
+
+				// Obtener cantidad de propuestas
+				const countBigInt = await govContract.getProposalsCount();
+				const count = Number(countBigInt);
+
+				const container = document.getElementById('gov-proposals-container');
+				if (!container) return;
+
+				if (count === 0) {
+					container.innerHTML = `<p style="font-size: 0.85em; color: #888; text-align: center; padding: 10px;">No hay propuestas activas en la gobernanza.</p>`;
+					return;
+				}
+
+				// Cargar todas las propuestas
+				const proposals = [];
+				let totalPower = 0;
+
+				for (let i = 0; i < count; i++) {
+					const prop = await govContract.getProposal(i);
+					const voteCount = Number(ethers.formatUnits(prop.voteCount, 18));
+					const hasVotedFlag = userAddress ? await govContract.hasVoted(i, userAddress) : false;
+					
+					proposals.push({
+						id: Number(prop.id),
+						description: prop.description,
+						voteCount: voteCount,
+						votesCountRaw: Number(prop.votesCountRaw),
+						hasVoted: hasVotedFlag
+					});
+
+					totalPower += voteCount;
+				}
+
+				// Renderizar propuestas
+				let html = "";
+				proposals.forEach(p => {
+					const pct = totalPower > 0 ? (p.voteCount / totalPower) * 100 : 0;
+					
+					let buttonHtml = "";
+					if (p.hasVoted) {
+						buttonHtml = `<span style="color: #00ff00; font-size: 0.75em; font-weight: bold; display: inline-block; margin-top: 8px;">✓ YA VOTASTE</span>`;
+					} else {
+						buttonHtml = `<button type="button" id="btn-vote-${p.id}" onclick="votarPropuestaBlockchain(${p.id})" style="background: #00ffe5; color: #000; font-size: 0.75em; padding: 5px 10px; margin-top: 8px; border-radius: 4px; width: auto; font-weight: bold;">VOTAR ON-CHAIN</button>`;
+					}
+
+					html += `
+					<div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid rgba(0, 255, 229, 0.2);">
+						<div style="display: flex; justify-content: space-between; font-size: 0.85em; font-weight: bold; gap: 10px;">
+							<span>#${p.id} ${p.description}</span>
+							<span style="color: #00ffe5; white-space: nowrap;">${p.voteCount.toLocaleString(undefined, { maximumFractionDigits: 0 })} DXT (${p.votesCountRaw} votos)</span>
+						</div>
+						<div style="background: rgba(255,255,255,0.05); height: 6px; border-radius: 999px; overflow: hidden; margin-top: 5px; border: 1px solid rgba(255,255,255,0.1);">
+							<div style="background: #00ffe5; height: 100%; width: ${pct}%; transition: width 0.5s;"></div>
+						</div>
+						${buttonHtml}
+					</div>`;
+				});
+
+				container.innerHTML = html;
+
+				// Mostrar sección de creación si el usuario conectado es el owner del contrato
+				try {
+					const contractOwner = await govContract.owner();
+					if (userAddress && contractOwner && userAddress.toLowerCase() === contractOwner.toLowerCase()) {
+						document.getElementById('gov-create-section').style.display = 'block';
+					} else {
+						document.getElementById('gov-create-section').style.display = 'none';
+					}
+				} catch (e) {
+					console.warn("No se pudo leer el owner del contrato de gobernanza:", e.message);
+				}
+
+			} catch (e) {
+				console.warn("Error al cargar gobernanza blockchain:", e.message);
+			}
+		}
+
+		async function votarPropuestaBlockchain(proposalId) {
+			if (typeof window.ethereum === 'undefined') {
+				alert('MetaMask no detectado. Instálalo en tu navegador.');
+				return;
+			}
+			
+			if (!DEXTER_GOV_ADDRESS || !DXT_TOKEN_ADDRESS) {
+				alert('Contrato de Gobernanza o Token no configurado.');
+				return;
+			}
+
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const readProvider = await getReadProvider(provider);
+				const signer = await provider.getSigner();
+				const userAddress = await signer.getAddress();
+
+				// Primero verificar si el usuario tiene balance de DXT
+				const tokenAbi = [
+					"function balanceOf(address account) public view returns (uint256)"
+				];
+				const tokenContract = new ethers.Contract(DXT_TOKEN_ADDRESS, tokenAbi, readProvider);
+				const balance = await tokenContract.balanceOf(userAddress);
+				
+				if (balance === 0n) {
+					alert('Debes tener tokens DXT en la blockchain para votar. ¡Despliega el token y mina horas o usa el faucet local!');
+					return;
+				}
+
+				const govAbi = [
+					"function vote(uint256 proposalId) external",
+					"function hasVoted(uint256 proposalId, address voter) external view returns (bool)"
+				];
+				const govContractRead = new ethers.Contract(DEXTER_GOV_ADDRESS, govAbi, readProvider);
+
+				// Verificar si ya votó
+				const alreadyVoted = await govContractRead.hasVoted(proposalId, userAddress);
+				if (alreadyVoted) {
+					alert('Esta billetera ya ha emitido un voto on-chain para esta propuesta.');
+					return;
+				}
+
+				const btn = document.getElementById(`btn-vote-${proposalId}`);
+				const origText = btn.innerText;
+				btn.disabled = true;
+				btn.innerText = "Firmando Voto...";
+
+				// Enviar transacción
+				const govContractWrite = new ethers.Contract(DEXTER_GOV_ADDRESS, govAbi, signer);
+				const tx = await govContractWrite.vote(proposalId);
+				btn.innerText = "Confirmando Tx...";
+				const receipt = await tx.wait();
+
+				btn.innerText = "Registrando...";
+				
+				// Confirmar al Go Server
+				const response = await fetch('/api/confirm-vote', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						wallet: userAddress,
+						proposalId: proposalId,
+						txHash: receipt.hash
+					})
+				});
+
+				if (response.ok) {
+					alert('¡Voto registrado en Blockchain con éxito! Tu peso de voto basado en tu saldo DXT ha sido aplicado.');
+					location.reload();
+				} else {
+					alert('Voto firmado en blockchain, pero hubo un error al sincronizar con el servidor.');
+					btn.disabled = false;
+					btn.innerText = origText;
+				}
+			} catch (e) {
+				console.error(e);
+				alert('Error al votar: ' + (e.reason || e.message));
+			}
+		}
+
+		async function crearPropuestaBlockchain() {
+			const descInput = document.getElementById('new-proposal-desc');
+			const desc = descInput.value.trim();
+			if (!desc) {
+				alert('Por favor escribe la descripción de tu postulación/propuesta.');
+				return;
+			}
+
+			if (typeof window.ethereum === 'undefined') {
+				alert('MetaMask no detectado.');
+				return;
+			}
+
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const signer = await provider.getSigner();
+
+				const govAbi = [
+					"function createProposal(string calldata _description) external"
+				];
+				const govContract = new ethers.Contract(DEXTER_GOV_ADDRESS, govAbi, signer);
+
+				const btn = document.getElementById('btn-create-proposal');
+				const origText = btn.innerText;
+				btn.disabled = true;
+				btn.innerText = "Firmando Transacción...";
+
+				const tx = await govContract.createProposal(desc);
+				btn.innerText = "Confirmando Postulación...";
+				await tx.wait();
+
+				btn.innerText = "¡Postulación Publicada!";
+				alert('¡Propuesta de gobernanza publicada en la blockchain con éxito!');
+				descInput.value = "";
+				location.reload();
+			} catch (e) {
+				console.error(e);
+				alert('Error al postular propuesta: ' + (e.reason || e.message));
+				const btn = document.getElementById('btn-create-proposal');
+				btn.disabled = false;
+				btn.innerText = "ENVIAR POSTULACIÓN A BLOCKCHAIN";
+			}
+		}
 
 		async function vincularContrato(contractAddr = null) {
 			if (!contractAddr) {
@@ -465,75 +1000,88 @@
 				document.getElementById('token-symbol').innerText = '...';
 				document.getElementById('blockchain-balance').innerText = '...';
 
-				const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-				if (accounts.length === 0) {
-					alert('Por favor abre tu MetaMask e inicia sesión.');
-					return;
-				}
-				const wallet = accounts[0];
-
-				// 1. Obtener decimales
-				// selector decimals(): 0x313ce567
-				const decimalsHex = await window.ethereum.request({
-					method: 'eth_call',
-					params: [{ to: contractAddr, data: '0x313ce567' }, 'latest']
-				});
-				const decimals = parseInt(decimalsHex, 16) || 18;
-
-				// 2. Obtener Balance
-				// selector balanceOf(address): 0x70a08231
-				const walletPadding = wallet.substring(2).padStart(64, '0');
-				const balanceHex = await window.ethereum.request({
-					method: 'eth_call',
-					params: [{ to: contractAddr, data: '0x70a08231' + walletPadding }, 'latest']
-				});
+				// Inicializar Ethers Provider
+				let provider = new ethers.BrowserProvider(window.ethereum);
 				
-				// Convertir balance
-				const balanceBigInt = BigInt(balanceHex);
-				const balanceFormatted = Number(balanceBigInt) / (10 ** decimals);
+				// Solicitar conexión de cuenta antes de intentar cambiar de red
+				await provider.send("eth_requestAccounts", []);
 
-				// 3. Obtener Símbolo
-				// selector symbol(): 0x95d89b41
-				let symbol = "DXT";
-				try {
-					const symbolHex = await window.ethereum.request({
-						method: 'eth_call',
-						params: [{ to: contractAddr, data: '0x95d89b41' }, 'latest']
-					});
-					if (symbolHex && symbolHex !== '0x') {
-						const length = parseInt(symbolHex.substring(66, 130), 16);
-						if (length > 0 && length < 32) {
-							const stringData = symbolHex.substring(130, 130 + length * 2);
-							let parsedSymbol = '';
-							for (let i = 0; i < stringData.length; i += 2) {
-								parsedSymbol += String.fromCharCode(parseInt(stringData.substring(i, i + 2), 16));
+				// Cambiar de red programáticamente si está en otra red
+				let network = await provider.getNetwork();
+				let chainId = Number(network.chainId);
+				if (chainId !== TARGET_CHAIN_ID) {
+					console.log(`Cambio de red programático a ${TARGET_NETWORK_NAME} (${TARGET_CHAIN_ID})...`);
+					try {
+						await window.ethereum.request({
+							method: 'wallet_switchEthereumChain',
+							params: [{ chainId: TARGET_CHAIN_HEX }],
+						});
+						// Re-instanciar provider después de cambiar de red
+						provider = new ethers.BrowserProvider(window.ethereum);
+					} catch (switchError) {
+						if (switchError.code === 4902) {
+							try {
+								await window.ethereum.request({
+									method: 'wallet_addEthereumChain',
+									params: [{
+										chainId: TARGET_CHAIN_HEX,
+										chainName: TARGET_NETWORK_NAME,
+										rpcUrls: [TARGET_RPC_URL],
+										nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+									}],
+								});
+								// Re-instanciar provider después de agregar y cambiar de red
+								provider = new ethers.BrowserProvider(window.ethereum);
+							} catch (addError) {
+								console.error("Error al agregar la red:", addError);
 							}
-							if (parsedSymbol) symbol = parsedSymbol;
+						} else {
+							console.error("Error al cambiar de red:", switchError);
 						}
 					}
+				}
+
+				const readProvider = await getReadProvider(provider);
+				const signer = await provider.getSigner();
+				const wallet = await signer.getAddress();
+
+				// Verificar si el contrato tiene código
+				const code = await readProvider.getCode(contractAddr);
+				if (code === "0x" || code === "0x0" || code === "0x00") {
+					alert(`¡Código Vacío! No hay ningún contrato inteligente desplegado en la dirección ${contractAddr} en la red activa de tu MetaMask.\n\nPor favor, asegúrate de estar en la red de Hardhat Local y de haber desplegado los contratos.`);
+					document.getElementById('contract-info').style.display = 'none';
+					return;
+				}
+
+				// ABI básica de ERC20
+				const tokenAbi = [
+					"function decimals() public view returns (uint8)",
+					"function balanceOf(address account) public view returns (uint256)",
+					"function symbol() public view returns (string)",
+					"function name() public view returns (string)"
+				];
+
+				const tokenContract = new ethers.Contract(contractAddr, tokenAbi, readProvider);
+
+				// 1. Obtener decimales
+				const decimals = await tokenContract.decimals();
+
+				// 2. Obtener Balance
+				const balanceBigInt = await tokenContract.balanceOf(wallet);
+				const balanceFormatted = Number(balanceBigInt) / (10 ** Number(decimals));
+
+				// 3. Obtener Símbolo
+				let symbol = "DXT";
+				try {
+					symbol = await tokenContract.symbol();
 				} catch (e) {
 					console.log("No se pudo obtener el símbolo, usando DXT por defecto");
 				}
 
 				// 4. Obtener Nombre
-				// selector name(): 0x06fdde03
 				let tokenName = "Dexter Token";
 				try {
-					const nameHex = await window.ethereum.request({
-						method: 'eth_call',
-						params: [{ to: contractAddr, data: '0x06fdde03' }, 'latest']
-					});
-					if (nameHex && nameHex !== '0x') {
-						const length = parseInt(nameHex.substring(66, 130), 16);
-						if (length > 0 && length < 64) {
-							const stringData = nameHex.substring(130, 130 + length * 2);
-							let parsedName = '';
-							for (let i = 0; i < stringData.length; i += 2) {
-								parsedName += String.fromCharCode(parseInt(stringData.substring(i, i + 2), 16));
-							}
-							if (parsedName) tokenName = parsedName;
-						}
-					}
+					tokenName = await tokenContract.name();
 				} catch (e) {
 					console.log("No se pudo obtener el nombre, usando Dexter Token por defecto");
 				}
@@ -548,11 +1096,240 @@
 				// Guardar en el navegador
 				localStorage.setItem('dxt_contract_address', contractAddr);
 
+				// Si el contrato conectado coincide con el DXT_TOKEN_ADDRESS, cargar la gobernanza
+				if (DEXTER_GOV_ADDRESS) {
+					cargarGobernanzaBlockchain();
+				}
+
 			} catch (error) {
 				console.error(error);
-				alert('Error al leer el contrato. Asegúrate de que el contrato esté en la red seleccionada en tu MetaMask.');
+				alert('Error al leer el contrato: ' + error.message + '\nDetalle: ' + (error.stack || JSON.stringify(error)));
 				document.getElementById('contract-info').style.display = 'none';
 			}
+		}
+
+		function copiarDireccionCompleta() {
+			const address = document.getElementById('wallet-full-address').innerText.trim();
+			navigator.clipboard.writeText(address).then(() => {
+				alert('¡Dirección copiada al portapapeles con éxito!');
+			}).catch(err => {
+				console.error('Error al copiar dirección: ', err);
+			});
+		}
+
+		// Hacer los ajolotes arrastrables y burbujas del estanque
+		document.addEventListener('DOMContentLoaded', () => {
+			const pond = document.getElementById('sanctuary-pond');
+			const bubblesContainer = document.getElementById('pond-bubbles');
+			
+			// Generar burbujas dinámicas de fondo
+			if (bubblesContainer) {
+				const numBubbles = 15;
+				for (let i = 0; i < numBubbles; i++) {
+					const bubble = document.createElement('div');
+					bubble.className = 'bubble-particle';
+					const size = Math.random() * 8 + 4; // 4px a 12px
+					bubble.style.width = size + 'px';
+					bubble.style.height = size + 'px';
+					bubble.style.left = Math.random() * 100 + '%';
+					bubble.style.animationDelay = Math.random() * 8 + 's';
+					bubble.style.animationDuration = Math.random() * 4 + 6 + 's'; // 6s a 10s
+					bubblesContainer.appendChild(bubble);
+				}
+			}
+
+			// Implementación de arrastre (drag-and-drop) y Nado Dinámico Realista
+			const axolotls = document.querySelectorAll('.floating-axolotl');
+			const axStates = new Map();
+
+			axolotls.forEach((ax, idx) => {
+				// Remover cualquier animación residual
+				ax.style.animation = 'none';
+
+				// Inicializar estado de nado dinámico
+				const state = {
+					x: parseFloat(ax.style.left) || (15 + idx * 12),
+					y: parseFloat(ax.style.top) || (20 + (idx % 2) * 20),
+					vx: (Math.random() - 0.5) * 0.06,
+					vy: (Math.random() - 0.5) * 0.04,
+					angle: 0,
+					targetAngle: 0,
+					isDragging: false,
+					lastWander: Date.now() + Math.random() * 2000
+				};
+				axStates.set(ax, state);
+
+				let startX, startY;
+
+				ax.addEventListener('mousedown', (e) => {
+					state.isDragging = true;
+					state.vx = 0;
+					state.vy = 0;
+					ax.style.zIndex = '100';
+
+					const rect = ax.getBoundingClientRect();
+					const pondRect = pond.getBoundingClientRect();
+
+					startX = e.clientX - (rect.left - pondRect.left);
+					startY = e.clientY - (rect.top - pondRect.top);
+
+					e.preventDefault();
+				});
+
+				document.addEventListener('mousemove', (e) => {
+					if (!state.isDragging) return;
+
+					const pondRect = pond.getBoundingClientRect();
+					let x = e.clientX - pondRect.left - startX;
+					let y = e.clientY - pondRect.top - startY;
+
+					const maxX = pondRect.width - ax.offsetWidth;
+					const maxY = pondRect.height - ax.offsetHeight;
+
+					x = Math.max(0, Math.min(x, maxX));
+					y = Math.max(0, Math.min(y, maxY));
+
+					state.x = (x / pondRect.width) * 100;
+					state.y = (y / pondRect.height) * 100;
+
+					ax.style.left = state.x + '%';
+					ax.style.top = state.y + '%';
+				});
+
+				document.addEventListener('mouseup', () => {
+					if (!state.isDragging) return;
+					state.isDragging = false;
+					ax.style.zIndex = '10';
+					// Darle un empujón inicial aleatorio al soltar para que empiece a nadar
+					state.vx = (Math.random() - 0.5) * 0.07;
+					state.vy = (Math.random() - 0.5) * 0.05;
+				});
+
+				// Soporte para pantallas táctiles (móviles)
+				ax.addEventListener('touchstart', (e) => {
+					state.isDragging = true;
+					state.vx = 0;
+					state.vy = 0;
+					ax.style.zIndex = '100';
+
+					const touch = e.touches[0];
+					const rect = ax.getBoundingClientRect();
+					const pondRect = pond.getBoundingClientRect();
+
+					startX = touch.clientX - (rect.left - pondRect.left);
+					startY = touch.clientY - (rect.top - pondRect.top);
+				});
+
+				document.addEventListener('touchmove', (e) => {
+					if (!state.isDragging) return;
+
+					const touch = e.touches[0];
+					const pondRect = pond.getBoundingClientRect();
+					let x = touch.clientX - pondRect.left - startX;
+					let y = touch.clientY - pondRect.top - startY;
+
+					const maxX = pondRect.width - ax.offsetWidth;
+					const maxY = pondRect.height - ax.offsetHeight;
+
+					x = Math.max(0, Math.min(x, maxX));
+					y = Math.max(0, Math.min(y, maxY));
+
+					state.x = (x / pondRect.width) * 100;
+					state.y = (y / pondRect.height) * 100;
+
+					ax.style.left = state.x + '%';
+					ax.style.top = state.y + '%';
+				});
+
+				document.addEventListener('touchend', () => {
+					if (!state.isDragging) return;
+					state.isDragging = false;
+					ax.style.zIndex = '10';
+					state.vx = (Math.random() - 0.5) * 0.07;
+					state.vy = (Math.random() - 0.5) * 0.05;
+				});
+			});
+
+			// Loop de Animación de Nado Dinámico
+			function updateNado() {
+				axStates.forEach((state, ax) => {
+					if (state.isDragging) {
+						// Efecto al arrastrar (ligera inclinación de balanceo)
+						ax.style.transform = `scale(1.08) rotate(${Math.sin(Date.now() / 150) * 4}deg)`;
+						return;
+					}
+
+					// Cambio de dirección ocasional (vagar por el estanque de forma orgánica)
+					const ahora = Date.now();
+					if (ahora - state.lastWander > Math.random() * 4000 + 3000) {
+						const anguloRandom = Math.random() * Math.PI * 2;
+						const impulso = Math.random() * 0.04 + 0.01;
+						state.vx += Math.cos(anguloRandom) * impulso;
+						state.vy += Math.sin(anguloRandom) * impulso;
+						state.lastWander = ahora;
+					}
+
+					// Fricción del agua para suavizar movimiento
+					state.vx *= 0.985;
+					state.vy *= 0.985;
+
+					// Limitar velocidades mínima y máxima para nado calmado
+					const velActual = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+					const velMin = 0.015;
+					const velMax = 0.06;
+					if (velActual < velMin) {
+						state.vx = (state.vx / (velActual || 1)) * velMin;
+						state.vy = (state.vy / (velActual || 1)) * velMin;
+					} else if (velActual > velMax) {
+						state.vx = (state.vx / velActual) * velMax;
+						state.vy = (state.vy / velActual) * velMax;
+					}
+
+					// Actualizar coordenadas
+					state.x += state.vx;
+					state.y += state.vy;
+
+					// Colisiones con bordes del estanque con rebote suave
+					const rebote = -0.8;
+					if (state.x < 2) { state.x = 2; state.vx *= rebote; }
+					if (state.x > 88) { state.x = 88; state.vx *= rebote; }
+					if (state.y < 2) { state.y = 2; state.vy *= rebote; }
+					if (state.y > 80) { state.y = 80; state.vy *= rebote; }
+
+					// Determinar hacia dónde mira el ajolote (giro horizontal scaleX)
+					const flip = state.vx < 0 ? -1 : 1;
+
+					// Calcular inclinación vertical según dirección de nado
+					state.targetAngle = Math.atan2(state.vy * 1.5, Math.abs(state.vx)) * 180 / Math.PI;
+					state.angle += (state.targetAngle - state.angle) * 0.08;
+
+					// Wiggle (movimiento oscilatorio de la cola/cuerpo al nadar)
+					const frecuenciaWiggle = 0.007;
+					const amplitudWiggle = 3.5;
+					const wiggle = Math.sin(Date.now() * frecuenciaWiggle) * amplitudWiggle;
+					
+					const anguloFinal = state.angle + wiggle;
+
+					// Aplicar coordenadas y transformación CSS
+					ax.style.left = state.x + '%';
+					ax.style.top = state.y + '%';
+					ax.style.transform = `scaleX(${flip}) rotate(${anguloFinal}deg)`;
+				});
+				requestAnimationFrame(updateNado);
+			}
+
+			// Iniciar ciclo de nado si hay ajolotes en el estanque
+			if (axolotls.length > 0) {
+				updateNado();
+			}
+		});
+		function copiarDireccionCompleta() {
+			const address = document.getElementById('wallet-full-address').innerText.trim();
+			navigator.clipboard.writeText(address).then(() => {
+				alert('¡Dirección copiada al portapapeles con éxito!');
+			}).catch(err => {
+				console.error('Error al copiar dirección: ', err);
+			});
 		}
 	</script>
 </body>

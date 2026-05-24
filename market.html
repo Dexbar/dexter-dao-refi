@@ -7,6 +7,7 @@
     <meta name="description" content="Compra y vende NFTs exclusivos del ecosistema Dexter DAO con tokens DXT." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
         :root {
             --bg: #060610;
@@ -453,12 +454,11 @@
                 <div><span>{{.Vendidos}} / {{.MaxSupply}}</span></div>
             </div>
 
-            <form method="POST" action="/market">
-                <input type="hidden" name="buy" value="{{.Key}}" />
-                <button type="submit" class="btn-buy btn-buy-buy" {{if $soldOut}}disabled{{end}}>
+            <div>
+                <button type="button" id="btn-{{.Key}}" class="btn-buy btn-buy-buy" {{if $soldOut}}disabled{{end}} onclick="comprarNFTBlockchain('{{.Key}}', {{.Price}})">
                     {{if $soldOut}}SOLD OUT{{else}}Comprar NFT{{end}}
                 </button>
-            </form>
+            </div>
         </div>
     </div>
     {{end}}
@@ -470,13 +470,30 @@
 </footer>
 
 <script>
-    // Dirección del contrato desplegado localmente (actualiza esto cuando despliegues a Sepolia)
-    const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    // Dirección del contrato DXT
+    const CONTRACT_ADDRESS = "{{.TokenAddress}}";
+    const DEXTER_NFT_ADDRESS = "{{.NFTAddress}}";
+    const DEXTER_NETWORK = "{{.Network}}";
+
+    // Configuración dinámica de red
+    let TARGET_CHAIN_ID = 31337;
+    let TARGET_CHAIN_HEX = "0x7a69";
+    let TARGET_NETWORK_NAME = "Hardhat Local";
+    let TARGET_RPC_URL = "http://localhost:8545";
+
+    if (DEXTER_NETWORK === "sepolia") {
+        TARGET_CHAIN_ID = 11155111;
+        TARGET_CHAIN_HEX = "0xaa36a7";
+        TARGET_NETWORK_NAME = "Red de prueba Sepolia";
+        TARGET_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com";
+    }
 
     // Mostrar dirección en el footer
     if (CONTRACT_ADDRESS) {
         document.getElementById('contract-addr-display').innerText =
             CONTRACT_ADDRESS.slice(0, 6) + '···' + CONTRACT_ADDRESS.slice(-4);
+    } else {
+        document.getElementById('contract-addr-display').innerText = "No desplegado";
     }
 
     async function conectarMetaMask() {
@@ -505,20 +522,166 @@
         }
     }
 
+    async function getReadProvider(browserProvider) {
+        try {
+            const network = await browserProvider.getNetwork();
+            if (Number(network.chainId) === TARGET_CHAIN_ID) {
+                const localProv = new ethers.JsonRpcProvider(TARGET_RPC_URL);
+                await localProv.getNetwork();
+                return localProv;
+            }
+        } catch (e) {
+            console.warn("No se pudo conectar directamente al JsonRpcProvider de la red", e);
+        }
+        return browserProvider;
+    }
+
     async function leerBalance(wallet) {
         if (!CONTRACT_ADDRESS || !window.ethereum) return;
         try {
-            const walletPad = wallet.substring(2).padStart(64, '0');
-            const balHex = await window.ethereum.request({
-                method: 'eth_call',
-                params: [{ to: CONTRACT_ADDRESS, data: '0x70a08231' + walletPad }, 'latest']
-            });
-            const balBig = BigInt(balHex);
-            const bal = Number(balBig) / 1e18;
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const readProvider = await getReadProvider(provider);
+            const tokenAbi = [
+                "function balanceOf(address account) public view returns (uint256)"
+            ];
+            const tokenContract = new ethers.Contract(CONTRACT_ADDRESS, tokenAbi, readProvider);
+            const balance = await tokenContract.balanceOf(wallet);
+            const bal = Number(balance) / 1e18;
             document.getElementById('dxt-balance-display').innerText =
                 bal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DXT';
         } catch (e) {
             console.warn('No se pudo leer balance del contrato:', e.message);
+        }
+    }
+
+    async function comprarNFTBlockchain(key, price) {
+        if (typeof window.ethereum === 'undefined') {
+            alert('MetaMask no está detectado. Por favor instálalo en tu navegador.');
+            return;
+        }
+
+        try {
+            const tokenAddr = CONTRACT_ADDRESS;
+            const nftAddr = DEXTER_NFT_ADDRESS;
+
+            if (!tokenAddr || !nftAddr) {
+                alert('Los contratos del ecosistema no se han desplegado todavía. Por favor despliega los contratos en tu red local o testnet.');
+                return;
+            }
+
+            const provider = new ethers.BrowserProvider(window.ethereum);
+
+            // Cambiar de red programáticamente si está en otra red
+            let network = await provider.getNetwork();
+            let chainId = Number(network.chainId);
+            if (chainId !== TARGET_CHAIN_ID) {
+                console.log(`Cambio de red programático a ${TARGET_NETWORK_NAME} (${TARGET_CHAIN_ID})...`);
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: TARGET_CHAIN_HEX }],
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: TARGET_CHAIN_HEX,
+                                    chainName: TARGET_NETWORK_NAME,
+                                    rpcUrls: [TARGET_RPC_URL],
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+                                }],
+                            });
+                        } catch (addError) {
+                            console.error("Error al agregar la red:", addError);
+                        }
+                    } else {
+                        console.error("Error al cambiar de red:", switchError);
+                    }
+                }
+            }
+
+            const readProvider = await getReadProvider(provider);
+            const signer = await provider.getSigner();
+            const userAddress = await signer.getAddress();
+
+            // Definir ABIs mínimas
+            const tokenAbi = [
+                "function approve(address spender, uint256 amount) public returns (bool)",
+                "function balanceOf(address account) public view returns (uint256)",
+                "function allowance(address owner, address spender) public view returns (uint256)"
+            ];
+            
+            const nftAbi = [
+                "function mintNFT(uint256 nftType) public returns (uint256)"
+            ];
+
+            const tokenContractRead = new ethers.Contract(tokenAddr, tokenAbi, readProvider);
+            const tokenContractWrite = new ethers.Contract(tokenAddr, tokenAbi, signer);
+            const nftContractWrite = new ethers.Contract(nftAddr, nftAbi, signer);
+
+            const priceWei = ethers.parseUnits(price.toString(), 18);
+
+            // Verificar saldo del token
+            const balance = await tokenContractRead.balanceOf(userAddress);
+            if (balance < priceWei) {
+                alert(`Saldo DXT insuficiente. Tienes ${ethers.formatUnits(balance, 18)} DXT y necesitas ${price} DXT.`);
+                return;
+            }
+
+            const btn = document.getElementById(`btn-${key}`);
+            const origText = btn.innerText;
+            btn.disabled = true;
+
+            // Verificar allowance actual
+            const allowance = await tokenContractRead.allowance(userAddress, nftAddr);
+            if (allowance < priceWei) {
+                btn.innerText = "Aprobando DXT...";
+                console.log("Aprobando DXT para contrato NFT...");
+                const approveTx = await tokenContractWrite.approve(nftAddr, priceWei);
+                await approveTx.wait();
+                console.log("Aprobación exitosa!");
+            }
+
+            btn.innerText = "Acuñando NFT...";
+            console.log("Acuñando NFT en Blockchain...");
+            
+            // Mapear key a tipo
+            const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero"];
+            const nftType = nftKeys.indexOf(key);
+
+            const mintTx = await nftContractWrite.mintNFT(nftType);
+            btn.innerText = "Confirmando Tx...";
+            const receipt = await mintTx.wait();
+            console.log("Acuñado exitosamente! Hash:", receipt.hash);
+
+            btn.innerText = "Guardando en Bóveda...";
+            
+            // Enviar notificación al servidor local Go
+            const response = await fetch('/api/confirm-nft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    wallet: userAddress,
+                    key: key,
+                    txHash: receipt.hash
+                })
+            });
+
+            if (response.ok) {
+                alert(`¡Felicidades! NFT Acuñado exitosamente en la blockchain. \nTxHash: ${receipt.hash}`);
+                location.reload();
+            } else {
+                alert('NFT acuñado en Blockchain pero hubo un problema al sincronizar con tu Bóveda local.');
+                btn.disabled = false;
+                btn.innerText = origText;
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert('Transacción fallida: ' + (error.reason || error.message));
+            location.reload();
         }
     }
 

@@ -9,8 +9,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -97,8 +99,8 @@ var marketItems = []MarketItem{{
 	DisplayName: "Ajolote Supremo",
 	Price:       5000,
 	Name:        "supremo",
-	MaxSupply:   1,
-	Rarity:      "Único (1/1)",
+	MaxSupply:   5,
+	Rarity:      "Limitado (5)",
 	Description: "Soberano absoluto de la blockchain. Una sola copia existente en el universo.",
 	Elemento:    "Cósmico/Oro",
 	Poder:       100,
@@ -118,6 +120,10 @@ var marketItems = []MarketItem{{
 }}
 
 func manejadorMarket(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+
     // Load the current user profile (same logic as manejadorPrincipal)
     cookie, err := r.Cookie("sesion")
     if err != nil || cookie.Value == "" {
@@ -182,17 +188,25 @@ func manejadorMarket(w http.ResponseWriter, r *http.Request) {
 	proximoDrop := time.Date(siguienteAño, siguienteMes, 1, 0, 0, 0, 0, ahoraTime.Location())
 	proximoDropUnix := proximoDrop.Unix()
 
+	addrs := cargarDirecciones()
+
 	// Render the marketplace page
 	data := struct {
 		Items           []MarketItem
 		Year            int
 		Mensaje         string
 		ProximoDropUnix int64
+		TokenAddress    string
+		NFTAddress      string
+		Network         string
 	}{
 		Items:           renderedItems,
 		Year:            time.Now().Year(),
 		Mensaje:         mensajeNotif,
 		ProximoDropUnix: proximoDropUnix,
+		TokenAddress:    addrs.DexterDAO,
+		NFTAddress:      addrs.DexterNFT,
+		Network:         addrs.Network,
 	}
     tmpl, _ := template.ParseFiles("market.html")
     tmpl.Execute(w, data)
@@ -206,6 +220,7 @@ type Database map[string]UserProfile
 
 type PageData struct {
 	User            string
+	WalletCompleta  string
 	Balance         int
 	ValorPesos      int
 	Mensaje         string
@@ -220,17 +235,90 @@ type PageData struct {
 	TieneChinampero bool
 	DiscordWebhook  string
 	TokenAddress    string
+	NFTAddress      string
+	GovAddress      string
 	ContractAddress string
 	UltimoReclamo   int64
 	TiempoRestante  int64
+	Network         string
 }
 
-const RUTA_MAESTRO = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_maestro_nft_1778945173814.png`
-const RUTA_ASTRONAUTA = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_astronauta_legendario_1778912778060.png`
-const RUTA_QUETZAL = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_quetzalcoatl_nft_1778943251774.png`
-const RUTA_ANDROIDE = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_androide_1779299408180.png`
-const RUTA_SUPREMO = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\ajolote_supremo_1779386438430.png`
-const RUTA_CHINAMPERO = `C:\Users\USER\.gemini\antigravity\brain\eced84e9-d0f1-4b46-9e99-a26952f5bb56\axolote_chinampero_1779406931630.png`
+type DeployedAddresses struct {
+	DexterDAO string `json:"DexterDAO"`
+	DexterNFT string `json:"DexterNFT"`
+	DexterGov string `json:"DexterGov"`
+	Network   string `json:"network"`
+}
+
+func cargarDirecciones() DeployedAddresses {
+	datos, err := os.ReadFile("deployed_addresses.json")
+	var addr DeployedAddresses
+	if err == nil {
+		json.Unmarshal(datos, &addr)
+	}
+	return addr
+}
+
+func mintearTokensBlockchain(network string, recipient string, amount int) (string, error) {
+	netParam := network
+	if netParam == "" {
+		netParam = "hardhat"
+	}
+	if netParam == "hardhat" {
+		netParam = "localhost"
+	}
+
+	cmd := exec.Command("node", "scripts/mint_tokens.js", recipient, strconv.Itoa(amount))
+	cmd.Env = append(os.Environ(),
+		"HARDHAT_NETWORK="+netParam,
+	)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	output := stdout.String()
+
+	// Buscar confirmacion en la salida antes de validar errores de ejecucion (ej. crashes de libuv al salir)
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "MINT_SUCCESS:") {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 2 {
+				return parts[1], nil
+			}
+		}
+	}
+
+	if err != nil {
+		return "", fmt.Errorf("ejecucion fallida: %v, stderr: %s, stdout: %s", err, stderr.String(), output)
+	}
+
+	return "", fmt.Errorf("no se encontro confirmacion en salida: %s", output)
+}
+
+
+type ConfirmNFTRequest struct {
+	Wallet string `json:"wallet"`
+	Key    string `json:"key"`
+	TxHash string `json:"txHash"`
+}
+
+type ConfirmVoteRequest struct {
+	Wallet     string `json:"wallet"`
+	ProposalID int    `json:"proposalId"`
+	TxHash     string `json:"txHash"`
+}
+
+
+const RUTA_MAESTRO = `assets/ajolote_maestro.png`
+const RUTA_ASTRONAUTA = `assets/ajolote_astronauta.png`
+const RUTA_QUETZAL = `assets/ajolote_quetzal.png`
+const RUTA_ANDROIDE = `assets/ajolote_androide.png`
+const RUTA_SUPREMO = `assets/ajolote_supremo.png`
+const RUTA_CHINAMPERO = `assets/ajolote_chinampero.png`
 
 func enviarDiscord(webhookURL string, titulo string, descripcion string, color int, imagePath string) {
 	if webhookURL == "" {
@@ -316,8 +404,17 @@ func cargarDB() Database {
 }
 
 func guardarDB(db Database) {
-	datosJSON, _ := json.MarshalIndent(db, "", "  ")
-	os.WriteFile("db.json", datosJSON, 0644)
+	datosJSON, err := json.MarshalIndent(db, "", "  ")
+	if err != nil {
+		fmt.Printf("Error al serializar DB: %v\n", err)
+		return
+	}
+	err = os.WriteFile("db.json", datosJSON, 0644)
+	if err != nil {
+		fmt.Printf("Error al escribir db.json en disco: %v\n", err)
+	} else {
+		fmt.Println("db.json guardada exitosamente en disco")
+	}
 }
 
 func agregarHistorial(perfil *UserProfile, msg string) {
@@ -354,6 +451,10 @@ func obtenerCantidadVendida(db Database, key string) int {
 }
 
 func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+
 	cookie, err := r.Cookie("sesion")
 	
 	if r.FormValue("accion") == "logout" {
@@ -374,6 +475,7 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
 	}
 	db := cargarDB()
+	addrs := cargarDirecciones()
 	
 	// Buscar el perfil de esta billetera. Si no existe, crear uno virgen.
 	perfil, existe := db[wallet]
@@ -434,10 +536,29 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 					bonoMsg = " (Bono 1.5x Chinampero Activo! 🌾)"
 				}
 				pago := horas * basePago
-				perfil.Balance += pago
-				agregarHistorial(&perfil, fmt.Sprintf("+%d TK minados (%d hrs)%s", pago, horas, bonoMsg))
-				mensajeNotif = fmt.Sprintf("¡Chamba registrada! +%d TK%s", pago, bonoMsg)
-				enviarDiscord(perfil.DiscordWebhook, "⛏️ Chamba Minera Registrada", fmt.Sprintf("Billetera: `%s`\n**Horas trabajadas:** %d hrs\n**Tokens minados:** +%d TK%s\n**Saldo actual:** %d TK", displayWallet, horas, pago, bonoMsg, perfil.Balance), 16766720, "") // Oro
+
+				// Intentar mintear on-chain
+				if addrs.DexterDAO == "" {
+					mensajeNotif = "Error: El token DXT no ha sido desplegado todavía."
+				} else {
+					txHash, err := mintearTokensBlockchain(addrs.Network, wallet, pago)
+					if err != nil {
+						mensajeNotif = fmt.Sprintf("Error al minar on-chain: %v", err)
+					} else {
+						perfil.Balance += pago
+						agregarHistorial(&perfil, fmt.Sprintf("+%d DXT minados on-chain (Tx: %s)%s", pago, txHash, bonoMsg))
+						mensajeNotif = fmt.Sprintf("¡Chamba registrada on-chain! +%d DXT%s (Tx: %s)", pago, bonoMsg, txHash[:10]+"...")
+						
+						txLink := fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", txHash)
+						if addrs.Network == "alfajores" {
+							txLink = fmt.Sprintf("https://celo-alfajores.blockscout.com/tx/%s", txHash)
+						} else if addrs.Network == "hardhat" || addrs.Network == "localhost" {
+							txLink = "Red Local (Hardhat)"
+						}
+						
+						enviarDiscord(perfil.DiscordWebhook, "⛏️ Chamba Minera Realizada On-Chain", fmt.Sprintf("Billetera: `%s`\n**Horas trabajadas:** %d hrs\n**Tokens minados:** +%d DXT%s\n**Transacción:** %s\n**Saldo actual:** %d DXT", displayWallet, horas, pago, bonoMsg, txLink, perfil.Balance), 16766720, "") // Oro
+					}
+				}
 			}
 		}
 
@@ -586,8 +707,15 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Si el contrato guardado es diferente al token DXT desplegado, lo actualizamos al correcto para evitar errores
+	if addrs.DexterDAO != "" && perfil.ContractAddress != addrs.DexterDAO {
+		perfil.ContractAddress = addrs.DexterDAO
+		db[wallet] = perfil
+	}
+
 	datosHTML := PageData{
 		User:            displayWallet,
+		WalletCompleta:  wallet,
 		Balance:         perfil.Balance,
 		ValorPesos:      perfil.Balance * 2,
 		Mensaje:         mensajeNotif,
@@ -601,13 +729,156 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		TieneSupremo:    tieneItem(perfil.Inventario, "supremo"),
 		TieneChinampero: tieneItem(perfil.Inventario, "chinampero"),
 		DiscordWebhook:  perfil.DiscordWebhook,
+		TokenAddress:    addrs.DexterDAO,
+		NFTAddress:      addrs.DexterNFT,
+		GovAddress:      addrs.DexterGov,
 		ContractAddress: perfil.ContractAddress,
 		UltimoReclamo:   perfil.UltimoReclamo,
 		TiempoRestante:  tiempoRestante,
+		Network:         addrs.Network,
 	}
 
 	tmpl, _ := template.ParseFiles("index.html")
 	tmpl.Execute(w, datosHTML)
+}
+
+func manejadorConfirmNFT(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+	var req ConfirmNFTRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	wallet := strings.ToLower(req.Wallet)
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe {
+		perfil = UserProfile{Balance: 0, Inventario: []string{}, Historial: []string{}}
+	}
+
+	// Encontrar el item en la lista para obtener el precio y nombre real
+	var itemDef MarketItem
+	encontrado := false
+	for _, item := range marketItems {
+		if item.Key == req.Key {
+			itemDef = item
+			encontrado = true
+			break
+		}
+	}
+
+	if !encontrado {
+		http.Error(w, "NFT no encontrado", http.StatusNotFound)
+		return
+	}
+
+	// Restar el balance local (simulado) para que coincida, o solo registrar si deseamos.
+	if perfil.Balance >= itemDef.Price {
+		perfil.Balance -= itemDef.Price
+	} else {
+		perfil.Balance = 0 // Si fue comprado directamente con fondos on-chain, sincronizamos
+	}
+
+	perfil.Inventario = append(perfil.Inventario, itemDef.Name)
+	msgHistorial := fmt.Sprintf("-%d TK Compra en Blockchain de %s (Tx: %s)", itemDef.Price, itemDef.Name, req.TxHash)
+	agregarHistorial(&perfil, msgHistorial)
+	
+	// Guardar en la DB
+	db[wallet] = perfil
+	guardarDB(db)
+
+	// Mandar alerta a Discord
+	var color int = 0x00ff00
+	if req.Key == "supremo" {
+		color = 16766720 // Oro
+	} else if req.Key == "chinampero" {
+		color = 0x00ff66 // Verde Chinampa
+	}
+	
+	displayWallet := wallet
+	if len(wallet) > 10 {
+		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
+	}
+
+	txLink := fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", req.TxHash)
+	if req.TxHash == "local" || len(req.TxHash) < 10 {
+		txLink = "Red Local (Hardhat)"
+	}
+
+	enviarDiscord(
+		perfil.DiscordWebhook,
+		"⛓️ ¡NFT ACUÑADO EN BLOCKCHAIN REAL!",
+		fmt.Sprintf("Billetera: `%s` ha acuñado con éxito **%s** por **%d DXT**.\n\n**Transacción:** %s\n\n¡El NFT ahora reside en la blockchain y en su bóveda!", displayWallet, itemDef.DisplayName, itemDef.Price, txLink),
+		color,
+		itemDef.ImgPath,
+	)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("confirmado"))
+}
+
+func manejadorConfirmVote(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+	var req ConfirmVoteRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	wallet := strings.ToLower(req.Wallet)
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe {
+		perfil = UserProfile{Balance: 0, Inventario: []string{}, Historial: []string{}}
+	}
+
+	var propuesta string
+	if req.ProposalID == 0 {
+		perfil.VotosRobot++
+		propuesta = "🤖 NUEVO NFT: ROBOT"
+	} else if req.ProposalID == 1 {
+		perfil.VotosPago++
+		propuesta = "💰 SUBIR PAGO"
+	} else {
+		propuesta = fmt.Sprintf("Propuesta #%d", req.ProposalID)
+	}
+
+	msgHistorial := fmt.Sprintf("Voto firmado en Blockchain: %s (Tx: %s)", propuesta, req.TxHash)
+	agregarHistorial(&perfil, msgHistorial)
+
+	// Guardar en la DB
+	db[wallet] = perfil
+	guardarDB(db)
+
+	displayWallet := wallet
+	if len(wallet) > 10 {
+		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
+	}
+
+	txLink := fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", req.TxHash)
+	if req.TxHash == "local" || len(req.TxHash) < 10 {
+		txLink = "Red Local (Hardhat)"
+	}
+
+	enviarDiscord(
+		perfil.DiscordWebhook,
+		"🗳️ VOTO DE GOBERNANZA REAL EN BLOCKCHAIN",
+		fmt.Sprintf("Billetera: `%s` ha emitido y firmado su voto on-chain para:\n**%s**.\n\n**Transacción:** %s", displayWallet, propuesta, txLink),
+		16753920, // Naranja
+		"",
+	)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("confirmado"))
 }
 
 func manejadorLogin(w http.ResponseWriter, r *http.Request) {
@@ -631,12 +902,19 @@ func main() {
 	http.HandleFunc("/img-supremo", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_SUPREMO) })
 	http.HandleFunc("/img-chinampero", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_CHINAMPERO) })
 	
+	http.HandleFunc("/api/confirm-nft", manejadorConfirmNFT)
+	http.HandleFunc("/api/confirm-vote", manejadorConfirmVote)
+	
 	http.HandleFunc("/login", manejadorLogin)
 	http.HandleFunc("/market", manejadorMarket)
 	http.HandleFunc("/", manejadorPrincipal)
 	
-	fmt.Println("--- SERVIDOR WEB3 MULTICUENTA ACTIVADO ---")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	fmt.Printf("--- SERVIDOR WEB3 MULTICUENTA ACTIVADO en puerto %s ---\n", port)
 	fmt.Println("Seguridad: Basada en Firmas de MetaMask")
-	fmt.Println("Entra a: http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Printf("Entra a: http://localhost:%s o tu IP pública/dominio\n", port)
+	http.ListenAndServe(":"+port, nil)
 }

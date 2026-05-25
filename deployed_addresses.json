@@ -1,7 +1,7 @@
 {
-  "DexterDAO": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "DexterNFT": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  "DexterGov": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  "deployedAt": "2026-05-24T16:44:08.207Z",
-  "network": "localhost"
+  "DexterDAO": "0x07DE158984Eaf99249EE52792ce262B02cc896b4",
+  "DexterNFT": "0xF493781E3Bde9598056DC2035584925ba1D143a7",
+  "DexterGov": "0x23e1A106A2eD3Ce041E07A039B3e83E8447d81F7",
+  "deployedAt": "2026-05-25T17:02:24.937Z",
+  "network": "sepolia"
 }

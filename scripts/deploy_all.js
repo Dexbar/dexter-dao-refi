@@ -30,11 +30,20 @@ async function main() {
   const govAddress = await gov.getAddress();
   console.log(`✅ DexterGov desplegado en: ${govAddress}`);
 
+  // --- 3.5. Desplegar DexterCrowdfund Crowdfunding ---
+  console.log("\n3️⃣.5️⃣ Desplegando Crowdfunding: DexterCrowdfund...");
+  const DexterCrowdfund = await hre.ethers.getContractFactory("DexterCrowdfund");
+  const crowdfund = await DexterCrowdfund.deploy(tokenAddress);
+  await crowdfund.waitForDeployment();
+  const crowdfundAddress = await crowdfund.getAddress();
+  console.log(`✅ DexterCrowdfund desplegado en: ${crowdfundAddress}`);
+
   // --- 4. Guardar Direcciones Desplegadas ---
   const addresses = {
     DexterDAO: tokenAddress,
     DexterNFT: nftAddress,
     DexterGov: govAddress,
+    DexterCrowdfund: crowdfundAddress,
     deployedAt: new Date().toISOString(),
     network: hre.network.name
   };
@@ -48,6 +57,7 @@ async function main() {
   console.log(`Token address:      ${tokenAddress}`);
   console.log(`NFT address:        ${nftAddress}`);
   console.log(`Gov address:        ${govAddress}`);
+  console.log(`Crowdfund address:  ${crowdfundAddress}`);
   console.log("------------------------------------");
 }
 

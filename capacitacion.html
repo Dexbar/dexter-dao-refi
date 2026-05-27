@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexter DAO — Panel de Ajuste Fino y Capacitación</title>
+    <meta name="description" content="Simulador de consola de ajuste fino Gemma QLoRA y generación de datasets sintéticos.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #030308;
+            --card: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.06);
+            --accent-green: #00ff66;
+            --accent-cyan: #00ffe5;
+            --accent-purple: #b06fff;
+            --accent-orange: #ff8c00;
+            --text-main: #f0f0f5;
+            --text-muted: #8888aa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 80% 40% at 50% -20%, rgba(0, 255, 102, 0.12), transparent),
+                radial-gradient(ellipse 50% 50% at 90% 80%, rgba(0, 255, 229, 0.08), transparent);
+            overflow-x: hidden;
+        }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(3, 3, 8, 0.7);
+        }
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--accent-green);
+            letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+        .logo span {
+            color: var(--accent-cyan);
+        }
+        .btn-back {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem 1.1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-back:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Title block */
+        .title-block {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .title-block h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+        }
+        .title-block h1 span {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .title-block p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* ── GRID SYSTEM ── */
+        .grid-half {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        @media(min-width: 900px) {
+            .grid-half {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ── CARD STYLING ── */
+        .glass-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.8rem;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card:hover {
+            border-color: rgba(0, 255, 102, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 255, 102, 0.05);
+        }
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+        .card-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        /* ── SYNTHESIZER ── */
+        .synth-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .synth-input-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .synth-textarea {
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .synth-textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 229, 0.15);
+        }
+        .btn-synth {
+            background: linear-gradient(135deg, var(--accent-cyan), #00a8ff);
+            color: #000;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+        .btn-synth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 229, 0.3);
+        }
+
+        .synth-result-container {
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+            display: none;
+        }
+        .synth-result-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.6rem;
+        }
+        .synth-result-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 229, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: var(--accent-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-copy-result {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .btn-copy-result:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ── ASYNC TERMINAL SIMULATOR ── */
+        .terminal-container {
+            background: #020205;
+            border: 1px solid #1a1a2e;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 380px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        }
+        .terminal-header {
+            background: #090911;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #141424;
+        }
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .td-red { background: #ff5f56; }
+        .td-yellow { background: #ffbd2e; }
+        .td-green { background: #27c93f; }
+        
+        .terminal-title {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .terminal-screen {
+            flex: 1;
+            padding: 1.2rem;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            color: #27c93f;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scroll-behavior: smooth;
+        }
+
+        .terminal-line {
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .line-input-prompt {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+        }
+        .line-input-prompt span {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+        .line-input-prompt input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            flex: 1;
+        }
+
+        .terminal-btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .btn-run-training {
+            background: linear-gradient(135deg, var(--accent-green), #00cc55);
+            color: #000;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .btn-run-training:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 102, 0.3);
+        }
+
+        /* ── DOWNLOAD AREA ── */
+        .download-section {
+            margin-top: 1rem;
+        }
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .script-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1.2rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .script-card:hover {
+            border-color: rgba(176, 111, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(176, 111, 255, 0.04);
+        }
+        .script-meta h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .script-meta p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        .script-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 0.6rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-copy {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .btn-copy:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: #fff;
+        }
+        .btn-download {
+            background: var(--accent-purple);
+            color: #fff;
+            border: none;
+        }
+        .btn-download:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(176, 111, 255, 0.3);
+        }
+
+        /* ── POPUP CODE MODAL ── */
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal.active {
+            opacity: 1; pointer-events: auto;
+        }
+        .modal-content {
+            background: #06060c;
+            border: 1px solid #1e1e2f;
+            border-radius: 20px;
+            width: 90%; max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .modal-header {
+            padding: 1rem 1.5rem;
+            background: #0d0d18;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { font-size: 1.2rem; color: #fff; }
+        .modal-close {
+            background: transparent;
+            border: none; color: #fff;
+            font-size: 1.5rem; cursor: pointer;
+        }
+        .modal-body {
+            flex: 1;
+            padding: 1.5rem;
+            overflow: auto;
+            background: #010103;
+        }
+        .modal-body pre {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="/" class="logo">Dexter<span>DAO</span></a>
+    <a href="/" class="btn-back">← Volver al Dashboard</a>
+</header>
+
+<div class="container">
+    <div class="title-block">
+        <h1>Capacitación e Infraestructura <span>Gemma LoRA</span></h1>
+        <p>Entrena, evalúa y sirve modelos de ajuste fino para traducción de lenguaje natural a comandos del sistema.</p>
+    </div>
+
+    <!-- MAIN INTERACTIVE SECTION -->
+    <div class="grid-half">
+        <!-- AI SYNTHESIZER -->
+        <div class="glass-card">
+            <div class="card-header">
+                <h2>🧬 Sintetizador de Datos (Synthesizer)</h2>
+                <p>Genera pares de entrenamiento de lenguaje natural a comandos Bash limpios sin explicaciones.</p>
+            </div>
+            
+            <div class="synth-input-group">
+                <label for="synth-prompt">Instrucción en Lenguaje Natural:</label>
+                <textarea id="synth-prompt" class="synth-textarea" placeholder="Ej: compilar los contratos inteligentes del proyecto..."></textarea>
+                <button type="button" class="btn-synth" onclick="generarComandoSintetico()">Generar Comando de Producción</button>
+            </div>
+
+            <div class="synth-result-container" id="synth-result-box">
+                <div class="synth-result-title">Comando Generado (Producción):</div>
+                <div class="synth-result-card">
+                    <span id="synth-result-text">npx hardhat compile</span>
+                    <button class="btn-copy-result" onclick="copiarComandoSintetico()" title="Copiar Comando">📋</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TERMINAL SIMULATOR -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="card-header" style="margin-bottom: 0.8rem;">
+                <h2>🤖 Simulador de Antigravity CLI</h2>
+                <p>Simula el pipeline completo asíncrono de compilación y entrenamiento ejecutando comandos.</p>
+            </div>
+
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="terminal-dot td-red"></div>
+                        <div class="terminal-dot td-yellow"></div>
+                        <div class="terminal-dot td-green"></div>
+                    </div>
+                    <div class="terminal-title">Antigravity Console v1.2</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                
+                <div class="terminal-screen" id="terminal-screen-box">
+                    <div class="terminal-line" style="color: #888;">--- Terminal asíncrona iniciada con éxito ---</div>
+                    <div class="terminal-line" style="color: #888;">Escribe 'realizar el trabajo de capacitación' o presiona el botón inferior para comenzar.</div>
+                    
+                    <div id="terminal-interactive-line" class="line-input-prompt">
+                        <span>admin@antigravity-nodes:~ $</span>
+                        <input type="text" id="terminal-input" placeholder="" autocomplete="off" onkeydown="handleTerminalInput(event)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal-btn-row">
+                <button class="btn-run-training" onclick="iniciarAjusteSimulado()">Ejecutar Script de Ajuste</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DOWNLOAD SCRIPTS AREA -->
+    <div class="glass-card download-section">
+        <div class="card-header">
+            <h2>📦 Scripts de Infraestructura Gemma LoRA</h2>
+            <p>Descarga o copia la implementación real en Python para ejecutar los pipelines de ajuste QLoRA localmente o en tu CI/CD.</p>
+        </div>
+
+        <div class="download-grid">
+            <!-- Train Script -->
+            <div class="script-card">
+                <div class="script-meta">
+                    <h3>train_gemma_lora.py</h3>
+                    <p>Ajuste fino eficiente con QLoRA utilizando bitsandbytes, PEFT y SFTTrainer sobre el modelo Gemma base.</p>
+                </div>
+                <div class="script-actions">
+                    <button class="btn-action btn-copy" onclick="mostrarModalCodigo('train')">Ver Código</button>
+                    <a href="/scripts/train_gemma_lora.py" class="btn-action btn-download" download>Descargar</a>
+                </div>
+            </div>
+
+            <!-- Eval Script -->
+            <div class="script-card">
+                <div class="script-meta">
+                    <h3>evaluar_gemma.py</h3>
+                    <p>Carga los adaptadores guardados, realiza la fusión de pesos y ejecuta inferencias de prueba para comprobar la exactitud.</p>
+                </div>
+                <div class="script-actions">
+                    <button class="btn-action btn-copy" onclick="mostrarModalCodigo('eval')">Ver Código</button>
+                    <a href="/scripts/evaluar_gemma.py" class="btn-action btn-download" download>Descargar</a>
+                </div>
+            </div>
+
+            <!-- Serve Script -->
+            <div class="script-card">
+                <div class="script-meta">
+                    <h3>servir_gemma.py</h3>
+                    <p>Servidor API REST de alto rendimiento basado en FastAPI y Uvicorn para servir comandos en milisegundos.</p>
+                </div>
+                <div class="script-actions">
+                    <button class="btn-action btn-copy" onclick="mostrarModalCodigo('serve')">Ver Código</button>
+                    <a href="/scripts/servir_gemma.py" class="btn-action btn-download" download>Descargar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CODE MODAL -->
+<div class="modal" id="code-modal" onclick="cerrarModalCodigo()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="modal-title-text">Código Fuente</h3>
+            <button class="modal-close" onclick="cerrarModalCodigo()">×</button>
+        </div>
+        <div class="modal-body">
+            <pre><code id="modal-code-block"></code></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Sintetizador de comandos simulado
+    const BASH_MAP = {
+        "compilar los contratos inteligentes": "npx hardhat compile",
+        "compile the smart contracts": "npx hardhat compile",
+        "compile contracts": "npx hardhat compile",
+        "start hardhat node": "npx hardhat node",
+        "iniciar nodo local": "npx hardhat node",
+        "desplegar contratos localmente": "npx hardhat run scripts/deploy_all.js --network localhost",
+        "deploy contracts locally": "npx hardhat run scripts/deploy_all.js --network localhost",
+        "deploy to localhost": "npx hardhat run scripts/deploy_all.js --network localhost",
+        "desplegar contratos en sepolia": "npx hardhat run scripts/deploy_all.js --network sepolia",
+        "deploy to sepolia": "npx hardhat run scripts/deploy_all.js --network sepolia",
+        "desplegar en celo": "npx hardhat run scripts/deploy_all.js --network alfajores",
+        "deploy to celo": "npx hardhat run scripts/deploy_all.js --network alfajores",
+        "iniciar servidor go": "go run main.go",
+        "run go server": "go run main.go",
+        "revisar saldo dxt": "node scripts/check_dxt_balance.js",
+        "check dxt balance": "node scripts/check_dxt_balance.js",
+        "revisar saldo eth": "node scripts/check_balance.js",
+        "check balance": "node scripts/check_balance.js"
+    };
+
+    function generarComandoSintetico() {
+        const promptInput = document.getElementById('synth-prompt').value.trim().toLowerCase();
+        if (!promptInput) {
+            alert('Por favor escribe una instrucción.');
+            return;
+        }
+
+        const resultBox = document.getElementById('synth-result-box');
+        const resultText = document.getElementById('synth-result-text');
+
+        // Buscar coincidencia parcial o por defecto
+        let cmd = "command not recognized";
+        let found = false;
+
+        for (const [key, value] of Object.entries(BASH_MAP)) {
+            if (promptInput.includes(key)) {
+                cmd = value;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            // Alguna heurística básica si no está mapeado exactamente
+            if (promptInput.includes("compil") || promptInput.includes("compile")) {
+                cmd = "npx hardhat compile";
+            } else if (promptInput.includes("servidor") || promptInput.includes("server") || promptInput.includes("main.go")) {
+                cmd = "go run main.go";
+            } else if (promptInput.includes("deploy") || promptInput.includes("despleg")) {
+                if (promptInput.includes("sepolia")) cmd = "npx hardhat run scripts/deploy_all.js --network sepolia";
+                else if (promptInput.includes("celo") || promptInput.includes("alfajores")) cmd = "npx hardhat run scripts/deploy_all.js --network alfajores";
+                else cmd = "npx hardhat run scripts/deploy_all.js --network localhost";
+            } else if (promptInput.includes("mint") || promptInput.includes("mintear")) {
+                cmd = "node scripts/mint_tokens.js 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 500";
+            } else {
+                // Comando genérico
+                cmd = "ls -la";
+            }
+        }
+
+        resultText.innerText = cmd;
+        resultBox.style.display = 'block';
+    }
+
+    function copiarComandoSintetico() {
+        const text = document.getElementById('synth-result-text').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('¡Comando copiado al portapapeles!');
+        });
+    }
+
+    // Simulador de Terminal
+    const terminalScreen = document.getElementById('terminal-screen-box');
+    const terminalInput = document.getElementById('terminal-input');
+    const interactiveLine = document.getElementById('terminal-interactive-line');
+
+    function handleTerminalInput(e) {
+        if (e.key === 'Enter') {
+            const inputVal = terminalInput.value.trim();
+            terminalInput.value = '';
+            
+            if (inputVal === '') return;
+            
+            // Agregar línea de input al histórico de la pantalla
+            agregarLineaTerminal(`admin@antigravity-nodes:~ $ ${inputVal}`, '#fff');
+            
+            if (inputVal === 'clear') {
+                // Borrar pantalla excepto la línea interactiva
+                const lines = terminalScreen.querySelectorAll('.terminal-line');
+                lines.forEach(l => l.remove());
+                return;
+            }
+            
+            if (inputVal === 'help') {
+                agregarLineaTerminal('Comandos disponibles:\n  realizar el trabajo de capacitación - Arranca pipeline Gemma\n  help                                  - Muestra esta ayuda\n  clear                                 - Limpia la pantalla', '#888');
+                return;
+            }
+            
+            if (inputVal === 'realizar el trabajo de capacitación') {
+                iniciarAjusteSimulado();
+                return;
+            }
+            
+            // Si el comando no se reconoce
+            setTimeout(() => {
+                agregarLineaTerminal(`bash: command not found: ${inputVal}`, '#ff5f56');
+            }, 100);
+        }
+    }
+
+    function agregarLineaTerminal(texto, color = '#27c93f') {
+        const div = document.createElement('div');
+        div.className = 'terminal-line';
+        div.style.color = color;
+        div.innerText = texto;
+        terminalScreen.insertBefore(div, interactiveLine);
+        terminalScreen.scrollTop = terminalScreen.scrollHeight;
+    }
+
+    let trainingInProgress = false;
+
+    function iniciarAjusteSimulado() {
+        if (trainingInProgress) return;
+        trainingInProgress = true;
+        terminalInput.disabled = true;
+
+        const logs = [
+            { text: "⚡ [ANTIGRAVITY CLI] Iniciando arranque asíncrono...", color: "#00ffe5" },
+            { text: "⚙️ [BAZEL] Invocando bazel run //gemma_lora:tune_lora_bin...", color: "#ff8c00" },
+            { text: "⚙️ [BAZEL] Analyzing dependency graph...", color: "#ff8c00" },
+            { text: "⚙️ [BAZEL] Build initialized: 42 actions pending.", color: "#ff8c00" },
+            { text: "⚙️ [BAZEL] [12/42] Compiling C++ custom CUDA kernels...", color: "#ff8c00" },
+            { text: "⚙️ [BAZEL] Build completed successfully in 3.42s.", color: "#00ff66" },
+            { text: "📦 [SYNTHESIZER] Iniciando generación automática de datasets sintéticos...", color: "#b06fff" },
+            { text: "📦 [SYNTHESIZER] Leyendo esquemas de dApp Dexter DAO...", color: "#b06fff" },
+            { text: "📦 [SYNTHESIZER] Generando 1,000 muestras sintéticas de (Instrucción -> Comando)...", color: "#b06fff" },
+            { text: "📦 [SYNTHESIZER] Guardando dataset en: terminal_train.jsonl", color: "#00ff66" },
+            { text: "🚀 [PIPELINE] Cargando cargador de modelos Gemma-2b...", color: "#00ffe5" },
+            { text: "🚀 [PIPELINE] Configurando QLoRA (r=8, alpha=16, 4-bit quant)...", color: "#00ffe5" },
+            { text: "⛏️ [ENTRENAMIENTO] Iniciando Epoch 1/3...", color: "#fff" },
+            { text: "   Epoch 1/3 - Loss: 1.104 - Accuracy: 89.4% [=======>]", color: "#888" },
+            { text: "⛏️ [ENTRENAMIENTO] Iniciando Epoch 2/3...", color: "#fff" },
+            { text: "   Epoch 2/3 - Loss: 0.428 - Accuracy: 95.1% [=============>]", color: "#888" },
+            { text: "⛏️ [ENTRENAMIENTO] Iniciando Epoch 3/3...", color: "#fff" },
+            { text: "   Epoch 3/3 - Loss: 0.115 - Accuracy: 99.2% [==================>]", color: "#888" },
+            { text: "💾 [PIPELINE] Ajuste completado. Guardando adaptador en ./gemma-lora-output/...", color: "#00ffe5" },
+            { text: "✅ [SISTEMA] ¡Ajuste fino exitoso! Adaptadores listos para la API de FastAPI.", color: "#00ff66" }
+        ];
+
+        let index = 0;
+        function printNextLog() {
+            if (index < logs.length) {
+                agregarLineaTerminal(logs[index].text, logs[index].color);
+                index++;
+                
+                // Variar el tiempo de retardo para simular asincronía real
+                let delay = 350 + Math.random() * 400;
+                if (logs[index - 1].text.includes("CUDA kernels")) delay = 1200; // Simular compilación pesada
+                if (logs[index - 1].text.includes("sintéticas")) delay = 1000;
+                if (logs[index - 1].text.includes("Epoch")) delay = 800;
+
+                setTimeout(printNextLog, delay);
+            } else {
+                trainingInProgress = false;
+                terminalInput.disabled = false;
+                terminalInput.focus();
+            }
+        }
+
+        printNextLog();
+    }
+
+    // Modal de Código y descarga
+    const scriptsCode = {
+        train: `import os
+import torch
+from datasets import load_dataset
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from trl import SFTTrainer
+
+MODEL_ID = "google/gemma-2b"
+DATASET_PATH = "terminal_train.jsonl"
+OUTPUT_DIR = "./gemma-lora-output"
+
+def train():
+    print("🚀 Cargando modelo base...")
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16,
+        bnb_4bit_use_double_quant=True
+    )
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer.pad_token = tokenizer.eos_token
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID, quantization_config=bnb_config, device_map="auto"
+    )
+    model = prepare_model_for_kbit_training(model)
+    lora_config = LoraConfig(
+        r=8, lora_alpha=16,
+        target_modules=["q_proj", "o_proj", "k_proj", "v_proj"],
+        lora_dropout=0.05, bias="none", task_type="CAUSAL_LM"
+    )
+    model = get_peft_model(model, lora_config)
+    dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
+    
+    def formatting_prompts_func(example):
+        return [f"### Instruction:\\n{p}\\n\\n### Response:\\n{c}" for p, c in zip(example['prompt'], example['command'])]
+
+    args = TrainingArguments(
+        output_dir=OUTPUT_DIR, per_device_train_batch_size=2,
+        gradient_accumulation_steps=4, max_steps=100, learning_rate=2e-4,
+        fp16=True, optim="paged_adamw_8bit"
+    )
+    trainer = SFTTrainer(
+        model=model, train_dataset=dataset, peft_config=lora_config,
+        max_seq_length=512, tokenizer=tokenizer,
+        formatting_func=formatting_prompts_func, args=args
+    )
+    trainer.train()
+    trainer.model.save_pretrained(OUTPUT_DIR)
+    print("🎉 Ajuste LoRA exitoso!")
+
+if __name__ == "__main__":
+    train()`,
+        
+        eval: `import os
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel
+
+MODEL_ID = "google/gemma-2b"
+LORA_WEIGHTS = "./gemma-lora-output"
+
+def evaluar():
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    base_model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID, torch_dtype=torch.float16, device_map="auto"
+    )
+    model = PeftModel.from_pretrained(base_model, LORA_WEIGHTS)
+    model = model.merge_and_unload()
+    
+    test_prompts = ["compile the smart contracts", "run the go web server"]
+    for prompt in test_prompts:
+        input_text = f"### Instruction:\\n{prompt}\\n\\n### Response:\\n"
+        inputs = tokenizer(input_text, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+        with torch.no_grad():
+            outputs = model.generate(**inputs, max_new_tokens=50, temperature=0.1)
+        print(f"Prompt: {prompt} -> Command: {tokenizer.decode(outputs[0], skip_special_tokens=True)}")
+
+if __name__ == "__main__":
+    evaluar()`,
+        
+        serve: `import os
+import torch
+import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel
+
+app = FastAPI(title="Gemma LoRA API")
+MODEL_ID = "google/gemma-2b"
+LORA_WEIGHTS = "./gemma-lora-output"
+
+tokenizer = None
+model = None
+
+class Query(BaseModel):
+    prompt: str
+
+@app.on_event("startup")
+def load():
+    global tokenizer, model
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    base_model = AutoModelForCausalLM.from_pretrained(MODEL_ID, torch_dtype=torch.float16, device_map="auto")
+    model = PeftModel.from_pretrained(base_model, LORA_WEIGHTS).merge_and_unload()
+
+@app.post("/predict")
+def predict(q: Query):
+    input_text = f"### Instruction:\\n{q.prompt}\\n\\n### Response:\\n"
+    inputs = tokenizer(input_text, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=50, temperature=0.1)
+    res = tokenizer.decode(outputs[0], skip_special_tokens=True).split("### Response:\\n")[-1].strip()
+    return {"command": res}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)`
+    };
+
+    function mostrarModalCodigo(scriptName) {
+        const modal = document.getElementById('code-modal');
+        const title = document.getElementById('modal-title-text');
+        const codeBlock = document.getElementById('modal-code-block');
+
+        let titleStr = "";
+        if (scriptName === 'train') titleStr = "train_gemma_lora.py — Script de Ajuste Fino QLoRA";
+        if (scriptName === 'eval') titleStr = "evaluar_gemma.py — Script de Inferencia y Validación";
+        if (scriptName === 'serve') titleStr = "servir_gemma.py — Servidor FastAPI de Producción";
+
+        title.innerText = titleStr;
+        codeBlock.innerText = scriptsCode[scriptName];
+        modal.classList.add('active');
+    }
+
+    function cerrarModalCodigo() {
+        document.getElementById('code-modal').classList.remove('active');
+    }
+</script>
+</body>
+</html>

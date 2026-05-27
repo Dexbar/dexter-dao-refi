@@ -1,0 +1,9 @@
+torch
+transformers
+peft
+trl
+datasets
+bitsandbytes
+fastapi
+uvicorn
+pydantic

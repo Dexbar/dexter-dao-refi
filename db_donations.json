@@ -1,0 +1,20 @@
+[
+  {
+    "id": 0,
+    "title": "Limpieza de Canales en Xochimilco",
+    "description": "Fondo comunitario para la compra de herramientas de limpieza y organización de brigadas vecinales para sanear los canales secundarios.",
+    "recipient": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    "goal": 1500,
+    "amountRaised": 450,
+    "completed": false
+  },
+  {
+    "id": 1,
+    "title": "Taller de Desarrollo Blockchain y Go",
+    "description": "Fondo para impartir talleres gratuitos sobre contratos inteligentes y Go a jóvenes entusiastas de la tecnología.",
+    "recipient": "0x350f9cf31bc1eb56c596b38fa96d9a24831e6b32",
+    "goal": 3000,
+    "amountRaised": 1200,
+    "completed": false
+  }
+]

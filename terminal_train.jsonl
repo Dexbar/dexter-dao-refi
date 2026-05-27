@@ -1,0 +1,25 @@
+{"prompt": "compile the smart contracts", "command": "npx hardhat compile"}
+{"prompt": "compilar los contratos inteligentes", "command": "npx hardhat compile"}
+{"prompt": "compile contracts", "command": "npx hardhat compile"}
+{"prompt": "start a local hardhat node", "command": "npx hardhat node"}
+{"prompt": "iniciar un nodo local de hardhat", "command": "npx hardhat node"}
+{"prompt": "run local blockchain network", "command": "npx hardhat node"}
+{"prompt": "deploy all contracts to localhost", "command": "npx hardhat run scripts/deploy_all.js --network localhost"}
+{"prompt": "desplegar contratos localmente", "command": "npx hardhat run scripts/deploy_all.js --network localhost"}
+{"prompt": "deploy contracts to local network", "command": "npx hardhat run scripts/deploy_all.js --network localhost"}
+{"prompt": "deploy all contracts to sepolia network", "command": "npx hardhat run scripts/deploy_all.js --network sepolia"}
+{"prompt": "desplegar contratos en sepolia", "command": "npx hardhat run scripts/deploy_all.js --network sepolia"}
+{"prompt": "deploy all contracts to celo alfajores testnet", "command": "npx hardhat run scripts/deploy_all.js --network alfajores"}
+{"prompt": "desplegar contratos en celo alfajores", "command": "npx hardhat run scripts/deploy_all.js --network alfajores"}
+{"prompt": "run the go web server", "command": "go run main.go"}
+{"prompt": "iniciar el servidor de go", "command": "go run main.go"}
+{"prompt": "start go backend", "command": "go run main.go"}
+{"prompt": "check local network account balance", "command": "node scripts/check_balance.js"}
+{"prompt": "revisar saldo de eth o red local", "command": "node scripts/check_balance.js"}
+{"prompt": "check dxt token balance of local account", "command": "node scripts/check_dxt_balance.js"}
+{"prompt": "revisar balance del token dxt", "command": "node scripts/check_dxt_balance.js"}
+{"prompt": "mint 500 dxt tokens to 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266", "command": "node scripts/mint_tokens.js 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 500"}
+{"prompt": "mintear 1000 dxt a la billetera 0x350f9cf31bc1eb56c596b38fa96d9a24831e6b32", "command": "node scripts/mint_tokens.js 0x350f9cf31bc1eb56c596b38fa96d9a24831e6b32 1000"}
+{"prompt": "run local database test", "command": "go run scratch/test_db.go"}
+{"prompt": "probar conexion y escritura de base de datos db.json", "command": "go run scratch/test_db.go"}
+{"prompt": "test db.json write operations", "command": "go run scratch/test_db.go"}

@@ -264,9 +264,10 @@
 	<h1>🏦 DEXTER DAO: SISTEMA CENTRAL 🏦</h1>
 	
 	<!-- BARRA SUPERIOR -->
-	<div style="text-align: right; max-width: 1200px; margin: 0 auto 20px auto;">
-		<span style="color: #aaa; margin-right: 15px;">Cuenta Web3: <strong style="color: #f6851b; text-shadow: 0 0 10px #f6851b;">{{.User}}</strong></span>
-		<form method="POST" style="display:inline;"><input type="hidden" name="accion" value="logout"><button type="submit" style="background:#333; color:#fff; width:auto; padding: 5px 15px;">DESCONECTAR</button></form>
+	<div style="text-align: right; max-width: 1200px; margin: 0 auto 20px auto; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+		<span style="color: #aaa; margin-right: 5px;">Cuenta Web3: <strong style="color: #f6851b; text-shadow: 0 0 10px #f6851b;">{{.User}}</strong></span>
+		<button type="button" onclick="location.href='/capacitacion'" style="background: linear-gradient(135deg, #00ff66, #00ffe5); color: #000; width: auto; padding: 6px 16px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; transition: 0.2s;">🎓 CAPACITACIÓN AI</button>
+		<form method="POST" style="display:inline; margin: 0;"><input type="hidden" name="accion" value="logout"><button type="submit" style="background:#333; color:#fff; width:auto; padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;">DESCONECTAR</button></form>
 	</div>
 
 	<div class="container">
@@ -479,6 +480,101 @@
 			</div>
 		</div>
 
+		<!-- CROWDFUNDING Y PROPUESTAS DE DONACIONES -->
+		<div class="card gov-card" style="border-color: #ffd700; min-width: 320px; text-align: center;">
+			<h2 style="color:#ffd700; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+				🗳️ Crowdfunding y Proyectos
+			</h2>
+			<p style="color: #aaa; font-size: 0.9em; margin-bottom: 15px;">
+				Postula iniciativas comunitarias para la DAO o dona fondos a propuestas activas.
+			</p>
+
+			<!-- Pestañas -->
+			<div style="display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 1px solid rgba(255, 215, 0, 0.15); padding-bottom: 8px;">
+				<button type="button" id="tab-crowd-local" onclick="switchCrowdTab('local')" style="flex: 1; background: rgba(255, 215, 0, 0.15); color: #ffd700; font-size: 0.8em; padding: 6px; border-radius: 4px; font-weight: bold; border: 1px solid rgba(255, 215, 0, 0.3); cursor: pointer; transition: 0.3s;">
+					Simulado (Web2)
+				</button>
+				<button type="button" id="tab-crowd-chain" onclick="switchCrowdTab('chain')" style="flex: 1; background: transparent; color: #aaa; font-size: 0.8em; padding: 6px; border-radius: 4px; font-weight: bold; border: 1px solid transparent; cursor: pointer; transition: 0.3s;">
+					Blockchain (Web3)
+				</button>
+			</div>
+
+			<!-- SECCIÓN SIMULADA (LOCAL) -->
+			<div id="crowd-section-local">
+				<div style="max-height: 280px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
+					{{range .DonacionesLocales}}
+					<div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid rgba(255, 215, 0, 0.15); text-align: left;">
+						<div style="font-weight: bold; color: #ffd700; font-size: 0.85em; margin-bottom: 4px;">#{{.ID}} {{.Title}}</div>
+						<div style="font-size: 0.75em; color: #ccc; margin-bottom: 8px; line-height: 1.3;">{{.Description}}</div>
+						<div style="font-size: 0.7em; color: #888; margin-bottom: 6px; word-break: break-all;">Beneficiario: <span style="font-family: monospace; color: #aaa;">{{.Recipient}}</span></div>
+						
+						<!-- Progreso -->
+						<div style="display: flex; justify-content: space-between; font-size: 0.7em; margin-bottom: 4px;">
+							<span>Recaudado: <strong>{{.AmountRaised}} TK</strong></span>
+							<span>Meta: {{.Goal}} TK</span>
+						</div>
+						<div class="stat-bar-container" style="background: rgba(255,255,255,0.05); height: 6px; margin-bottom: 10px; border-radius: 3px;">
+							<div class="stat-bar" style="height: 100%; background: #ffd700; width: {{.Percent}}%; border-radius: 3px;"></div>
+						</div>
+
+						<!-- Formulario Donación -->
+						{{if .Completed}}
+							<div style="text-align: center; color: #00ff00; font-size: 0.75em; font-weight: bold; padding: 4px; border: 1px dashed #00ff00; border-radius: 4px; background: rgba(0,255,0,0.05);">
+								✓ META ALCANZADA
+							</div>
+						{{else}}
+							<form method="POST" style="display: flex; gap: 6px; margin: 0;">
+								<input type="hidden" name="donar_local" value="1">
+								<input type="hidden" name="proposal_id" value="{{.ID}}">
+								<input type="number" name="cantidad" placeholder="Monto TK..." min="1" required style="flex: 1; padding: 5px; font-size: 0.75em; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.3); color: #fff; border-radius: 4px;">
+								<button type="submit" style="background: #ffd700; color: #000; font-size: 0.75em; padding: 5px 10px; font-weight: bold; border-radius: 4px; margin-top: 0; width: auto; cursor: pointer;">DONAR</button>
+							</form>
+						{{end}}
+					</div>
+					{{else}}
+					<p style="font-size: 0.75em; color: #888; text-align: center; padding: 15px;">No hay propuestas de donación simuladas.</p>
+					{{end}}
+				</div>
+
+				<!-- Crear Propuesta Local -->
+				<div style="border-top: 1px solid rgba(255, 215, 0, 0.15); padding-top: 12px;">
+					<h4 style="color: #ffd700; margin: 0 0 8px 0; font-size: 0.8em; text-transform: uppercase; text-align: left;">Postular Iniciativa Local</h4>
+					<form method="POST" style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+						<input type="hidden" name="proponer_donacion" value="1">
+						<input type="text" name="titulo" placeholder="Título del proyecto..." required style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
+						<textarea name="descripcion" placeholder="Descripción de la iniciativa..." rows="2" required style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px; font-family: sans-serif; resize: vertical;"></textarea>
+						<div style="display: flex; gap: 6px;">
+							<input type="number" name="goal" placeholder="Meta TK..." min="10" required style="flex: 1; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
+							<input type="text" name="recipient" placeholder="Beneficiario (0x...)" value="{{.WalletCompleta}}" required style="flex: 1.5; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px; font-family: monospace;">
+						</div>
+						<button type="submit" style="background: #ffd700; color: #000; font-size: 0.75em; padding: 8px; font-weight: bold; border-radius: 4px; width: 100%; cursor: pointer;">POSTULAR INICIATIVA SIMULADA</button>
+					</form>
+				</div>
+			</div>
+
+			<!-- SECCIÓN BLOCKCHAIN (REAL) -->
+			<div id="crowd-section-chain" style="display: none;">
+				<div id="chain-campaigns-container" style="max-height: 280px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
+					<p style="font-size: 0.75em; color: #888; text-align: center; padding: 15px;">Cargando campañas desde la blockchain...</p>
+				</div>
+
+				<!-- Crear Propuesta Real en Blockchain -->
+				<div style="border-top: 1px solid rgba(255, 215, 0, 0.15); padding-top: 12px; text-align: left;">
+					<h4 style="color: #ffd700; margin: 0 0 8px 0; font-size: 0.8em; text-transform: uppercase;">Postular Campaña en Blockchain (Real)</h4>
+					<div style="display: flex; flex-direction: column; gap: 6px;">
+						<input type="text" id="chain-camp-title" placeholder="Título de la campaña..." style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
+						<textarea id="chain-camp-desc" placeholder="Descripción de la campaña..." rows="2" style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px; font-family: sans-serif; resize: vertical;"></textarea>
+						<input type="text" id="chain-camp-recipient" placeholder="Beneficiario (0x...)" value="" style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px; font-family: monospace;">
+						<div style="display: flex; gap: 6px;">
+							<input type="number" id="chain-camp-goal-dxt" placeholder="Meta DXT..." min="1" style="flex: 1; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
+							<input type="number" id="chain-camp-goal-eth" placeholder="Meta ETH (Opcional)..." step="0.01" min="0" style="flex: 1; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
+						</div>
+						<button type="button" onclick="crearCampanaBlockchain()" style="background: #ffd700; color: #000; font-size: 0.75em; padding: 8px; font-weight: bold; border-radius: 4px; width: 100%; cursor: pointer;">ENVIAR CAMPAÑA A BLOCKCHAIN</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- GALERÍA NFT -->
 		<div class="nft-card maestro">
 			<h3>MAESTRO #001</h3>
@@ -636,6 +732,7 @@
 		const DXT_TOKEN_ADDRESS = "{{.TokenAddress}}";
 		const DEXTER_NFT_ADDRESS = "{{.NFTAddress}}";
 		const DEXTER_GOV_ADDRESS = "{{.GovAddress}}";
+		const DEXTER_CROWDFUND_ADDRESS = "{{.CrowdfundAddress}}";
 		const DEXTER_NETWORK = "{{.Network}}";
 
 		// Configuración dinámica de red
@@ -673,8 +770,16 @@
 				}
 			}
 
+			// Cargar crowdfund on-chain si la dirección está disponible
+			if (DEXTER_CROWDFUND_ADDRESS && typeof window.ethereum !== 'undefined') {
+				const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+				if (accounts.length > 0) {
+					cargarCrowdfundBlockchain();
+				}
+			}
+
 			// Temporizador de recompensa diaria
-			let tiempoRestante = {{.TiempoRestante}};
+			let tiempoRestante = parseInt("{{.TiempoRestante}}") || 0;
 			if (tiempoRestante > 0) {
 				const btnClaim = document.getElementById('btn-claim');
 				const timerDiv = document.getElementById('claim-timer');
@@ -1330,6 +1435,317 @@
 			}).catch(err => {
 				console.error('Error al copiar dirección: ', err);
 			});
+		}
+
+		// --- Crowdfunding & Donation Proposals JS Interface ---
+		function switchCrowdTab(tab) {
+			if (tab === 'local') {
+				document.getElementById('crowd-section-local').style.display = 'block';
+				document.getElementById('crowd-section-chain').style.display = 'none';
+				document.getElementById('tab-crowd-local').style.background = 'rgba(255, 215, 0, 0.15)';
+				document.getElementById('tab-crowd-local').style.color = '#ffd700';
+				document.getElementById('tab-crowd-local').style.borderColor = 'rgba(255, 215, 0, 0.3)';
+				document.getElementById('tab-crowd-chain').style.background = 'transparent';
+				document.getElementById('tab-crowd-chain').style.color = '#aaa';
+				document.getElementById('tab-crowd-chain').style.borderColor = 'transparent';
+			} else {
+				document.getElementById('crowd-section-local').style.display = 'none';
+				document.getElementById('crowd-section-chain').style.display = 'block';
+				document.getElementById('tab-crowd-local').style.background = 'transparent';
+				document.getElementById('tab-crowd-local').style.color = '#aaa';
+				document.getElementById('tab-crowd-local').style.borderColor = 'transparent';
+				document.getElementById('tab-crowd-chain').style.background = 'rgba(255, 215, 0, 0.15)';
+				document.getElementById('tab-crowd-chain').style.color = '#ffd700';
+				document.getElementById('tab-crowd-chain').style.borderColor = 'rgba(255, 215, 0, 0.3)';
+				
+				cargarCrowdfundBlockchain();
+			}
+		}
+
+		async function cargarCrowdfundBlockchain() {
+			if (!DEXTER_CROWDFUND_ADDRESS || typeof window.ethereum === 'undefined') return;
+			const container = document.getElementById('chain-campaigns-container');
+			if (!container) return;
+			
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const readProvider = await getReadProvider(provider);
+				
+				const crowdfundAbi = [
+					"function getCampaignsCount() external view returns (uint256)",
+					"function getCampaign(uint256 campaignId) external view returns (uint256 id, string memory title, string memory description, address recipient, uint256 goal, uint256 amountRaised, uint256 ethGoal, uint256 ethRaised, bool completed, bool fundsWithdrawn)"
+				];
+				
+				const contract = new ethers.Contract(DEXTER_CROWDFUND_ADDRESS, crowdfundAbi, readProvider);
+				
+				let userAddress = "";
+				try {
+					const signer = await provider.getSigner();
+					userAddress = await signer.getAddress();
+					// Rellenar beneficiario por defecto en formulario de postulación
+					const recipientInput = document.getElementById('chain-camp-recipient');
+					if (recipientInput && !recipientInput.value) {
+						recipientInput.value = userAddress;
+					}
+				} catch (e) {}
+
+				const countBigInt = await contract.getCampaignsCount();
+				const count = Number(countBigInt);
+				
+				if (count === 0) {
+					container.innerHTML = `<p style="font-size: 0.75em; color: #888; text-align: center; padding: 15px;">No hay campañas activas en la blockchain.</p>`;
+					return;
+				}
+				
+				let html = "";
+				for (let i = 0; i < count; i++) {
+					const camp = await contract.getCampaign(i);
+					const id = Number(camp.id);
+					const title = camp.title;
+					const description = camp.description;
+					const recipient = camp.recipient;
+					const goal = Number(ethers.formatUnits(camp.goal, 18));
+					const raised = Number(ethers.formatUnits(camp.amountRaised, 18));
+					const ethGoal = Number(ethers.formatUnits(camp.ethGoal, 18));
+					const ethRaised = Number(ethers.formatUnits(camp.ethRaised, 18));
+					const completed = camp.completed;
+					const withdrawn = camp.fundsWithdrawn;
+					
+					const dxtPct = goal > 0 ? Math.min((raised / goal) * 100, 100) : 100;
+					const ethPct = ethGoal > 0 ? Math.min((ethRaised / ethGoal) * 100, 100) : 100;
+					
+					let isUserRecipient = userAddress && userAddress.toLowerCase() === recipient.toLowerCase();
+					
+					let dxtGoalHtml = goal > 0 ? `<div style="font-size: 0.75em; margin-bottom: 2px;">DXT Recaudado: <strong>${raised.toFixed(2)} DXT</strong> / ${goal.toFixed(2)} DXT</div>
+						 <div class="stat-bar-container" style="background: rgba(255,255,255,0.05); height: 6px; margin-bottom: 8px; border-radius: 3px;">
+							 <div class="stat-bar" style="height: 100%; background: #00ffe5; width: ${dxtPct}%; border-radius: 3px;"></div>
+						 </div>` : "";
+						 
+					let ethGoalHtml = ethGoal > 0 ? `<div style="font-size: 0.75em; margin-bottom: 2px;">ETH Recaudado: <strong>${ethRaised.toFixed(4)} ETH</strong> / ${ethGoal.toFixed(4)} ETH</div>
+						 <div class="stat-bar-container" style="background: rgba(255,255,255,0.05); height: 6px; margin-bottom: 12px; border-radius: 3px;">
+							 <div class="stat-bar" style="height: 100%; background: #ffd700; width: ${ethPct}%; border-radius: 3px;"></div>
+						 </div>` : "";
+					
+					let actionHtml = "";
+					if (withdrawn) {
+						actionHtml = `<div style="text-align: center; color: #888; font-size: 0.75em; font-weight: bold; padding: 4px; border: 1px dashed #555; border-radius: 4px; background: rgba(255,255,255,0.02);">✓ FONDOS RETIRADOS</div>`;
+					} else if (completed && isUserRecipient) {
+						actionHtml = `<button type="button" onclick="retirarFondosBlockchain(${id})" style="background: #00ff00; color: #000; font-size: 0.75em; padding: 6px; font-weight: bold; border-radius: 4px; width: 100%; margin-top: 5px; cursor: pointer;">RETIRAR FONDOS RECAUDADOS</button>`;
+					} else if (completed) {
+						actionHtml = `<div style="text-align: center; color: #00ff00; font-size: 0.75em; font-weight: bold; padding: 4px; border: 1px dashed #00ff00; border-radius: 4px; background: rgba(0,255,0,0.05);">✓ META LOGRADA (Espera retiro)</div>`;
+					} else {
+						let dxtInputHtml = goal > 0 ? `<div style="display: flex; gap: 6px; margin-bottom: 6px;">
+							<input type="number" id="donate-dxt-input-${id}" placeholder="DXT a donar..." step="1" style="flex: 1; padding: 5px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,255,229,0.3); color:#fff; border-radius:4px;">
+							<button type="button" onclick="donarDxtBlockchain(${id})" style="background: #00ffe5; color: #000; font-size: 0.75em; padding: 5px 10px; font-weight: bold; border-radius: 4px; width: auto; margin-top:0; cursor: pointer;">DONAR DXT</button>
+						</div>` : "";
+						
+						let ethInputHtml = ethGoal > 0 ? `<div style="display: flex; gap: 6px;">
+							<input type="number" id="donate-eth-input-${id}" placeholder="ETH a donar..." step="0.01" style="flex: 1; padding: 5px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.3); color:#fff; border-radius:4px;">
+							<button type="button" onclick="donarEthBlockchain(${id})" style="background: #ffd700; color: #000; font-size: 0.75em; padding: 5px 10px; font-weight: bold; border-radius: 4px; width: auto; margin-top:0; cursor: pointer;">DONAR ETH</button>
+						</div>` : "";
+						
+						actionHtml = `<div style="display: flex; flex-direction: column; gap: 4px;">${dxtInputHtml}${ethInputHtml}</div>`;
+					}
+
+					html += `
+					<div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255, 215, 0, 0.15); text-align: left;">
+						<div style="font-weight: bold; color: #ffd700; font-size: 0.85em; margin-bottom: 4px;">#${id} ${title}</div>
+						<div style="font-size: 0.75em; color: #ccc; margin-bottom: 8px; line-height: 1.3;">${description}</div>
+						<div style="font-size: 0.7em; color: #888; margin-bottom: 8px; word-break: break-all;">Beneficiario: <span style="font-family: monospace; color: #aaa;">${recipient}</span></div>
+						
+						${dxtGoalHtml}
+						${ethGoalHtml}
+						${actionHtml}
+					</div>
+					`;
+				}
+				container.innerHTML = html;
+			} catch (e) {
+				console.error("Error al cargar campañas blockchain", e);
+				container.innerHTML = `<p style="font-size: 0.75em; color: #ff3333; text-align: center; padding: 15px;">Error al conectar con el Smart Contract.</p>`;
+			}
+		}
+
+		async function crearCampanaBlockchain() {
+			if (!DEXTER_CROWDFUND_ADDRESS || typeof window.ethereum === 'undefined') {
+				alert("MetaMask no conectado o dirección de crowdfunding no disponible.");
+				return;
+			}
+			
+			const title = document.getElementById('chain-camp-title').value.trim();
+			const desc = document.getElementById('chain-camp-desc').value.trim();
+			const recipient = document.getElementById('chain-camp-recipient').value.trim();
+			const goalDxtVal = document.getElementById('chain-camp-goal-dxt').value.trim();
+			const goalEthVal = document.getElementById('chain-camp-goal-eth').value.trim();
+			
+			if (!title || !recipient || !goalDxtVal) {
+				alert("Por favor completa los campos obligatorios: Título, Beneficiario y Meta DXT.");
+				return;
+			}
+			
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const signer = await provider.getSigner();
+				
+				const crowdfundAbi = [
+					"function createCampaign(string memory title, string memory description, address payable recipient, uint256 goal, uint256 ethGoal) external"
+				];
+				const contract = new ethers.Contract(DEXTER_CROWDFUND_ADDRESS, crowdfundAbi, signer);
+				
+				const goalDxt = ethers.parseUnits(goalDxtVal, 18);
+				const goalEth = goalEthVal ? ethers.parseUnits(goalEthVal, 18) : 0n;
+				
+				alert("Iniciando transacción de postulación en MetaMask. Por favor confirma la transacción...");
+				const tx = await contract.createCampaign(title, desc, recipient, goalDxt, goalEth);
+				
+				alert("Transacción enviada. Esperando confirmación de bloque...");
+				await tx.wait();
+				
+				alert("¡Campaña creada con éxito en la blockchain!");
+				
+				document.getElementById('chain-camp-title').value = "";
+				document.getElementById('chain-camp-desc').value = "";
+				document.getElementById('chain-camp-goal-dxt').value = "";
+				document.getElementById('chain-camp-goal-eth').value = "";
+				
+				cargarCrowdfundBlockchain();
+			} catch (e) {
+				alert("Error al postular campaña: " + (e.reason || e.message));
+			}
+		}
+
+		async function donarDxtBlockchain(campaignId) {
+			if (!DEXTER_CROWDFUND_ADDRESS || !DXT_TOKEN_ADDRESS || typeof window.ethereum === 'undefined') return;
+			
+			const input = document.getElementById(`donate-dxt-input-${campaignId}`);
+			const amountVal = input.value.trim();
+			if (!amountVal || Number(amountVal) <= 0) {
+				alert("Por favor ingresa un monto válido de DXT.");
+				return;
+			}
+			
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const signer = await provider.getSigner();
+				const userAddress = await signer.getAddress();
+				
+				const tokenAbi = [
+					"function approve(address spender, uint256 amount) external returns (bool)",
+					"function allowance(address owner, address spender) external view returns (uint256)"
+				];
+				const crowdfundAbi = [
+					"function donateDXT(uint256 campaignId, uint256 amount) external"
+				];
+				
+				const tokenContract = new ethers.Contract(DXT_TOKEN_ADDRESS, tokenAbi, signer);
+				const crowdfundContract = new ethers.Contract(DEXTER_CROWDFUND_ADDRESS, crowdfundAbi, signer);
+				
+				const amount = ethers.parseUnits(amountVal, 18);
+				
+				// Comprobar allowance
+				const allowed = await tokenContract.allowance(userAddress, DEXTER_CROWDFUND_ADDRESS);
+				if (allowed < amount) {
+					alert("Primero debes aprobar al contrato de Crowdfunding para gastar tus tokens DXT. Confirma la transacción de aprobación...");
+					const approveTx = await tokenContract.approve(DEXTER_CROWDFUND_ADDRESS, amount);
+					await approveTx.wait();
+					alert("Aprobación completada. Ahora confirma la transacción de donación...");
+				}
+				
+				const tx = await crowdfundContract.donateDXT(campaignId, amount);
+				alert("Donación enviada. Esperando confirmación...");
+				await tx.wait();
+				
+				alert(`¡Donación de ${amountVal} DXT completada con éxito!`);
+				input.value = "";
+				
+				// Confirmar en el backend local
+				await confirmarDonacionBackend(userAddress, campaignId, amountVal, "DXT", tx.hash);
+			} catch (e) {
+				alert("Error en la donación de DXT: " + (e.reason || e.message));
+			}
+		}
+
+		async function donarEthBlockchain(campaignId) {
+			if (!DEXTER_CROWDFUND_ADDRESS || typeof window.ethereum === 'undefined') return;
+			
+			const input = document.getElementById(`donate-eth-input-${campaignId}`);
+			const amountVal = input.value.trim();
+			if (!amountVal || Number(amountVal) <= 0) {
+				alert("Por favor ingresa un monto válido de ETH.");
+				return;
+			}
+			
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const signer = await provider.getSigner();
+				const userAddress = await signer.getAddress();
+				
+				const crowdfundAbi = [
+					"function donateETH(uint256 campaignId) external payable"
+				];
+				const contract = new ethers.Contract(DEXTER_CROWDFUND_ADDRESS, crowdfundAbi, signer);
+				
+				const value = ethers.parseEther(amountVal);
+				
+				alert(`Confirma la transacción de donación de ${amountVal} ETH en MetaMask...`);
+				const tx = await contract.donateETH(campaignId, { value: value });
+				alert("Donación enviada. Esperando confirmación...");
+				await tx.wait();
+				
+				alert(`¡Donación de ${amountVal} ETH completada con éxito!`);
+				input.value = "";
+				
+				// Confirmar en el backend local
+				await confirmarDonacionBackend(userAddress, campaignId, amountVal, "ETH", tx.hash);
+			} catch (e) {
+				alert("Error en la donación de ETH: " + (e.reason || e.message));
+			}
+		}
+
+		async function confirmarDonacionBackend(wallet, campaignId, amount, type, txHash) {
+			try {
+				const response = await fetch('/api/confirm-donation', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						wallet: wallet,
+						campaignId: campaignId,
+						amount: amount.toString(),
+						type: type,
+						txHash: txHash
+					})
+				});
+				if (response.ok) {
+					console.log("Donación confirmada y guardada localmente.");
+					setTimeout(() => window.location.reload(), 1500);
+				}
+			} catch (e) {
+				console.error("Error al registrar donación en backend local", e);
+			}
+		}
+
+		async function retirarFondosBlockchain(campaignId) {
+			if (!DEXTER_CROWDFUND_ADDRESS || typeof window.ethereum === 'undefined') return;
+			
+			try {
+				const provider = new ethers.BrowserProvider(window.ethereum);
+				const signer = await provider.getSigner();
+				
+				const crowdfundAbi = [
+					"function withdrawFunds(uint256 campaignId) external"
+				];
+				const contract = new ethers.Contract(DEXTER_CROWDFUND_ADDRESS, crowdfundAbi, signer);
+				
+				alert("Confirmando transacción de retiro de fondos en MetaMask...");
+				const tx = await contract.withdrawFunds(campaignId);
+				alert("Retiro enviado. Esperando confirmación de bloque...");
+				await tx.wait();
+				
+				alert("¡Fondos de la campaña retirados y transferidos exitosamente a tu billetera!");
+				cargarCrowdfundBlockchain();
+			} catch (e) {
+				alert("Error al retirar fondos: " + (e.reason || e.message));
+			}
 		}
 	</script>
 </body>

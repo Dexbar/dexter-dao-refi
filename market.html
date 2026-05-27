@@ -695,7 +695,7 @@
         }
 
         // Cuenta regresiva del próximo drop
-        const proximoDropUnix = {{.ProximoDropUnix}};
+        const proximoDropUnix = parseInt("{{.ProximoDropUnix}}") || 0;
         function actualizarCuentaRegresiva() {
             const ahora = Math.floor(Date.now() / 1000);
             let diferencia = proximoDropUnix - ahora;

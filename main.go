@@ -218,36 +218,72 @@ func manejadorMarket(w http.ResponseWriter, r *http.Request) {
 // Y la base de datos global es un Mapa (Diccionario) de Wallet -> Perfil
 type Database map[string]UserProfile
 
+type DonationProposal struct {
+	ID           int    `json:"id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Recipient    string `json:"recipient"`
+	Goal         int    `json:"goal"`
+	AmountRaised int    `json:"amountRaised"`
+	Completed    bool   `json:"completed"`
+	Percent      int    `json:"percent"`
+}
+
 type PageData struct {
-	User            string
-	WalletCompleta  string
-	Balance         int
-	ValorPesos      int
-	Mensaje         string
-	Historial       []string
-	VotosRobot      int
-	VotosPago       int
-	TieneAjolote    bool
-	TieneLuna       bool
-	TieneQuetzal    bool
-	TieneAndroide   bool
-	TieneSupremo    bool
-	TieneChinampero bool
-	DiscordWebhook  string
-	TokenAddress    string
-	NFTAddress      string
-	GovAddress      string
-	ContractAddress string
-	UltimoReclamo   int64
-	TiempoRestante  int64
-	Network         string
+	User              string
+	WalletCompleta    string
+	Balance           int
+	ValorPesos        int
+	Mensaje           string
+	Historial         []string
+	VotosRobot        int
+	VotosPago         int
+	TieneAjolote      bool
+	TieneLuna         bool
+	TieneQuetzal      bool
+	TieneAndroide     bool
+	TieneSupremo      bool
+	TieneChinampero   bool
+	DiscordWebhook    string
+	TokenAddress      string
+	NFTAddress        string
+	GovAddress        string
+	CrowdfundAddress  string
+	ContractAddress   string
+	UltimoReclamo     int64
+	TiempoRestante    int64
+	Network           string
+	DonacionesLocales []DonationProposal
 }
 
 type DeployedAddresses struct {
-	DexterDAO string `json:"DexterDAO"`
-	DexterNFT string `json:"DexterNFT"`
-	DexterGov string `json:"DexterGov"`
-	Network   string `json:"network"`
+	DexterDAO       string `json:"DexterDAO"`
+	DexterNFT       string `json:"DexterNFT"`
+	DexterGov       string `json:"DexterGov"`
+	DexterCrowdfund string `json:"DexterCrowdfund"`
+	Network         string `json:"network"`
+}
+
+func cargarDonacionesLocales() []DonationProposal {
+	datos, err := os.ReadFile("db_donations.json")
+	var donaciones []DonationProposal
+	if err == nil {
+		json.Unmarshal(datos, &donaciones)
+		for i := range donaciones {
+			if donaciones[i].Goal > 0 {
+				donaciones[i].Percent = donaciones[i].AmountRaised * 100 / donaciones[i].Goal
+				if donaciones[i].Percent > 100 {
+					donaciones[i].Percent = 100
+				}
+			}
+		}
+	}
+	return donaciones
+}
+
+func guardarDonacionesLocales(donaciones []DonationProposal) {
+	datos, _ := json.MarshalIndent(donaciones, "", "  ")
+	os.WriteFile("db_donations.json", datos, 0644)
 }
 
 func cargarDirecciones() DeployedAddresses {
@@ -550,9 +586,10 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 						mensajeNotif = fmt.Sprintf("¡Chamba registrada on-chain! +%d DXT%s (Tx: %s)", pago, bonoMsg, txHash[:10]+"...")
 						
 						txLink := fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", txHash)
-						if addrs.Network == "alfajores" {
+						switch addrs.Network {
+						case "alfajores":
 							txLink = fmt.Sprintf("https://celo-alfajores.blockscout.com/tx/%s", txHash)
-						} else if addrs.Network == "hardhat" || addrs.Network == "localhost" {
+						case "hardhat", "localhost":
 							txLink = "Red Local (Hardhat)"
 						}
 						
@@ -575,6 +612,53 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 			}
 			mensajeNotif = "¡Tu voto ha sido firmado en la blockchain simulada!"
 			enviarDiscord(perfil.DiscordWebhook, "🗳️ VOTO DE GOBERNANZA FIRMADO", fmt.Sprintf("Billetera: `%s` ha emitido un voto para la propuesta:\n**%s**", displayWallet, propuesta), 16753920, "") // Naranja
+		}
+
+		if r.FormValue("proponer_donacion") != "" {
+			titulo := r.FormValue("titulo")
+			descripcion := r.FormValue("descripcion")
+			goal, _ := strconv.Atoi(r.FormValue("goal"))
+			recipient := r.FormValue("recipient")
+			if titulo != "" && recipient != "" && goal > 0 {
+				donaciones := cargarDonacionesLocales()
+				newId := len(donaciones)
+				donaciones = append(donaciones, DonationProposal{
+					ID:           newId,
+					Title:        titulo,
+					Description:  descripcion,
+					Recipient:    recipient,
+					Goal:         goal,
+					AmountRaised: 0,
+					Completed:    false,
+				})
+				guardarDonacionesLocales(donaciones)
+				mensajeNotif = "¡Propuesta local de donación creada!"
+				enviarDiscord(perfil.DiscordWebhook, "🗳️ NUEVA PROPUESTA DE DONACIÓN (SIMULADA)", fmt.Sprintf("Billetera: `%s` ha propuesto una iniciativa:\n**%s**\n*Meta:* %d TK\n*Beneficiario:* `%s`", displayWallet, titulo, goal, recipient), 16753920, "")
+			}
+		}
+
+		if r.FormValue("donar_local") != "" {
+			propId, _ := strconv.Atoi(r.FormValue("proposal_id"))
+			cantidad, _ := strconv.Atoi(r.FormValue("cantidad"))
+			if cantidad > 0 {
+				donaciones := cargarDonacionesLocales()
+				if propId >= 0 && propId < len(donaciones) {
+					prop := &donaciones[propId]
+					if perfil.Balance >= cantidad {
+						perfil.Balance -= cantidad
+						prop.AmountRaised += cantidad
+						if prop.AmountRaised >= prop.Goal {
+							prop.Completed = true
+						}
+						agregarHistorial(&perfil, fmt.Sprintf("Donaste %d TK a la propuesta: %s", cantidad, prop.Title))
+						guardarDonacionesLocales(donaciones)
+						mensajeNotif = fmt.Sprintf("¡Donaste %d TK exitosamente!", cantidad)
+						enviarDiscord(perfil.DiscordWebhook, "🎁 DONACIÓN SIMULADA REALIZADA", fmt.Sprintf("Billetera: `%s` donó **%d TK** a la iniciativa:\n**%s**\n*Recaudado:* %d/%d TK", displayWallet, cantidad, prop.Title, prop.AmountRaised, prop.Goal), 16766720, "")
+					} else {
+						mensajeNotif = "¡Saldo de TK insuficiente para realizar la donación!"
+					}
+				}
+			}
 		}
 
 		if r.FormValue("comprar") != "" {
@@ -714,28 +798,30 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	datosHTML := PageData{
-		User:            displayWallet,
-		WalletCompleta:  wallet,
-		Balance:         perfil.Balance,
-		ValorPesos:      perfil.Balance * 2,
-		Mensaje:         mensajeNotif,
-		Historial:       perfil.Historial,
-		VotosRobot:      perfil.VotosRobot,
-		VotosPago:       perfil.VotosPago,
-		TieneAjolote:    tieneItem(perfil.Inventario, "ajolote"),
-		TieneLuna:       tieneItem(perfil.Inventario, "luna"),
-		TieneQuetzal:    tieneItem(perfil.Inventario, "quetzal"),
-		TieneAndroide:   tieneItem(perfil.Inventario, "androide"),
-		TieneSupremo:    tieneItem(perfil.Inventario, "supremo"),
-		TieneChinampero: tieneItem(perfil.Inventario, "chinampero"),
-		DiscordWebhook:  perfil.DiscordWebhook,
-		TokenAddress:    addrs.DexterDAO,
-		NFTAddress:      addrs.DexterNFT,
-		GovAddress:      addrs.DexterGov,
-		ContractAddress: perfil.ContractAddress,
-		UltimoReclamo:   perfil.UltimoReclamo,
-		TiempoRestante:  tiempoRestante,
-		Network:         addrs.Network,
+		User:              displayWallet,
+		WalletCompleta:    wallet,
+		Balance:           perfil.Balance,
+		ValorPesos:        perfil.Balance * 2,
+		Mensaje:           mensajeNotif,
+		Historial:         perfil.Historial,
+		VotosRobot:        perfil.VotosRobot,
+		VotosPago:         perfil.VotosPago,
+		TieneAjolote:      tieneItem(perfil.Inventario, "ajolote"),
+		TieneLuna:         tieneItem(perfil.Inventario, "luna"),
+		TieneQuetzal:      tieneItem(perfil.Inventario, "quetzal"),
+		TieneAndroide:     tieneItem(perfil.Inventario, "androide"),
+		TieneSupremo:      tieneItem(perfil.Inventario, "supremo"),
+		TieneChinampero:   tieneItem(perfil.Inventario, "chinampero"),
+		DiscordWebhook:    perfil.DiscordWebhook,
+		TokenAddress:      addrs.DexterDAO,
+		NFTAddress:        addrs.DexterNFT,
+		GovAddress:        addrs.DexterGov,
+		CrowdfundAddress:  addrs.DexterCrowdfund,
+		ContractAddress:   perfil.ContractAddress,
+		UltimoReclamo:     perfil.UltimoReclamo,
+		TiempoRestante:    tiempoRestante,
+		Network:           addrs.Network,
+		DonacionesLocales: cargarDonacionesLocales(),
 	}
 
 	tmpl, _ := template.ParseFiles("index.html")
@@ -794,9 +880,10 @@ func manejadorConfirmNFT(w http.ResponseWriter, r *http.Request) {
 
 	// Mandar alerta a Discord
 	var color int = 0x00ff00
-	if req.Key == "supremo" {
+	switch req.Key {
+	case "supremo":
 		color = 16766720 // Oro
-	} else if req.Key == "chinampero" {
+	case "chinampero":
 		color = 0x00ff66 // Verde Chinampa
 	}
 	
@@ -881,6 +968,62 @@ func manejadorConfirmVote(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("confirmado"))
 }
 
+type ConfirmDonationRequest struct {
+	Wallet     string `json:"wallet"`
+	CampaignID int    `json:"campaignId"`
+	Amount     string `json:"amount"`
+	Type       string `json:"type"`
+	TxHash     string `json:"txHash"`
+}
+
+func manejadorConfirmDonation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+	var req ConfirmDonationRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	wallet := strings.ToLower(req.Wallet)
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe {
+		perfil = UserProfile{Balance: 0, Inventario: []string{}, Historial: []string{}}
+	}
+
+	msgHistorial := fmt.Sprintf("Donación firmada en Blockchain: %s %s a la Campaña #%d (Tx: %s)", req.Amount, req.Type, req.CampaignID, req.TxHash)
+	agregarHistorial(&perfil, msgHistorial)
+
+	// Guardar en la DB
+	db[wallet] = perfil
+	guardarDB(db)
+
+	displayWallet := wallet
+	if len(wallet) > 10 {
+		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
+	}
+
+	txLink := fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", req.TxHash)
+	if req.TxHash == "local" || len(req.TxHash) < 10 {
+		txLink = "Red Local (Hardhat)"
+	}
+
+	enviarDiscord(
+		perfil.DiscordWebhook,
+		"🎁 DONACIÓN REAL EN BLOCKCHAIN",
+		fmt.Sprintf("Billetera: `%s` donó **%s %s** en la blockchain a la Campaña #%d.\n\n**Transacción:** %s", displayWallet, req.Amount, req.Type, req.CampaignID, txLink),
+		65280, // Verde
+		"",
+	)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("confirmado"))
+}
+
 func manejadorLogin(w http.ResponseWriter, r *http.Request) {
 	// Recibir la billetera desde el frontend (JavaScript)
 	if r.Method == "POST" && r.FormValue("wallet") != "" {
@@ -894,6 +1037,13 @@ func manejadorLogin(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+func manejadorCapacitacion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+	http.ServeFile(w, r, "capacitacion.html")
+}
+
 func main() {
 	http.HandleFunc("/img-maestro", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_MAESTRO) })
 	http.HandleFunc("/img-astronauta", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_ASTRONAUTA) })
@@ -904,8 +1054,13 @@ func main() {
 	
 	http.HandleFunc("/api/confirm-nft", manejadorConfirmNFT)
 	http.HandleFunc("/api/confirm-vote", manejadorConfirmVote)
+	http.HandleFunc("/api/confirm-donation", manejadorConfirmDonation)
+	
+	// Servir scripts de forma estática para la descarga de los scripts de Python
+	http.Handle("/scripts/", http.StripPrefix("/scripts/", http.FileServer(http.Dir("scripts"))))
 	
 	http.HandleFunc("/login", manejadorLogin)
+	http.HandleFunc("/capacitacion", manejadorCapacitacion)
 	http.HandleFunc("/market", manejadorMarket)
 	http.HandleFunc("/", manejadorPrincipal)
 	

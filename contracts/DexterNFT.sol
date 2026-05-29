@@ -43,11 +43,13 @@ contract DexterNFT is ERC721, Ownable {
         nftTypes[4] = NFTType("Ajolote Supremo", 5000 * 10**18, 1, 0);
         // 5: Ajolote Chinampero (chinampero), Price: 1500 DXT, Max Supply: 200
         nftTypes[5] = NFTType("Ajolote Chinampero", 1500 * 10**18, 200, 0);
+        // 6: Ajolote Guardian (guardian), Price: 3000 DXT, Max Supply: 40
+        nftTypes[6] = NFTType("Ajolote Guardian", 3000 * 10**18, 40, 0);
     }
 
     // Función para comprar / acuñar un NFT pagando con tokens DXT ERC-20
     function mintNFT(uint256 _nftType) external returns (uint256) {
-        require(_nftType <= 5, "Tipo de NFT invalido");
+        require(_nftType <= 6, "Tipo de NFT invalido");
         NFTType storage nft = nftTypes[_nftType];
         require(nft.currentSupply < nft.maxSupply, "Suministro maximo alcanzado para este tipo");
 
@@ -76,7 +78,7 @@ contract DexterNFT is ERC721, Ownable {
         uint256 maxSupply,
         uint256 currentSupply
     ) {
-        require(_nftType <= 5, "Tipo de NFT invalido");
+        require(_nftType <= 6, "Tipo de NFT invalido");
         NFTType memory nft = nftTypes[_nftType];
         return (nft.name, nft.price, nft.maxSupply, nft.currentSupply);
     }

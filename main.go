@@ -124,6 +124,18 @@ var marketItems = []MarketItem{{
 	Elemento:    "Tierra/Planta",
 	Poder:       92,
 	RarezaPorc:  95,
+}, {
+	Key:         "guardian",
+	ImgPath:     "/img-guardian",
+	DisplayName: "Ajolote Guardián",
+	Price:       3000,
+	Name:        "guardian",
+	MaxSupply:   40,
+	Rarity:      "Legendario",
+	Description: "Forjado en la red Celo con fuego digital y capacidades de protección on-chain.",
+	Elemento:    "Fuego",
+	Poder:       97,
+	RarezaPorc:  98,
 }}
 
 func manejadorMarket(w http.ResponseWriter, r *http.Request) {
@@ -251,6 +263,7 @@ type PageData struct {
 	TieneAndroide     bool
 	TieneSupremo      bool
 	TieneChinampero   bool
+	TieneGuardian     bool
 	TienePoap         bool
 	DiscordWebhook    string
 	TokenAddress      string
@@ -429,6 +442,7 @@ const RUTA_ANDROIDE = `assets/ajolote_androide.png`
 const RUTA_SUPREMO = `assets/ajolote_supremo.png`
 const RUTA_CHINAMPERO = `assets/ajolote_chinampero.png`
 const RUTA_DEVCONNECT = `assets/ajolote_devconnect.png`
+const RUTA_GUARDIAN = `assets/ajolote_guardian.png`
 
 func enviarDiscord(webhookURL string, titulo string, descripcion string, color int, imagePath string) {
 	if webhookURL == "" {
@@ -792,6 +806,11 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 				imgPath = RUTA_CHINAMPERO
 				nftNombre = "🌾 Ajolote Chinampero"
 				color = 65280 // Verde
+			case "guardian":
+				p = 3000
+				imgPath = RUTA_GUARDIAN
+				nftNombre = "🔥 Ajolote Guardián"
+				color = 16729856 // Naranja
 			}
 			
 			// Find the item definition for supply limit check
@@ -858,6 +877,11 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 				imgPath = RUTA_CHINAMPERO
 				nftNombre = "🌾 Ajolote Chinampero"
 				color = 16711680 // Rojo
+			case "guardian":
+				v = 2000
+				imgPath = RUTA_GUARDIAN
+				nftNombre = "🔥 Ajolote Guardián"
+				color = 16711680 // Rojo
 			}
 			
 			if tieneItem(perfil.Inventario, it) {
@@ -911,6 +935,7 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		TieneAndroide:     tieneItem(perfil.Inventario, "androide"),
 		TieneSupremo:      tieneItem(perfil.Inventario, "supremo"),
 		TieneChinampero:   tieneItem(perfil.Inventario, "chinampero"),
+		TieneGuardian:     tieneItem(perfil.Inventario, "guardian"),
 		TienePoap:         perfil.TienePoap,
 		DiscordWebhook:    perfil.DiscordWebhook,
 		TokenAddress:      addrs.DexterDAO,
@@ -1744,6 +1769,7 @@ func main() {
 	http.HandleFunc("/img-supremo", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_SUPREMO) })
 	http.HandleFunc("/img-chinampero", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_CHINAMPERO) })
 	http.HandleFunc("/img-devconnect", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_DEVCONNECT) })
+	http.HandleFunc("/img-guardian", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_GUARDIAN) })
 	
 	http.HandleFunc("/api/confirm-nft", manejadorConfirmNFT)
 	http.HandleFunc("/api/confirm-vote", manejadorConfirmVote)

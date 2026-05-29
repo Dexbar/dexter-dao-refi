@@ -130,6 +130,7 @@
         .nft-card.robot:hover   { border-color: var(--purple); box-shadow: 0 20px 60px rgba(176,111,255,0.2); }
         .nft-card.supremo:hover { border-color: var(--gold); box-shadow: 0 20px 60px rgba(255,215,0,0.4); }
         .nft-card.chinampero:hover { border-color: #00ff66; box-shadow: 0 20px 60px rgba(0,255,102,0.2); }
+        .nft-card.guardian:hover { border-color: #ff5500; box-shadow: 0 20px 60px rgba(255,85,0,0.3); }
 
         /* Rarity badge */
         .rarity {
@@ -180,6 +181,7 @@
         .robot   .btn-buy-buy { background: linear-gradient(135deg, var(--purple), #5000aa); color: #fff; }
         .supremo .btn-buy-buy { background: linear-gradient(135deg, var(--gold), #ff8c00); color: #000; }
         .chinampero .btn-buy-buy { background: linear-gradient(135deg, #00ff66, #009944); color: #000; }
+        .guardian .btn-buy-buy { background: linear-gradient(135deg, #ff5500, #ff2200); color: #fff; }
 
         .btn-sell { background: linear-gradient(135deg, #ff4444, #aa0000); color: #fff; }
 
@@ -442,6 +444,7 @@
                     {{if eq .Key `androide`}}color:var(--purple){{end}}
                     {{if eq .Key `supremo`}}color:var(--gold){{end}}
                     {{if eq .Key `chinampero`}}color:#00ff66{{end}}
+                    {{if eq .Key `guardian`}}color:#ff5500{{end}}
                 ">
                     {{.Price}}<span>DXT</span>
                 </div>
@@ -659,7 +662,7 @@
             console.log("Acuñando NFT en Blockchain...");
             
             // Mapear key a tipo
-            const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero"];
+            const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero", "guardian"];
             const nftType = nftKeys.indexOf(key);
 
             const mintTx = await nftContractWrite.mintNFT(nftType);

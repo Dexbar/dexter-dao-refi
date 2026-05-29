@@ -55,6 +55,9 @@
 		.nft-card.chinampero { color: #00ff66; border: 1px solid rgba(0,255,102,0.5); }
 		.nft-card.chinampero:hover { animation: pulse-glow 2s infinite; border-color:#00ff66; }
 
+		.nft-card.guardian { color: #ff5500; border: 1px solid rgba(255,85,0,0.5); }
+		.nft-card.guardian:hover { animation: pulse-glow 2s infinite; border-color:#ff5500; }
+
 		.nft-card.supremo { color: #ffd700; border: 1px solid rgba(255,215,0,0.8); background: linear-gradient(135deg, rgba(6,6,16,0.9), rgba(255,215,0,0.08)); }
 		.nft-card.supremo:hover { animation: pulse-glow 1.5s infinite; border-color:#ffffff; box-shadow: 0 0 25px rgba(255,215,0,0.6); }
 
@@ -127,6 +130,7 @@
 		.stat-badge.el-divino { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.3); color: #ffd700; }
 		.stat-badge.el-cyber { background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.3); color: #00ff00; }
 		.stat-badge.el-oro { background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2)); border-color: #ffd700; color: #ffd700; }
+		.stat-badge.el-fuego { background: rgba(255, 85, 0, 0.1); border-color: rgba(255, 85, 0, 0.3); color: #ff5500; }
 
 		.stat-bar-container {
 			width: 100%;
@@ -253,6 +257,7 @@
 		.glow-divino { color: #ffd700; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)); }
 		.glow-cyber { color: #00ff00; filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.6)); }
 		.glow-oro { color: #ff8c00; filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.8)); }
+		.glow-fuego { color: #ff5500; filter: drop-shadow(0 0 10px rgba(255, 85, 0, 0.8)); }
 
 		@keyframes float-soft-stationary {
 			0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -1029,6 +1034,61 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('elixir_fury', 250, 'Elíxir de Furia')">Comprar</button>
 								</div>
 							</div>
+							<div class="item-shop-card">
+								<div>
+									<div class="item-icon">⚔️⚡</div>
+									<div class="item-name">Cyber Sable</div>
+									<div class="item-desc">+15 daño extra en cada ataque básico.</div>
+								</div>
+								<div>
+									<div class="item-price">400 TK</div>
+									<button type="button" class="btn-buy-item" onclick="comprarItemArena('cyber_sword', 400, 'Cyber Sable')">Comprar</button>
+								</div>
+							</div>
+							<div class="item-shop-card">
+								<div>
+									<div class="item-icon">☣️🧪</div>
+									<div class="item-name">Bomba Ácida</div>
+									<div class="item-desc">Inflige 60 daño directo incondicional.</div>
+								</div>
+								<div>
+									<div class="item-price">300 TK</div>
+									<button type="button" class="btn-buy-item" onclick="comprarItemArena('acid_bomb', 300, 'Bomba Ácida')">Comprar</button>
+								</div>
+							</div>
+							<div class="item-shop-card">
+								<div>
+									<div class="item-icon">🔨🌌</div>
+									<div class="item-name">Martillo Gravitacional</div>
+									<div class="item-desc">80 daño pesado y 35% de prob. de aturdir.</div>
+								</div>
+								<div>
+									<div class="item-price">500 TK</div>
+									<button type="button" class="btn-buy-item" onclick="comprarItemArena('gravity_hammer', 500, 'Martillo Gravitacional')">Comprar</button>
+								</div>
+							</div>
+							<div class="item-shop-card">
+								<div>
+									<div class="item-icon">🛡️🌵</div>
+									<div class="item-name">Escudo de Espinas</div>
+									<div class="item-desc">30 de escudo e inflige 20 de daño reflectivo.</div>
+								</div>
+								<div>
+									<div class="item-price">350 TK</div>
+									<button type="button" class="btn-buy-item" onclick="comprarItemArena('spike_shield', 350, 'Escudo de Espinas')">Comprar</button>
+								</div>
+							</div>
+							<div class="item-shop-card">
+								<div>
+									<div class="item-icon">🔫⚡</div>
+									<div class="item-name">Rayo de Plasma</div>
+									<div class="item-desc">Dispara energía que causa 55 de daño Cyber.</div>
+								</div>
+								<div>
+									<div class="item-price">450 TK</div>
+									<button type="button" class="btn-buy-item" onclick="comprarItemArena('plasma_beam', 450, 'Rayo de Plasma')">Comprar</button>
+								</div>
+							</div>
 						</div>
 					</div>
 					<!-- MOCHILA -->
@@ -1163,6 +1223,14 @@
 					<div class="floating-axolotl glow-agua ax-float-6" title="Ajolote Chinampero" style="left: 50%; top: 10%; color: #00ff88;">
 						<img src="/img-chinampero" alt="Ajolote Chinampero" />
 						<span>Chinampero</span>
+					</div>
+				{{end}}
+				
+				{{if .TieneGuardian}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-fuego ax-float-8" title="Ajolote Guardián" style="left: 60%; top: 30%;">
+						<img src="/img-guardian" alt="Ajolote Guardián" />
+						<span>Guardián</span>
 					</div>
 				{{end}}
 
@@ -1586,6 +1654,31 @@
 					<button type="submit" name="vender" value="supremo" style="background:#ff3333; color:#fff;">REVENDER (7500 TK)</button>
 				{{else}}
 					<button type="submit" name="comprar" value="supremo" style="background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000;">COMPRAR (5000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card guardian holo-shine">
+			<h3>🔥 AJOLOTE GUARDIÁN</h3>
+			<img src="/img-guardian" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-fuego">🔥 Fuego</span>
+				<span class="stat-badge">⚡ Poder: 97</span>
+				<span class="stat-badge">💎 Rareza: 98%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 97%; background: #ff5500;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneGuardian}}
+					<button type="submit" name="vender" value="guardian" style="background:#ff3333; color:#fff;">REVENDER (2000 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="guardian" style="background:#ff5500; color:#fff;">COMPRAR (3000 TK)</button>
 				{{end}}
 			</form>
 		</div>
@@ -2118,6 +2211,7 @@
 		{{if .TieneAndroide}}INVENTARIO_CARTAS.push("androide");{{end}}
 		{{if .TieneChinampero}}INVENTARIO_CARTAS.push("chinampero");{{end}}
 		{{if .TieneSupremo}}INVENTARIO_CARTAS.push("supremo");{{end}}
+		{{if .TieneGuardian}}INVENTARIO_CARTAS.push("guardian");{{end}}
 
 		const CARDS_DATA = {
 			"starter": {
@@ -2203,6 +2297,18 @@
 				imgPath: "/img-supremo",
 				description: "Soberano absoluto de la blockchain.",
 				color: "#ffd700"
+			},
+			"guardian": {
+				key: "guardian",
+				name: "guardian",
+				displayName: "Ajolote Guardián",
+				element: "Fuego",
+				power: 97,
+				hp: 180,
+				maxHp: 180,
+				imgPath: "/img-guardian",
+				description: "Forjado en la red Celo con fuego digital y capacidades de protección on-chain.",
+				color: "#ff5500"
 			}
 		};
 
@@ -2280,13 +2386,19 @@
 
 		// --- SISTEMA DE MOCHILA Y FURY EN COMBATE ---
 		let playerFuryActive = false; // Multiplicador de daño 1.2x
+		let playerSwordActive = false; // Daño extra +15
 
 		// Estructura de items
 		const ARENA_ITEMS_META = {
 			potion_life: { icon: "🧪", displayName: "Poción de Vida", desc: "Restaura 40 HP.", cost: 150 },
 			super_potion: { icon: "🧪✨", displayName: "Súper Poción", desc: "Restaura 100 HP.", cost: 350 },
 			plasma_shield: { icon: "🛡️⚡", displayName: "Escudo Plasma", desc: "Genera 50 de Escudo.", cost: 200 },
-			elixir_fury: { icon: "🔥🧪", displayName: "Elíxir de Furia", desc: "Daño +20% este combate.", cost: 250 }
+			elixir_fury: { icon: "🔥🧪", displayName: "Elíxir de Furia", desc: "Daño +20% este combate.", cost: 250 },
+			cyber_sword: { icon: "⚔️⚡", displayName: "Cyber Sable", desc: "Ataques básicos causan +15 de daño extra.", cost: 400 },
+			acid_bomb: { icon: "☣️🧪", displayName: "Bomba Ácida", desc: "Inflige 60 de daño directo incondicional.", cost: 300 },
+			gravity_hammer: { icon: "🔨🌌", displayName: "Martillo Gravitacional", desc: "80 de daño pesado y 35% prob. de stun.", cost: 500 },
+			spike_shield: { icon: "🛡️🌵", displayName: "Escudo de Espinas", desc: "Otorga 30 de escudo e inflige 20 de daño reflectivo.", cost: 350 },
+			plasma_beam: { icon: "🔫⚡", displayName: "Rayo de Plasma", desc: "Dispara energía que causa 55 de daño Cyber.", cost: 450 }
 		};
 
 		// Obtener mochila del localStorage
@@ -2298,7 +2410,12 @@
 					potion_life: 0,
 					super_potion: 0,
 					plasma_shield: 0,
-					elixir_fury: 0
+					elixir_fury: 0,
+					cyber_sword: 0,
+					acid_bomb: 0,
+					gravity_hammer: 0,
+					spike_shield: 0,
+					plasma_beam: 0
 				};
 				localStorage.setItem(key, JSON.stringify(backpack));
 			} else {
@@ -2478,6 +2595,58 @@
 				setTimeout(() => SOUNDS.attack(), 150);
 				spawnBurst("crit", true);
 				agregarLogBatalla(`🔥🧪 Usaste *Elíxir de Furia*. Tus ataques infligirán +20% de daño este combate.`, '#ff3333');
+			} else if (itemId === 'cyber_sword') {
+				playerSwordActive = true;
+				crearPopupBatalla(true, `⚔️ Sable`, true);
+				SOUNDS.crit();
+				spawnBurst("Cyber", true);
+				agregarLogBatalla(`⚔️⚡ Equipaste *Cyber Sable*. Tus ataques básicos causarán +15 de daño extra.`, '#00ffe5');
+			} else if (itemId === 'acid_bomb') {
+				const acidDmg = 60;
+				opponentHP = Math.max(0, opponentHP - acidDmg);
+				crearPopupBatalla(false, `☣️-${acidDmg}`);
+				SOUNDS.hit();
+				spawnBurst("crit", false);
+				agregarLogBatalla(`☣️🧪 Lanzaste una *Bomba Ácida* e infligiste ${acidDmg} de daño directo al enemigo.`, '#00ff88');
+				document.getElementById('opponent-hp-bar').style.width = (opponentHP / opponentMaxHP * 100) + '%';
+				document.getElementById('opponent-hp-text').innerText = `${opponentHP} / ${opponentMaxHP} HP`;
+			} else if (itemId === 'gravity_hammer') {
+				const hammerDmg = 80;
+				opponentHP = Math.max(0, opponentHP - hammerDmg);
+				const isStunned = Math.random() < 0.35;
+				crearPopupBatalla(false, `🔨-${hammerDmg}`);
+				SOUNDS.crit();
+				spawnBurst("Cósmico", false);
+				document.getElementById('opponent-hp-bar').style.width = (opponentHP / opponentMaxHP * 100) + '%';
+				document.getElementById('opponent-hp-text').innerText = `${opponentHP} / ${opponentMaxHP} HP`;
+				if (isStunned) {
+					opponentStunned = true;
+					agregarLogBatalla(`🔨🌌 Usaste *Martillo Gravitacional* e infligiste ${hammerDmg} de daño. ¡Has aturdido al enemigo!`, '#b06fff');
+				} else {
+					agregarLogBatalla(`🔨🌌 Usaste *Martillo Gravitacional* e infligiste ${hammerDmg} de daño.`, '#b06fff');
+				}
+			} else if (itemId === 'spike_shield') {
+				const shieldAmt = 30;
+				const reflectDmg = 20;
+				playerShield += shieldAmt;
+				opponentHP = Math.max(0, opponentHP - reflectDmg);
+				crearPopupBatalla(true, `🛡️+${shieldAmt}`, true);
+				crearPopupBatalla(false, `🌵-${reflectDmg}`);
+				SOUNDS.shield();
+				spawnBurst("Tierra/Planta", true);
+				spawnBurst("Tierra/Planta", false);
+				agregarLogBatalla(`🛡️🌵 Usaste *Escudo de Espinas*. Generas ${shieldAmt} de escudo e infliges ${reflectDmg} de daño reflectivo.`, '#00ff88');
+				document.getElementById('opponent-hp-bar').style.width = (opponentHP / opponentMaxHP * 100) + '%';
+				document.getElementById('opponent-hp-text').innerText = `${opponentHP} / ${opponentMaxHP} HP`;
+			} else if (itemId === 'plasma_beam') {
+				const beamDmg = 55;
+				opponentHP = Math.max(0, opponentHP - beamDmg);
+				crearPopupBatalla(false, `🔫-${beamDmg}`);
+				SOUNDS.attack();
+				spawnBurst("Cyber", false);
+				agregarLogBatalla(`🔫⚡ Disparaste un *Rayo de Plasma* e infligiste ${beamDmg} de daño Cyber.`, '#00ff00');
+				document.getElementById('opponent-hp-bar').style.width = (opponentHP / opponentMaxHP * 100) + '%';
+				document.getElementById('opponent-hp-text').innerText = `${opponentHP} / ${opponentMaxHP} HP`;
 			}
 
 			// Actualizar UI del HP del jugador y badges
@@ -2729,6 +2898,12 @@
 				if (playerRegenTurns > 0) {
 					html += `<span class="battle-status-badge" style="color: #00ff88;"><i style="font-style: normal;">🌾</i> Regen: ${playerRegenTurns}t</span>`;
 				}
+				if (playerSwordActive) {
+					html += `<span class="battle-status-badge" style="color: #00ffe5;"><i style="font-style: normal;">⚔️</i> Sable Activo</span>`;
+				}
+				if (playerFuryActive) {
+					html += `<span class="battle-status-badge" style="color: #ff3333;"><i style="font-style: normal;">🔥</i> Furia Activa</span>`;
+				}
 				playerBadges.innerHTML = html;
 			}
 
@@ -2798,6 +2973,7 @@
 			else if (card.element === "Cyber") elementBadge = "🤖 Cyber";
 			else if (card.element === "Cósmico/Oro") elementBadge = "👑 Cósmico/Oro";
 			else if (card.element === "Tierra/Planta") elementBadge = "🌱 Tierra/Planta";
+			else if (card.element === "Fuego") elementBadge = "🔥 Fuego";
 			else elementBadge = card.element;
 
 			// Determinar color de borde neon
@@ -2842,6 +3018,7 @@
 			else if (enemy.element === "Divino") elementBadge = "✨ Divino";
 			else if (enemy.element === "Cyber") elementBadge = "🤖 Cyber";
 			else if (enemy.element === "Tierra/Planta") elementBadge = "🌱 Tierra/Planta";
+			else if (enemy.element === "Fuego") elementBadge = "🔥 Fuego";
 			else elementBadge = enemy.element;
 
 			let borderStyle = `border: 1.5px solid ${enemy.color || '#ff003c'}; box-shadow: 0 0 10px ${enemy.color || '#ff003c'}44;`;
@@ -2914,6 +3091,7 @@
 			document.getElementById('btn-flee').disabled = false;
 
 			playerFuryActive = false;
+			playerSwordActive = false;
 			const shopPanel = document.getElementById('arena-shop-backpack-panel');
 			if (shopPanel) shopPanel.style.display = 'none';
 
@@ -3020,6 +3198,9 @@
 				} else {
 					const mult = calcularMultiplicadorElemental(playerFighter.element, opponentFighter.element);
 					let baseDmg = Math.floor(playerFighter.power * 0.25) + Math.floor(Math.random() * 8);
+					if (playerSwordActive) {
+						baseDmg += 15;
+					}
 					if (playerFuryActive) {
 						baseDmg = Math.floor(baseDmg * 1.2);
 					}
@@ -3187,6 +3368,36 @@
 					SOUNDS.heal();
 					spawnBurst("Tierra/Planta", true);
 					agregarLogBatalla(`Usaste *Cosecha de Chinampa*. Te curas +${heal} HP y activas regeneración por 3 turnos. 🌾`, '#00ff88');
+					
+				} else if (key === 'guardian') {
+					playerCard.classList.add('card-attack-left');
+					setTimeout(() => playerCard.classList.remove('card-attack-left'), 400);
+					SOUNDS.attack();
+					
+					dmg = 45 + Math.floor(Math.random() * 8);
+					if (playerFuryActive) {
+						dmg = Math.floor(dmg * 1.2);
+					}
+					opponentHP = Math.max(0, opponentHP - dmg);
+					playerShield = (playerShield || 0) + 25;
+					
+					setTimeout(() => {
+						opponentCard.classList.add('card-shake');
+						setTimeout(() => opponentCard.classList.remove('card-shake'), 350);
+						crearPopupBatalla(false, `🔥-${dmg}`);
+						crearPopupBatalla(true, `🛡️+25`, true);
+						SOUNDS.hit();
+						SOUNDS.shield();
+						spawnBurst("crit", false);
+						
+						document.getElementById('opponent-hp-bar').style.width = (opponentHP / opponentMaxHP * 100) + '%';
+						document.getElementById('opponent-hp-text').innerText = `${opponentHP} / ${opponentMaxHP} HP`;
+						document.getElementById('player-hp-bar').style.width = (playerHP / playerMaxHP * 100) + '%';
+						document.getElementById('player-hp-text').innerText = `${playerHP} / ${playerMaxHP} HP`;
+						actualizarEstadosBadges();
+					}, 200);
+					
+					agregarLogBatalla(`Usaste *Escudo Ígneo*. Causa ${dmg} de daño elemental e incrementa tu escudo en +25 HP.`, '#ff5500');
 					
 				} else if (key === 'supremo') {
 					playerCard.classList.add('card-attack-left');
@@ -3426,6 +3637,8 @@
 			playerRegenTurns = 0;
 			opponentStunned = false;
 			opponentIsDefending = false;
+			playerSwordActive = false;
+			playerFuryActive = false;
 			actualizarEstadosBadges();
 
 			if (victory) {

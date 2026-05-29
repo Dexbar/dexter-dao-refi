@@ -344,6 +344,57 @@ func mintearTokensBlockchain(network string, recipient string, amount int) (stri
 	return "", fmt.Errorf("no se encontro confirmacion en salida: %s", output)
 }
 
+func verificarTransaccionBlockchain(txHash string, txType string, wallet string) (bool, error) {
+	addrs := cargarDirecciones()
+	// Si la transaccion es "local" o vacia, la aceptamos si la red es local y deseamos permitirlo (como fallback)
+	if txHash == "local" || txHash == "" {
+		if addrs.Network == "localhost" || addrs.Network == "hardhat" || addrs.Network == "" {
+			return true, nil
+		}
+		return false, fmt.Errorf("transaccion vacia o de fallback no permitida en red publica")
+	}
+
+	netParam := addrs.Network
+	if netParam == "" {
+		netParam = "hardhat"
+	}
+	if netParam == "hardhat" {
+		netParam = "localhost"
+	}
+
+	cmd := exec.Command("node", "scripts/verify_transaction.js", txHash, txType, wallet)
+	cmd.Env = append(os.Environ(),
+		"HARDHAT_NETWORK="+netParam,
+	)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	output := stdout.String()
+
+	if err != nil {
+		return false, fmt.Errorf("ejecucion fallida: %v, stderr: %s, stdout: %s", err, stderr.String(), output)
+	}
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "VERIFY_SUCCESS:") {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 2 {
+				return parts[1] == "true", nil
+			}
+		}
+		if strings.HasPrefix(line, "VERIFY_FAILURE:") {
+			return false, fmt.Errorf("fallo de verificacion blockchain: %s", line)
+		}
+	}
+
+	return false, fmt.Errorf("no se encontro confirmacion de verificacion en la salida: %s", output)
+}
+
 
 type ConfirmNFTRequest struct {
 	Wallet string `json:"wallet"`
@@ -891,6 +942,14 @@ func manejadorConfirmNFT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wallet := strings.ToLower(req.Wallet)
+
+	// Verificar la transacción on-chain antes de actualizar la base de datos
+	valido, errVerify := verificarTransaccionBlockchain(req.TxHash, "nft_mint", wallet)
+	if errVerify != nil || !valido {
+		http.Error(w, fmt.Sprintf("Verificacion de transaccion fallida: %v", errVerify), http.StatusBadRequest)
+		return
+	}
+
 	db := cargarDB()
 	perfil, existe := db[wallet]
 	if !existe {
@@ -972,6 +1031,14 @@ func manejadorConfirmVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wallet := strings.ToLower(req.Wallet)
+
+	// Verificar la transacción on-chain antes de actualizar la base de datos
+	valido, errVerify := verificarTransaccionBlockchain(req.TxHash, "proposal_vote", wallet)
+	if errVerify != nil || !valido {
+		http.Error(w, fmt.Sprintf("Verificacion de transaccion fallida: %v", errVerify), http.StatusBadRequest)
+		return
+	}
+
 	db := cargarDB()
 	perfil, existe := db[wallet]
 	if !existe {
@@ -1039,6 +1106,14 @@ func manejadorConfirmDonation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wallet := strings.ToLower(req.Wallet)
+
+	// Verificar la transacción on-chain antes de actualizar la base de datos
+	valido, errVerify := verificarTransaccionBlockchain(req.TxHash, "donation", wallet)
+	if errVerify != nil || !valido {
+		http.Error(w, fmt.Sprintf("Verificacion de transaccion fallida: %v", errVerify), http.StatusBadRequest)
+		return
+	}
+
 	db := cargarDB()
 	perfil, existe := db[wallet]
 	if !existe {
@@ -1690,6 +1765,20 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	// Iniciar escuchador de eventos de la blockchain en segundo plano (daemon)
+	go func() {
+		time.Sleep(1 * time.Second)
+		fmt.Println("🚀 Iniciando daemon blockchain_listener.js en segundo plano...")
+		cmdListener := exec.Command("node", "scripts/blockchain_listener.js")
+		cmdListener.Stdout = os.Stdout
+		cmdListener.Stderr = os.Stderr
+		errListener := cmdListener.Run()
+		if errListener != nil {
+			fmt.Printf("⚠️ El daemon blockchain_listener.js se detuvo con error: %v\n", errListener)
+		}
+	}()
+
 	fmt.Printf("--- SERVIDOR WEB3 MULTICUENTA ACTIVADO en puerto %s ---\n", port)
 	fmt.Println("Seguridad: Basada en Firmas de MetaMask")
 	fmt.Printf("Entra a: http://localhost:%s o tu IP pública/dominio\n", port)

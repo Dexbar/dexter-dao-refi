@@ -1378,7 +1378,7 @@
 							<span>Meta: {{.Goal}} TK</span>
 						</div>
 						<div class="stat-bar-container" style="background: rgba(255,255,255,0.05); height: 6px; margin-bottom: 10px; border-radius: 3px;">
-							<div class="stat-bar" style="height: 100%; background: #ffd700; width: {{.Percent}}%; border-radius: 3px;"></div>
+							<div class="stat-bar" data-width="{{.Percent}}%" style="height: 100%; background: #ffd700; border-radius: 3px;"></div>
 						</div>
 
 						<!-- Formulario Donación -->
@@ -4987,6 +4987,13 @@
 			const box = btn.parentElement;
 			copyCommandToClipboard(box);
 		}
+
+		// Apply dynamic widths to stat bars to avoid CSS parsing errors with Go templates
+		document.addEventListener('DOMContentLoaded', () => {
+			document.querySelectorAll('.stat-bar[data-width]').forEach(el => {
+				el.style.width = el.getAttribute('data-width');
+			});
+		});
 	</script>
 </body>
 </html>

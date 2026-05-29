@@ -480,12 +480,23 @@
     let TARGET_CHAIN_HEX = "0x7a69";
     let TARGET_NETWORK_NAME = "Hardhat Local";
     let TARGET_RPC_URL = "http://localhost:8545";
+    let TARGET_NATIVE_SYMBOL = "ETH";
+    let TARGET_NATIVE_NAME = "ETH";
 
     if (DEXTER_NETWORK === "sepolia") {
         TARGET_CHAIN_ID = 11155111;
         TARGET_CHAIN_HEX = "0xaa36a7";
         TARGET_NETWORK_NAME = "Red de prueba Sepolia";
-        TARGET_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com";
+        TARGET_RPC_URL = "https://rpc.ankr.com/eth_sepolia";
+        TARGET_NATIVE_SYMBOL = "ETH";
+        TARGET_NATIVE_NAME = "ETH";
+    } else if (DEXTER_NETWORK === "alfajores") {
+        TARGET_CHAIN_ID = 44787;
+        TARGET_CHAIN_HEX = "0xafc7";
+        TARGET_NETWORK_NAME = "Celo Alfajores Testnet";
+        TARGET_RPC_URL = "https://alfajores-forno.celo-testnet.org";
+        TARGET_NATIVE_SYMBOL = "CELO";
+        TARGET_NATIVE_NAME = "CELO";
     }
 
     // Mostrar dirección en el footer
@@ -590,7 +601,7 @@
                                     chainId: TARGET_CHAIN_HEX,
                                     chainName: TARGET_NETWORK_NAME,
                                     rpcUrls: [TARGET_RPC_URL],
-                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+                                    nativeCurrency: { name: TARGET_NATIVE_NAME, symbol: TARGET_NATIVE_SYMBOL, decimals: 18 }
                                 }],
                             });
                         } catch (addError) {

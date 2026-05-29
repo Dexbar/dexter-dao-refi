@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract DexterNFT is ERC721, Ownable {
     IERC20 public dxtToken;
     uint256 public nextTokenId;
+    string private _baseTokenURI;
 
     // Estructura para definir los detalles de cada tipo de NFT
     struct NFTType {
@@ -27,6 +28,7 @@ contract DexterNFT is ERC721, Ownable {
 
     constructor(address _dxtTokenAddress) ERC721("Dexter Ajolote NFT", "DXNFT") Ownable(msg.sender) {
         dxtToken = IERC20(_dxtTokenAddress);
+        _baseTokenURI = "http://localhost:8080/api/nft/metadata/";
         
         // Inicializar los tipos de Ajolotes NFT según las especificaciones
         // 0: Maestro (ajolote), Price: 200 DXT, Max Supply: 500
@@ -84,5 +86,15 @@ contract DexterNFT is ERC721, Ownable {
         uint256 balance = dxtToken.balanceOf(address(this));
         require(balance > 0, "No hay tokens para retirar");
         require(dxtToken.transfer(owner(), balance), "Retiro fallido");
+    }
+
+    // Override _baseURI from OpenZeppelin ERC721
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _baseTokenURI;
+    }
+
+    // Allow owner to set a new base URI
+    function setBaseURI(string calldata newBaseURI) external onlyOwner {
+        _baseTokenURI = newBaseURI;
     }
 }

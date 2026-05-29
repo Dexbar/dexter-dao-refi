@@ -40,11 +40,11 @@ async function main() {
   if (network === "localhost" || network === "hardhat") {
     rpcUrl = "http://127.0.0.1:8545";
   } else if (network === "sepolia") {
-    rpcUrl = process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com";
+    rpcUrl = process.env.SEPOLIA_RPC_URL || "https://rpc.ankr.com/eth_sepolia";
   } else if (network === "alfajores") {
     rpcUrl = process.env.ALFAJORES_RPC_URL || "https://alfajores-forno.celo-testnet.org";
   } else {
-    rpcUrl = process.env.RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com";
+    rpcUrl = process.env.RPC_URL || "https://rpc.ankr.com/eth_sepolia";
   }
 
   // Clave privada del deployer (owner del contrato)

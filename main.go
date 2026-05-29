@@ -16,6 +16,11 @@ import (
 	"time"
 )
 
+type FighterStats struct {
+	Wins   int `json:"wins"`
+	Losses int `json:"losses"`
+}
+
 // Ahora la base de datos es el perfil de UN usuario
 type UserProfile struct {
 	Balance         int
@@ -27,6 +32,8 @@ type UserProfile struct {
 	ContractAddress string
 	TokenAddress    string
 	UltimoReclamo   int64
+	TienePoap       bool
+	FighterStats    map[string]FighterStats `json:"fighterStats"`
 }
 
 // MarketItem represents an NFT in the marketplace
@@ -244,6 +251,7 @@ type PageData struct {
 	TieneAndroide     bool
 	TieneSupremo      bool
 	TieneChinampero   bool
+	TienePoap         bool
 	DiscordWebhook    string
 	TokenAddress      string
 	NFTAddress        string
@@ -254,6 +262,7 @@ type PageData struct {
 	TiempoRestante    int64
 	Network           string
 	DonacionesLocales []DonationProposal
+	FighterStatsJSON  string
 }
 
 type DeployedAddresses struct {
@@ -348,6 +357,19 @@ type ConfirmVoteRequest struct {
 	TxHash     string `json:"txHash"`
 }
 
+type OpenSeaAttribute struct {
+	TraitType string      `json:"trait_type"`
+	Value     interface{} `json:"value"`
+}
+
+type OpenSeaMetadata struct {
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	Image       string             `json:"image"`
+	ExternalURL string             `json:"external_url"`
+	Attributes  []OpenSeaAttribute `json:"attributes"`
+}
+
 
 const RUTA_MAESTRO = `assets/ajolote_maestro.png`
 const RUTA_ASTRONAUTA = `assets/ajolote_astronauta.png`
@@ -355,6 +377,7 @@ const RUTA_QUETZAL = `assets/ajolote_quetzal.png`
 const RUTA_ANDROIDE = `assets/ajolote_androide.png`
 const RUTA_SUPREMO = `assets/ajolote_supremo.png`
 const RUTA_CHINAMPERO = `assets/ajolote_chinampero.png`
+const RUTA_DEVCONNECT = `assets/ajolote_devconnect.png`
 
 func enviarDiscord(webhookURL string, titulo string, descripcion string, color int, imagePath string) {
 	if webhookURL == "" {
@@ -520,6 +543,22 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		agregarHistorial(&perfil, "Cuenta Web3 creada exitosamente.")
 	}
 
+	// Verificar POAP en segundo plano si aún no está validado
+	if !perfil.TienePoap {
+		cmd := exec.Command("node", "scripts/verify_poap.js", wallet)
+		var stdout bytes.Buffer
+		cmd.Stdout = &stdout
+		if err := cmd.Run(); err == nil {
+			output := strings.TrimSpace(stdout.String())
+			if strings.Contains(output, "POAP_VERIFY_SUCCESS:true") {
+				perfil.TienePoap = true
+				agregarHistorial(&perfil, "¡POAP Devconnect verificado! Bono de mineria de +5 DXT desbloqueado. 🇦🇷")
+				db[wallet] = perfil
+				guardarDB(db)
+			}
+		}
+	}
+
 	mensajeNotif := "¡Conexión Web3 establecida!"
 
 	if r.Method == "POST" {
@@ -570,6 +609,10 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 				if tieneItem(perfil.Inventario, "chinampero") {
 					basePago = 15
 					bonoMsg = " (Bono 1.5x Chinampero Activo! 🌾)"
+				}
+				if perfil.TienePoap {
+					basePago += 5
+					bonoMsg += " (Bono Devconnect +5 DXT! 🎟️)"
 				}
 				pago := horas * basePago
 
@@ -797,6 +840,11 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		db[wallet] = perfil
 	}
 
+	statsJSON, _ := json.Marshal(perfil.FighterStats)
+	if perfil.FighterStats == nil {
+		statsJSON = []byte("{}")
+	}
+
 	datosHTML := PageData{
 		User:              displayWallet,
 		WalletCompleta:    wallet,
@@ -812,6 +860,7 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		TieneAndroide:     tieneItem(perfil.Inventario, "androide"),
 		TieneSupremo:      tieneItem(perfil.Inventario, "supremo"),
 		TieneChinampero:   tieneItem(perfil.Inventario, "chinampero"),
+		TienePoap:         perfil.TienePoap,
 		DiscordWebhook:    perfil.DiscordWebhook,
 		TokenAddress:      addrs.DexterDAO,
 		NFTAddress:        addrs.DexterNFT,
@@ -822,6 +871,7 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		TiempoRestante:    tiempoRestante,
 		Network:           addrs.Network,
 		DonacionesLocales: cargarDonacionesLocales(),
+		FighterStatsJSON:  string(statsJSON),
 	}
 
 	tmpl, _ := template.ParseFiles("index.html")
@@ -1024,6 +1074,551 @@ func manejadorConfirmDonation(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("confirmado"))
 }
 
+type BattleRewardRequest struct {
+	Wallet   string `json:"wallet"`
+	Enemy    string `json:"enemy"`
+	CardUsed string `json:"cardUsed"`
+	CardKey  string `json:"cardKey"`
+	IsReal   bool   `json:"isReal"`
+	Victory  bool   `json:"victory"`
+}
+
+type BattleRewardResponse struct {
+	Status string `json:"status"`
+	Reward int    `json:"reward"`
+	TxHash string `json:"txHash,omitempty"`
+}
+
+func manejadorBattleReward(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req BattleRewardRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, `{"error":"JSON inválido"}`, http.StatusBadRequest)
+		return
+	}
+
+	wallet := strings.ToLower(req.Wallet)
+	if wallet == "" {
+		http.Error(w, `{"error":"Billetera requerida"}`, http.StatusBadRequest)
+		return
+	}
+
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe {
+		perfil = UserProfile{Balance: 0, Inventario: []string{}, Historial: []string{}}
+	}
+
+	// Inicializar mapa de estadísticas si es nulo
+	if perfil.FighterStats == nil {
+		perfil.FighterStats = make(map[string]FighterStats)
+	}
+
+	// Actualizar estadísticas del luchador
+	stats := perfil.FighterStats[req.CardKey]
+	if req.Victory {
+		stats.Wins++
+	} else {
+		stats.Losses++
+	}
+	perfil.FighterStats[req.CardKey] = stats
+
+	reward := 0
+	txHash := ""
+	var mintErr error
+
+	if req.Victory {
+		reward = 10
+		if req.IsReal {
+			reward = 50
+			addrs := cargarDirecciones()
+			if addrs.DexterDAO != "" {
+				txHash, mintErr = mintearTokensBlockchain(addrs.Network, wallet, reward)
+				if mintErr != nil {
+					fmt.Printf("Error al minar on-chain en batalla: %v\n", mintErr)
+				}
+			}
+		}
+		perfil.Balance += reward
+	}
+
+	msgHistorial := ""
+	if req.Victory {
+		if req.IsReal && txHash != "" {
+			msgHistorial = fmt.Sprintf("+%d DXT Victoria en la Arena vs %s usando %s (Tx: %s)", reward, req.Enemy, req.CardUsed, txHash)
+		} else if req.IsReal {
+			msgHistorial = fmt.Sprintf("+%d TK Victoria en la Arena vs %s usando %s (Falla on-chain)", reward, req.Enemy, req.CardUsed)
+		} else {
+			msgHistorial = fmt.Sprintf("+%d TK Victoria en la Arena vs %s usando %s (Modo Práctica)", reward, req.Enemy, req.CardUsed)
+		}
+	} else {
+		msgHistorial = fmt.Sprintf("💀 Derrota en la Arena vs %s usando %s", req.Enemy, req.CardUsed)
+	}
+	agregarHistorial(&perfil, msgHistorial)
+
+	db[wallet] = perfil
+	guardarDB(db)
+
+	displayWallet := wallet
+	if len(wallet) > 10 {
+		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
+	}
+
+	txLink := ""
+	if txHash != "" {
+		addrs := cargarDirecciones()
+		txLink = fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", txHash)
+		if addrs.Network == "alfajores" {
+			txLink = fmt.Sprintf("https://celo-alfajores.blockscout.com/tx/%s", txHash)
+		} else if addrs.Network == "hardhat" || addrs.Network == "localhost" {
+			txLink = "Red Local (Hardhat)"
+		}
+	}
+
+	// Notificación Discord
+	discordMsg := ""
+	discordColor := 0x00ff00
+	if req.Victory {
+		if req.IsReal && txHash != "" {
+			discordMsg = fmt.Sprintf("🎮 **¡VICTORIA EN LA ARENA DE BATALLA!**\nBilletera: `%s` ha derrotado a **%s** usando la carta **%s**.\n\n**Recompensa:** +%d DXT (Acuñados on-chain)\n**Transacción:** %s", displayWallet, req.Enemy, req.CardUsed, reward, txLink)
+		} else if req.IsReal {
+			discordMsg = fmt.Sprintf("🎮 **¡VICTORIA EN LA ARENA DE BATALLA!**\nBilletera: `%s` ha derrotado a **%s** usando la carta **%s**.\n\n**Recompensa:** +%d DXT (Sincronizado localmente por falla de red)", displayWallet, req.Enemy, req.CardUsed, reward)
+		} else {
+			discordMsg = fmt.Sprintf("🎮 **¡VICTORIA EN LA ARENA DE BATALLA (PRÁCTICA)!**\nBilletera: `%s` ha derrotado a **%s** usando la carta básica **%s**.\n\n**Recompensa:** +%d TK (Solo local/práctica)", displayWallet, req.Enemy, req.CardUsed, reward)
+		}
+	} else {
+		discordColor = 0xff0000
+		discordMsg = fmt.Sprintf("💀 **¡DERROTA EN LA ARENA DE BATALLA!**\nBilletera: `%s` fue derrotada por **%s** usando la carta **%s**.", displayWallet, req.Enemy, req.CardUsed)
+	}
+
+	enviarDiscord(perfil.DiscordWebhook, "⚔️ AJOLOTE BATTLE ARENA", discordMsg, discordColor, "")
+
+	resp := BattleRewardResponse{
+		Status: "success",
+		Reward: reward,
+		TxHash: txHash,
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+type BuyItemRequest struct {
+	Wallet   string `json:"wallet"`
+	ItemID   string `json:"itemId"`
+	ItemName string `json:"itemName"`
+	Cost     int    `json:"cost"`
+}
+
+type BuyItemResponse struct {
+	Status     string `json:"status"`
+	NewBalance int    `json:"newBalance"`
+}
+
+func manejadorArenaBuyItem(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req BuyItemRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, `{"error":"JSON inválido"}`, http.StatusBadRequest)
+		return
+	}
+
+	wallet := strings.ToLower(req.Wallet)
+	if wallet == "" {
+		http.Error(w, `{"error":"Billetera requerida"}`, http.StatusBadRequest)
+		return
+	}
+
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe {
+		http.Error(w, `{"error":"Billetera no registrada"}`, http.StatusBadRequest)
+		return
+	}
+
+	if perfil.Balance < req.Cost {
+		http.Error(w, `{"error":"Saldo insuficiente de TK"}`, http.StatusBadRequest)
+		return
+	}
+
+	perfil.Balance -= req.Cost
+	msgHistorial := fmt.Sprintf("-%d TK Compra de item: %s 🎒", req.Cost, req.ItemName)
+	agregarHistorial(&perfil, msgHistorial)
+
+	db[wallet] = perfil
+	guardarDB(db)
+
+	resp := BuyItemResponse{
+		Status:     "success",
+		NewBalance: perfil.Balance,
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+func manejadorNFTMetadata(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+
+	// Extraer tokenId de la URL (ej. /api/nft/metadata/1 -> 1)
+	partes := strings.Split(r.URL.Path, "/")
+	if len(partes) < 5 {
+		http.Error(w, `{"error":"ID de token no especificado"}`, http.StatusBadRequest)
+		return
+	}
+	tokenIdStr := partes[len(partes)-1]
+	tokenId, err := strconv.Atoi(tokenIdStr)
+	if err != nil {
+		http.Error(w, `{"error":"ID de token invalido"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Consultar el tipo de NFT ejecutando get_nft_info.js
+	cmd := exec.Command("node", "scripts/get_nft_info.js", strconv.Itoa(tokenId))
+	
+	// Cargar variables de entorno necesarias de la red (ej: Sepolia RPC)
+	addrs := cargarDirecciones()
+	netParam := addrs.Network
+	if netParam == "" {
+		netParam = "hardhat"
+	}
+	if netParam == "hardhat" {
+		netParam = "localhost"
+	}
+	cmd.Env = append(os.Environ(),
+		"HARDHAT_NETWORK="+netParam,
+	)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	output := stdout.String()
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Fallo al consultar blockchain: %v, stderr: %s"}`, err, stderr.String()), http.StatusInternalServerError)
+		return
+	}
+
+	// Buscar confirmación en la salida
+	var key string
+	var owner string
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "NFT_INFO_SUCCESS:") {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 3 {
+				key = parts[1]
+				owner = parts[2]
+			}
+		}
+	}
+
+	if key == "" {
+		http.Error(w, fmt.Sprintf(`{"error":"No se encontro informacion del token en salida: %s"}`, output), http.StatusNotFound)
+		return
+	}
+
+	// Encontrar la definición del item en marketItems
+	var itemFound *MarketItem
+	for i := range marketItems {
+		if marketItems[i].Key == key {
+			itemFound = &marketItems[i]
+			break
+		}
+	}
+
+	if itemFound == nil {
+		http.Error(w, `{"error":"Tipo de NFT desconocido"}`, http.StatusNotFound)
+		return
+	}
+
+	// Construir la URL base dinámica para la imagen
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	host := r.Host
+	imageURL := fmt.Sprintf("%s://%s%s", scheme, host, itemFound.ImgPath)
+	externalURL := fmt.Sprintf("%s://%s/market", scheme, host)
+
+	// Crear metadatos compatibles con OpenSea
+	descClean := strings.TrimSuffix(itemFound.Description, ".")
+	metadata := OpenSeaMetadata{
+		Name:        fmt.Sprintf("%s #%d", itemFound.DisplayName, tokenId),
+		Description: fmt.Sprintf("%s. Poseído actualmente por %s.", descClean, owner),
+		Image:       imageURL,
+		ExternalURL: externalURL,
+		Attributes: []OpenSeaAttribute{
+			{TraitType: "Elemento", Value: itemFound.Elemento},
+			{TraitType: "Poder", Value: itemFound.Poder},
+			{TraitType: "Rareza", Value: itemFound.Rarity},
+			{TraitType: "Porcentaje de Rareza", Value: itemFound.RarezaPorc},
+		},
+	}
+
+	json.NewEncoder(w).Encode(metadata)
+}
+
+type AIChatRequest struct {
+	Message string `json:"message"`
+}
+
+type GemmaRequest struct {
+	Prompt string `json:"prompt"`
+}
+
+type GemmaResponse struct {
+	Instruction string `json:"instruction"`
+	Command     string `json:"command"`
+}
+
+type AIChatResponse struct {
+	Command     string `json:"command"`
+	Explanation string `json:"explanation"`
+	Source      string `json:"source"`
+}
+
+type TrainItem struct {
+	Prompt  string `json:"prompt"`
+	Command string `json:"command"`
+}
+
+func obtenerExplicacionComando(command string) string {
+	cmdClean := strings.ToLower(command)
+	if strings.Contains(cmdClean, "compile") {
+		return "Este comando compila todos tus contratos inteligentes de Solidity usando Hardhat, generando los artefactos y ABIs correspondientes."
+	}
+	if strings.Contains(cmdClean, "deploy_all.js") {
+		if strings.Contains(cmdClean, "sepolia") {
+			return "Despliega todos los contratos inteligentes (DexterDAO, DexterNFT, DexterGov, DexterCrowdfund) a la red de prueba Ethereum Sepolia."
+		}
+		if strings.Contains(cmdClean, "alfajores") {
+			return "Despliega todos los contratos inteligentes del ecosistema a la red de prueba Celo Alfajores."
+		}
+		return "Despliega todos los contratos inteligentes localmente en tu red de desarrollo de Hardhat simulada."
+	}
+	if strings.Contains(cmdClean, "check_balance.js") {
+		return "Consulta el saldo actual de Ether (ETH) de la billetera local configurada en la red activa."
+	}
+	if strings.Contains(cmdClean, "check_dxt_balance.js") {
+		return "Consulta el saldo del token nativo DXT (Dexter Token) en tu dirección local."
+	}
+	if strings.Contains(cmdClean, "mint_tokens.js") {
+		return "Mintea tokens DXT on-chain hacia la dirección especificada para incrementar el balance en tu cuenta."
+	}
+	if strings.Contains(cmdClean, "node") {
+		return "Inicia un nodo local de Hardhat de forma persistente. Esto crea una blockchain de pruebas en http://127.0.0.1:8545 con 20 cuentas de prueba cargadas con 10000 ETH cada una."
+	}
+	if strings.Contains(cmdClean, "test_db.go") {
+		return "Ejecuta una prueba del backend de Go en 'scratch/test_db.go' para verificar que la persistencia y lectura de 'db.json' funcionen correctamente."
+	}
+	if strings.Contains(cmdClean, "main.go") {
+		return "Ejecuta el servidor web y backend de Go de Dexter DAO localmente en el puerto 8080."
+	}
+	return "Este comando fue sugerido en base a tu consulta para interactuar con Dexter DAO."
+}
+
+func fallbackMatch(message string) (string, string) {
+	msgLower := strings.ToLower(strings.TrimSpace(message))
+
+	// Leer terminal_train.jsonl
+	datos, err := os.ReadFile("terminal_train.jsonl")
+	var bestCommand string
+	var bestPrompt string
+	maxScore := 0.0
+
+	if err == nil {
+		lines := strings.Split(string(datos), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			var item TrainItem
+			if errJson := json.Unmarshal([]byte(line), &item); errJson == nil {
+				promptLower := strings.ToLower(item.Prompt)
+				
+				// Algoritmo de puntuación simple:
+				// 1. Coincidencia exacta
+				if msgLower == promptLower {
+					return item.Command, "Fallback Local (Coincidencia Exacta)"
+				}
+				// 2. Substring completo
+				if strings.Contains(msgLower, promptLower) || strings.Contains(promptLower, msgLower) {
+					score := float64(len(promptLower)) / float64(len(msgLower))
+					if score > maxScore {
+						maxScore = score
+						bestCommand = item.Command
+						bestPrompt = item.Prompt
+					}
+				}
+				
+				// 3. Intersección de palabras
+				promptWords := strings.Fields(promptLower)
+				msgWords := strings.Fields(msgLower)
+				matches := 0
+				for _, pw := range promptWords {
+					// Ignorar palabras comunes cortas como "de", "la", "el", "los", "the", "to", "in", "on"
+					if len(pw) <= 2 {
+						continue
+					}
+					for _, mw := range msgWords {
+						if pw == mw {
+							matches++
+						}
+					}
+				}
+				if matches > 0 {
+					score := float64(matches) / float64(len(promptWords))
+					if score > maxScore {
+						maxScore = score
+						bestCommand = item.Command
+						bestPrompt = item.Prompt
+					}
+				}
+			}
+		}
+	}
+
+	if bestCommand != "" && maxScore >= 0.3 {
+		return bestCommand, fmt.Sprintf("Fallback Local (Coincidencia con '%s')", bestPrompt)
+	}
+
+	// Reglas de respaldo hardcoded por si no hay coincidencias claras en el jsonl
+	if strings.Contains(msgLower, "compile") || strings.Contains(msgLower, "compil") {
+		return "npx hardhat compile", "Fallback Local (Regla: Compilar)"
+	}
+	if strings.Contains(msgLower, "node") || strings.Contains(msgLower, "nodo") || strings.Contains(msgLower, "blockchain local") {
+		return "npx hardhat node", "Fallback Local (Regla: Nodo Local)"
+	}
+	if strings.Contains(msgLower, "deploy") || strings.Contains(msgLower, "desplegar") {
+		if strings.Contains(msgLower, "sepolia") {
+			return "npx hardhat run scripts/deploy_all.js --network sepolia", "Fallback Local (Regla: Despliegue Sepolia)"
+		}
+		if strings.Contains(msgLower, "celo") || strings.Contains(msgLower, "alfajores") {
+			return "npx hardhat run scripts/deploy_all.js --network alfajores", "Fallback Local (Regla: Despliegue Alfajores)"
+		}
+		return "npx hardhat run scripts/deploy_all.js --network localhost", "Fallback Local (Regla: Despliegue Local)"
+	}
+	if strings.Contains(msgLower, "mint") || strings.Contains(msgLower, "mintear") || strings.Contains(msgLower, "minar") || strings.Contains(msgLower, "chamba") {
+		// Buscar dirección 0x en el mensaje
+		words := strings.Fields(msgLower)
+		address := "<dirección_billetera>"
+		amount := "<cantidad>"
+		for _, w := range words {
+			if strings.HasPrefix(w, "0x") && len(w) == 42 {
+				address = w
+			} else if _, errNum := strconv.Atoi(w); errNum == nil {
+				amount = w
+			}
+		}
+		return fmt.Sprintf("node scripts/mint_tokens.js %s %s", address, amount), "Fallback Local (Regla: Mintear DXT)"
+	}
+	if strings.Contains(msgLower, "balance") || strings.Contains(msgLower, "saldo") {
+		if strings.Contains(msgLower, "dxt") || strings.Contains(msgLower, "token") {
+			return "node scripts/check_dxt_balance.js", "Fallback Local (Regla: Saldo DXT)"
+		}
+		return "node scripts/check_balance.js", "Fallback Local (Regla: Saldo ETH)"
+	}
+	if strings.Contains(msgLower, "go") || strings.Contains(msgLower, "server") || strings.Contains(msgLower, "servidor") || strings.Contains(msgLower, "backend") {
+		return "go run main.go", "Fallback Local (Regla: Servidor Go)"
+	}
+	if strings.Contains(msgLower, "db") || strings.Contains(msgLower, "database") || strings.Contains(msgLower, "base de datos") || strings.Contains(msgLower, "json") {
+		return "go run scratch/test_db.go", "Fallback Local (Regla: Base de Datos)"
+	}
+
+	return "", ""
+}
+
+func manejadorAIChat(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
+	// Permitir CORS básico por seguridad
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req AIChatRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"JSON inválido"}`, http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(req.Message) == "" {
+		http.Error(w, `{"error":"El mensaje no puede estar vacío"}`, http.StatusBadRequest)
+		return
+	}
+
+	// 1. Intentar contactar con FastAPI (servir_gemma.py)
+	gemmaReq := GemmaRequest{Prompt: req.Message}
+	payloadBytes, err := json.Marshal(gemmaReq)
+	if err == nil {
+		client := &http.Client{Timeout: 2 * time.Second} // Timeout corto de 2 segundos para responder rápido
+		resp, errCall := client.Post("http://localhost:8000/predict", "application/json", bytes.NewBuffer(payloadBytes))
+		if errCall == nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				var gemmaResp GemmaResponse
+				if errDecode := json.NewDecoder(resp.Body).Decode(&gemmaResp); errDecode == nil && gemmaResp.Command != "" {
+					explanation := obtenerExplicacionComando(gemmaResp.Command)
+					response := AIChatResponse{
+						Command:     gemmaResp.Command,
+						Explanation: explanation,
+						Source:      "Gemma AI (Servidor de Inferencia)",
+					}
+					json.NewEncoder(w).Encode(response)
+					return
+				}
+			}
+		}
+	}
+
+	// 2. Si falló Gemma, usar fallback local en Go
+	cmdMatch, source := fallbackMatch(req.Message)
+	if cmdMatch != "" {
+		explanation := obtenerExplicacionComando(cmdMatch)
+		response := AIChatResponse{
+			Command:     cmdMatch,
+			Explanation: explanation,
+			Source:      source,
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// 3. Fallback genérico si no se entiende
+	response := AIChatResponse{
+		Command:     "npx hardhat help",
+		Explanation: "No pude descifrar el comando específico para tu consulta. Puedes consultar la ayuda general de Hardhat ejecutando este comando.",
+		Source:      "Fallback Local (Sin coincidencias)",
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
 func manejadorLogin(w http.ResponseWriter, r *http.Request) {
 	// Recibir la billetera desde el frontend (JavaScript)
 	if r.Method == "POST" && r.FormValue("wallet") != "" {
@@ -1044,17 +1639,44 @@ func manejadorCapacitacion(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "capacitacion.html")
 }
 
+func cargarEnv() {
+	datos, err := os.ReadFile(".env")
+	if err != nil {
+		return
+	}
+	lineas := strings.Split(string(datos), "\n")
+	for _, linea := range lineas {
+		linea = strings.TrimSpace(linea)
+		if linea == "" || strings.HasPrefix(linea, "#") {
+			continue
+		}
+		partes := strings.SplitN(linea, "=", 2)
+		if len(partes) == 2 {
+			clave := strings.TrimSpace(partes[0])
+			valor := strings.TrimSpace(partes[1])
+			valor = strings.Trim(valor, `"'`)
+			os.Setenv(clave, valor)
+		}
+	}
+}
+
 func main() {
+	cargarEnv()
 	http.HandleFunc("/img-maestro", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_MAESTRO) })
 	http.HandleFunc("/img-astronauta", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_ASTRONAUTA) })
 	http.HandleFunc("/img-quetzal", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_QUETZAL) })
 	http.HandleFunc("/img-androide", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_ANDROIDE) })
 	http.HandleFunc("/img-supremo", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_SUPREMO) })
 	http.HandleFunc("/img-chinampero", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_CHINAMPERO) })
+	http.HandleFunc("/img-devconnect", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_DEVCONNECT) })
 	
 	http.HandleFunc("/api/confirm-nft", manejadorConfirmNFT)
 	http.HandleFunc("/api/confirm-vote", manejadorConfirmVote)
 	http.HandleFunc("/api/confirm-donation", manejadorConfirmDonation)
+	http.HandleFunc("/api/nft/metadata/", manejadorNFTMetadata)
+	http.HandleFunc("/api/ai/chat", manejadorAIChat)
+	http.HandleFunc("/api/battle/reward", manejadorBattleReward)
+	http.HandleFunc("/api/arena/buy-item", manejadorArenaBuyItem)
 	
 	// Servir scripts de forma estática para la descarga de los scripts de Python
 	http.Handle("/scripts/", http.StripPrefix("/scripts/", http.FileServer(http.Dir("scripts"))))

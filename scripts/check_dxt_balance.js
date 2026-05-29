@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  const deployed = JSON.parse(fs.readFileSync("deployed_addresses.json", "utf8"));
+  const deployedPath = path.join(__dirname, "../deployed_addresses.json");
+  const deployed = JSON.parse(fs.readFileSync(deployedPath, "utf8"));
   const tokenAddress = deployed.DexterDAO;
   const [deployer] = await hre.ethers.getSigners();
   const address = await deployer.getAddress();

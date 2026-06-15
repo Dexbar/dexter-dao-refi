@@ -3,6 +3,22 @@ const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");
 
+// Cargar .env de forma segura sobreescribiendo variables existentes
+const envPath = path.join(__dirname, "../.env");
+if (fs.existsSync(envPath)) {
+  try {
+    const dotenv = require("dotenv");
+    const envConfig = dotenv.config({ path: envPath }).parsed;
+    if (envConfig) {
+      for (const k in envConfig) {
+        process.env[k] = envConfig[k];
+      }
+    }
+  } catch (e) {
+    console.warn("Advertencia: No se pudo cargar dotenv:", e.message);
+  }
+}
+
 const DB_PATH = path.join(__dirname, "../db.json");
 
 // Helper to load/save db.json safely
@@ -46,15 +62,23 @@ async function main() {
   if (network === "localhost" || network === "hardhat") {
     rpcUrl = "http://127.0.0.1:8545";
   } else if (network === "sepolia") {
-    rpcUrl = process.env.SEPOLIA_RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.SEPOLIA_RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   } else if (network === "alfajores") {
     rpcUrl = process.env.ALFAJORES_RPC_URL || "https://alfajores-forno.celo-testnet.org";
   } else {
-    rpcUrl = process.env.RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   }
 
   console.log(`🔌 Connecting to RPC Provider: ${rpcUrl} (Network: ${network})`);
   const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+
 
   // ABIs mínimas para los eventos
   const nftAbi = [
@@ -71,7 +95,7 @@ async function main() {
   const govContract = new ethers.Contract(deployed.DexterGov, govAbi, provider);
   const crowdfundContract = new ethers.Contract(deployed.DexterCrowdfund, crowdfundAbi, provider);
 
-  const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero", "guardian"];
+  const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero", "guardian", "futbol_mex", "futbol_bra", "futbol_arg", "futbol_ger", "futbol_esp"];
   const nftPrices = {
     ajolote: 200,
     luna: 500,
@@ -79,7 +103,12 @@ async function main() {
     androide: 2000,
     supremo: 5000,
     chinampero: 1500,
-    guardian: 3000
+    guardian: 3000,
+    futbol_mex: 1000,
+    futbol_bra: 1000,
+    futbol_arg: 1000,
+    futbol_ger: 1000,
+    futbol_esp: 1000
   };
 
   // Helper to handle NFTMinted

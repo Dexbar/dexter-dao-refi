@@ -3,6 +3,22 @@ const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");
 
+// Cargar .env de forma segura sobreescribiendo variables existentes
+const envPath = path.join(__dirname, "../.env");
+if (fs.existsSync(envPath)) {
+  try {
+    const dotenv = require("dotenv");
+    const envConfig = dotenv.config({ path: envPath }).parsed;
+    if (envConfig) {
+      for (const k in envConfig) {
+        process.env[k] = envConfig[k];
+      }
+    }
+  } catch (e) {
+    console.warn("Advertencia: No se pudo cargar dotenv:", e.message);
+  }
+}
+
 // ABI minimo del contrato DexterDAO (solo la funcion mint que necesitamos)
 const DEXTER_DAO_ABI = [
   "function mint(address to, uint256 amount) external",
@@ -40,11 +56,17 @@ async function main() {
   if (network === "localhost" || network === "hardhat") {
     rpcUrl = "http://127.0.0.1:8545";
   } else if (network === "sepolia") {
-    rpcUrl = process.env.SEPOLIA_RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.SEPOLIA_RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   } else if (network === "alfajores") {
     rpcUrl = process.env.ALFAJORES_RPC_URL || "https://alfajores-forno.celo-testnet.org";
   } else {
-    rpcUrl = process.env.RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   }
 
   // Clave privada del deployer (owner del contrato)

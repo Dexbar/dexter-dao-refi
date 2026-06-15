@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"mime/multipart"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -34,6 +35,7 @@ type UserProfile struct {
 	UltimoReclamo   int64
 	TienePoap       bool
 	FighterStats    map[string]FighterStats `json:"fighterStats"`
+	ChatThreads     string                  `json:"chatThreads"`
 }
 
 // MarketItem represents an NFT in the marketplace
@@ -136,6 +138,90 @@ var marketItems = []MarketItem{{
 	Elemento:    "Fuego",
 	Poder:       97,
 	RarezaPorc:  98,
+}, {
+	Key:         "mago",
+	ImgPath:     "/img-mago",
+	DisplayName: "Ajolote Mago",
+	Price:       1200,
+	Name:        "mago",
+	MaxSupply:   150,
+	Rarity:      "Épico",
+	Description: "Maestro de las artes arcanas y conjuros del blockchain.",
+	Elemento:    "Cósmico",
+	Poder:       94,
+	RarezaPorc:  88,
+}, {
+	Key:         "mariachi",
+	ImgPath:     "/img-mariachi",
+	DisplayName: "Ajolote Mariachi",
+	Price:       800,
+	Name:        "mariachi",
+	MaxSupply:   250,
+	Rarity:      "Raro",
+	Description: "Alegra los bloques con su trompeta y melodías tradicionales.",
+	Elemento:    "Tierra/Planta",
+	Poder:       88,
+	RarezaPorc:  75,
+}, {
+	Key:         "futbol_mex",
+	ImgPath:     "/img-futbol-mex",
+	DisplayName: "Ajolote Tricolor (México)",
+	Price:       1000,
+	Name:        "futbol_mex",
+	MaxSupply:   20,
+	Rarity:      "Edición Mundial",
+	Description: "¡Viva México! Ajolote tricolor con camiseta verde, dominando el balón en la cancha del mundial virtual.",
+	Elemento:    "Tierra/Planta",
+	Poder:       90,
+	RarezaPorc:  95,
+}, {
+	Key:         "futbol_bra",
+	ImgPath:     "/img-futbol-bra",
+	DisplayName: "Ajolote Canarinho (Brasil)",
+	Price:       1000,
+	Name:        "futbol_bra",
+	MaxSupply:   20,
+	Rarity:      "Edición Mundial",
+	Description: "Joga bonito. Ajolote de verde e amarelo haciendo gambetas y samba con el balón blockchain.",
+	Elemento:    "Agua",
+	Poder:       94,
+	RarezaPorc:  95,
+}, {
+	Key:         "futbol_arg",
+	ImgPath:     "/img-futbol-arg",
+	DisplayName: "Ajolote Albiceleste (Argentina)",
+	Price:       1000,
+	Name:        "futbol_arg",
+	MaxSupply:   20,
+	Rarity:      "Edición Mundial",
+	Description: "La octava maravilla. Ajolote albiceleste con el 10 en la espalda, organizando el mediocampo del mundial.",
+	Elemento:    "Divino",
+	Poder:       93,
+	RarezaPorc:  95,
+}, {
+	Key:         "futbol_ger",
+	ImgPath:     "/img-futbol-ger",
+	DisplayName: "Ajolote Kaiser (Alemania)",
+	Price:       1000,
+	Name:        "futbol_ger",
+	MaxSupply:   20,
+	Rarity:      "Edición Mundial",
+	Description: "Precisión y potencia. Ajolote kaiser con camiseta blanca y negra, ejecutando un tiro libre con fuerza robótica.",
+	Elemento:    "Cyber",
+	Poder:       92,
+	RarezaPorc:  95,
+}, {
+	Key:         "futbol_esp",
+	ImgPath:     "/img-futbol-esp",
+	DisplayName: "Ajolote Furia Roja (España)",
+	Price:       1000,
+	Name:        "futbol_esp",
+	MaxSupply:   20,
+	Rarity:      "Edición Mundial",
+	Description: "Furia roja. Ajolote español haciendo tiquitaca y controlando la posesión en el partido del bloque.",
+	Elemento:    "Fuego",
+	Poder:       91,
+	RarezaPorc:  95,
 }}
 
 func manejadorMarket(w http.ResponseWriter, r *http.Request) {
@@ -218,6 +304,7 @@ func manejadorMarket(w http.ResponseWriter, r *http.Request) {
 		TokenAddress    string
 		NFTAddress      string
 		Network         string
+		UserInventory   []string
 	}{
 		Items:           renderedItems,
 		Year:            time.Now().Year(),
@@ -226,6 +313,7 @@ func manejadorMarket(w http.ResponseWriter, r *http.Request) {
 		TokenAddress:    addrs.DexterDAO,
 		NFTAddress:      addrs.DexterNFT,
 		Network:         addrs.Network,
+		UserInventory:   perfil.Inventario,
 	}
     tmpl, _ := template.ParseFiles("market.html")
     tmpl.Execute(w, data)
@@ -264,6 +352,8 @@ type PageData struct {
 	TieneSupremo      bool
 	TieneChinampero   bool
 	TieneGuardian     bool
+	TieneMago         bool
+	TieneMariachi     bool
 	TienePoap         bool
 	DiscordWebhook    string
 	TokenAddress      string
@@ -408,6 +498,56 @@ func verificarTransaccionBlockchain(txHash string, txType string, wallet string)
 	return false, fmt.Errorf("no se encontro confirmacion de verificacion en la salida: %s", output)
 }
 
+func verificarWagerBlockchain(txHash string, amount int, wallet string) (bool, error) {
+	addrs := cargarDirecciones()
+	if txHash == "local" || txHash == "" {
+		if addrs.Network == "localhost" || addrs.Network == "hardhat" || addrs.Network == "" {
+			return true, nil
+		}
+		return false, fmt.Errorf("transacción de apuesta vacía no permitida en red pública")
+	}
+
+	netParam := addrs.Network
+	if netParam == "" {
+		netParam = "hardhat"
+	}
+	if netParam == "hardhat" {
+		netParam = "localhost"
+	}
+
+	cmd := exec.Command("node", "scripts/verify_transaction.js", txHash, "battle_wager", wallet, strconv.Itoa(amount))
+	cmd.Env = append(os.Environ(),
+		"HARDHAT_NETWORK="+netParam,
+	)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	output := stdout.String()
+
+	if err != nil {
+		return false, fmt.Errorf("ejecución fallida: %v, stderr: %s, stdout: %s", err, stderr.String(), output)
+	}
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "VERIFY_SUCCESS:") {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 2 {
+				return parts[1] == "true", nil
+			}
+		}
+		if strings.HasPrefix(line, "VERIFY_FAILURE:") {
+			return false, fmt.Errorf("fallo de verificación blockchain: %s", line)
+		}
+	}
+
+	return false, fmt.Errorf("no se encontró confirmación de verificación en la salida: %s", output)
+}
+
 
 type ConfirmNFTRequest struct {
 	Wallet string `json:"wallet"`
@@ -443,75 +583,19 @@ const RUTA_SUPREMO = `assets/ajolote_supremo.png`
 const RUTA_CHINAMPERO = `assets/ajolote_chinampero.png`
 const RUTA_DEVCONNECT = `assets/ajolote_devconnect.png`
 const RUTA_GUARDIAN = `assets/ajolote_guardian.png`
+const RUTA_MAGO = `assets/ajolote_mago.png`
+const RUTA_MARIACHI = `assets/ajolote_mariachi.png`
+const RUTA_FUTBOL_MEX = `assets/ajolote_mexico.png`
+const RUTA_FUTBOL_BRA = `assets/ajolote_brasil.png`
+const RUTA_FUTBOL_ARG = `assets/ajolote_argentina.png`
+const RUTA_FUTBOL_GER = `assets/ajolote_alemania.png`
+const RUTA_FUTBOL_ESP = `assets/ajolote_espana.png`
+const RUTA_GEMMA_AVATAR = `assets/gemma_avatar.png`
 
 func enviarDiscord(webhookURL string, titulo string, descripcion string, color int, imagePath string) {
-	if webhookURL == "" {
-		return
-	}
-	go func() {
-		var b bytes.Buffer
-		w := multipart.NewWriter(&b)
-
-		var embedImage map[string]interface{}
-		var fileName string
-		if imagePath != "" {
-			fileName = filepath.Base(imagePath)
-			embedImage = map[string]interface{}{
-				"url": "attachment://" + fileName,
-			}
-		}
-
-		embed := map[string]interface{}{
-			"title":       titulo,
-			"description": descripcion,
-			"color":       color,
-			"footer": map[string]interface{}{
-				"text": "Dexter DAO - Powered by Go & Web3",
-			},
-		}
-		if imagePath != "" {
-			embed["image"] = embedImage
-		}
-
-		payload := map[string]interface{}{
-			"username":   "DEXTER DAO Bot",
-			"avatar_url": "https://img.icons8.com/color/96/ethereum.png",
-			"embeds":     []interface{}{embed},
-		}
-
-		payloadBytes, err := json.Marshal(payload)
-		if err != nil {
-			return
-		}
-
-		_ = w.WriteField("payload_json", string(payloadBytes))
-
-		if imagePath != "" {
-			file, err := os.Open(imagePath)
-			if err == nil {
-				defer file.Close()
-				part, err := w.CreateFormFile("files[0]", fileName)
-				if err == nil {
-					_, _ = io.Copy(part, file)
-				}
-			}
-		}
-
-		w.Close()
-
-		req, err := http.NewRequest("POST", webhookURL, &b)
-		if err != nil {
-			return
-		}
-		req.Header.Set("Content-Type", w.FormDataContentType())
-
-		client := &http.Client{Timeout: 10 * time.Second}
-		resp, err := client.Do(req)
-		if err == nil {
-			resp.Body.Close()
-		}
-	}()
+	// Discord notifications disabled
 }
+
 
 
 func cargarDB() Database {
@@ -583,6 +667,9 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 	
 	if r.FormValue("accion") == "logout" {
 		http.SetCookie(w, &http.Cookie{Name: "sesion", Value: "", MaxAge: -1})
+		ultimoWalletActivoMutex.Lock()
+		ultimoWalletActivo = ""
+		ultimoWalletActivoMutex.Unlock()
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -594,6 +681,9 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wallet := cookie.Value
+	ultimoWalletActivoMutex.Lock()
+	ultimoWalletActivo = wallet
+	ultimoWalletActivoMutex.Unlock()
 	displayWallet := wallet
 	if len(wallet) > 10 {
 		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
@@ -641,17 +731,6 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 				horas := restante / 3600
 				minutos := (restante % 3600) / 60
 				mensajeNotif = fmt.Sprintf("¡Aún no puedes reclamar! Restan %dh %dm", horas, minutos)
-			}
-		}
-		if r.FormValue("actualizar_webhook") != "" {
-			perfil.DiscordWebhook = r.FormValue("webhook_url")
-			if perfil.DiscordWebhook != "" {
-				agregarHistorial(&perfil, "Webhook de Discord configurado.")
-				mensajeNotif = "¡Webhook de Discord guardado!"
-				enviarDiscord(perfil.DiscordWebhook, "🔌 ¡DEXTER DAO CONECTADO!", fmt.Sprintf("¡Servidor de Go conectado exitosamente a este canal!\nBilletera: `%s`", displayWallet), 65280, "") // Verde
-			} else {
-				agregarHistorial(&perfil, "Webhook de Discord removido.")
-				mensajeNotif = "¡Webhook de Discord eliminado!"
 			}
 		}
 
@@ -811,6 +890,41 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 				imgPath = RUTA_GUARDIAN
 				nftNombre = "🔥 Ajolote Guardián"
 				color = 16729856 // Naranja
+			case "mago":
+				p = 1200
+				imgPath = RUTA_MAGO
+				nftNombre = "🔮 Ajolote Mago"
+				color = 11024383 // Púrpura
+			case "mariachi":
+				p = 800
+				imgPath = RUTA_MARIACHI
+				nftNombre = "🎺 Ajolote Mariachi"
+				color = 15381256 // Amarillo
+			case "futbol_mex":
+				p = 1000
+				imgPath = RUTA_FUTBOL_MEX
+				nftNombre = "⚽ Ajolote Tricolor (MX)"
+				color = 32768 // Verde
+			case "futbol_bra":
+				p = 1000
+				imgPath = RUTA_FUTBOL_BRA
+				nftNombre = "⚽ Ajolote Canarinho (BR)"
+				color = 16776960 // Amarillo
+			case "futbol_arg":
+				p = 1000
+				imgPath = RUTA_FUTBOL_ARG
+				nftNombre = "⚽ Ajolote Albiceleste (AR)"
+				color = 8438271 // Celeste
+			case "futbol_ger":
+				p = 1000
+				imgPath = RUTA_FUTBOL_GER
+				nftNombre = "⚽ Ajolote Kaiser (DE)"
+				color = 16777215 // Blanco
+			case "futbol_esp":
+				p = 1000
+				imgPath = RUTA_FUTBOL_ESP
+				nftNombre = "⚽ Ajolote Furia Roja (ES)"
+				color = 16711680 // Rojo
 			}
 			
 			// Find the item definition for supply limit check
@@ -882,6 +996,41 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 				imgPath = RUTA_GUARDIAN
 				nftNombre = "🔥 Ajolote Guardián"
 				color = 16711680 // Rojo
+			case "mago":
+				v = 1500
+				imgPath = RUTA_MAGO
+				nftNombre = "🔮 Ajolote Mago"
+				color = 16711680 // Rojo
+			case "mariachi":
+				v = 1000
+				imgPath = RUTA_MARIACHI
+				nftNombre = "🎺 Ajolote Mariachi"
+				color = 16711680 // Rojo
+			case "futbol_mex":
+				v = 600
+				imgPath = RUTA_FUTBOL_MEX
+				nftNombre = "⚽ Ajolote Tricolor (MX)"
+				color = 16711680
+			case "futbol_bra":
+				v = 600
+				imgPath = RUTA_FUTBOL_BRA
+				nftNombre = "⚽ Ajolote Canarinho (BR)"
+				color = 16711680
+			case "futbol_arg":
+				v = 600
+				imgPath = RUTA_FUTBOL_ARG
+				nftNombre = "⚽ Ajolote Albiceleste (AR)"
+				color = 16711680
+			case "futbol_ger":
+				v = 600
+				imgPath = RUTA_FUTBOL_GER
+				nftNombre = "⚽ Ajolote Kaiser (DE)"
+				color = 16711680
+			case "futbol_esp":
+				v = 600
+				imgPath = RUTA_FUTBOL_ESP
+				nftNombre = "⚽ Ajolote Furia Roja (ES)"
+				color = 16711680
 			}
 			
 			if tieneItem(perfil.Inventario, it) {
@@ -913,6 +1062,7 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 	if addrs.DexterDAO != "" && perfil.ContractAddress != addrs.DexterDAO {
 		perfil.ContractAddress = addrs.DexterDAO
 		db[wallet] = perfil
+		guardarDB(db)
 	}
 
 	statsJSON, _ := json.Marshal(perfil.FighterStats)
@@ -936,6 +1086,8 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		TieneSupremo:      tieneItem(perfil.Inventario, "supremo"),
 		TieneChinampero:   tieneItem(perfil.Inventario, "chinampero"),
 		TieneGuardian:     tieneItem(perfil.Inventario, "guardian"),
+		TieneMago:         tieneItem(perfil.Inventario, "mago"),
+		TieneMariachi:     tieneItem(perfil.Inventario, "mariachi"),
 		TienePoap:         perfil.TienePoap,
 		DiscordWebhook:    perfil.DiscordWebhook,
 		TokenAddress:      addrs.DexterDAO,
@@ -1175,12 +1327,14 @@ func manejadorConfirmDonation(w http.ResponseWriter, r *http.Request) {
 }
 
 type BattleRewardRequest struct {
-	Wallet   string `json:"wallet"`
-	Enemy    string `json:"enemy"`
-	CardUsed string `json:"cardUsed"`
-	CardKey  string `json:"cardKey"`
-	IsReal   bool   `json:"isReal"`
-	Victory  bool   `json:"victory"`
+	Wallet      string `json:"wallet"`
+	Enemy       string `json:"enemy"`
+	CardUsed    string `json:"cardUsed"`
+	CardKey     string `json:"cardKey"`
+	IsReal      bool   `json:"isReal"`
+	Victory     bool   `json:"victory"`
+	WagerAmt    int    `json:"wagerAmt"`
+	WagerTxHash string `json:"wagerTxHash"`
 }
 
 type BattleRewardResponse struct {
@@ -1209,6 +1363,15 @@ func manejadorBattleReward(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 1. Si hay apuesta real, verificar la transacción on-chain
+	if req.IsReal && req.WagerAmt > 0 {
+		valido, errVerify := verificarWagerBlockchain(req.WagerTxHash, req.WagerAmt, wallet)
+		if errVerify != nil || !valido {
+			http.Error(w, fmt.Sprintf(`{"error":"Verificación de apuesta on-chain fallida: %v"}`, errVerify), http.StatusBadRequest)
+			return
+		}
+	}
+
 	db := cargarDB()
 	perfil, existe := db[wallet]
 	if !existe {
@@ -1234,9 +1397,18 @@ func manejadorBattleReward(w http.ResponseWriter, r *http.Request) {
 	var mintErr error
 
 	if req.Victory {
-		reward = 10
+		if req.WagerAmt > 0 {
+			reward = req.WagerAmt * 2 // Duplica la apuesta
+		} else {
+			reward = 10
+		}
+
 		if req.IsReal {
-			reward = 50
+			if req.WagerAmt > 0 {
+				reward = req.WagerAmt * 2
+			} else {
+				reward = 50
+			}
 			addrs := cargarDirecciones()
 			if addrs.DexterDAO != "" {
 				txHash, mintErr = mintearTokensBlockchain(addrs.Network, wallet, reward)
@@ -1246,19 +1418,38 @@ func manejadorBattleReward(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		perfil.Balance += reward
+	} else {
+		// Si perdió en combate simulado y había una apuesta simulada, descontarla localmente
+		if !req.IsReal && req.WagerAmt > 0 {
+			perfil.Balance -= req.WagerAmt
+		}
 	}
 
 	msgHistorial := ""
 	if req.Victory {
-		if req.IsReal && txHash != "" {
-			msgHistorial = fmt.Sprintf("+%d DXT Victoria en la Arena vs %s usando %s (Tx: %s)", reward, req.Enemy, req.CardUsed, txHash)
-		} else if req.IsReal {
-			msgHistorial = fmt.Sprintf("+%d TK Victoria en la Arena vs %s usando %s (Falla on-chain)", reward, req.Enemy, req.CardUsed)
+		if req.WagerAmt > 0 {
+			if req.IsReal && txHash != "" {
+				msgHistorial = fmt.Sprintf("🏆 Victoria Arena vs %s usando %s (Ganaste apuesta: +%d DXT, Tx: %s)", req.Enemy, req.CardUsed, reward, txHash)
+			} else {
+				msgHistorial = fmt.Sprintf("🏆 Victoria Arena vs %s usando %s (Ganaste apuesta: +%d TK)", req.Enemy, req.CardUsed, reward)
+			}
 		} else {
-			msgHistorial = fmt.Sprintf("+%d TK Victoria en la Arena vs %s usando %s (Modo Práctica)", reward, req.Enemy, req.CardUsed)
+			if req.IsReal && txHash != "" {
+				msgHistorial = fmt.Sprintf("+%d DXT Victoria Arena vs %s usando %s (Tx: %s)", reward, req.Enemy, req.CardUsed, txHash)
+			} else {
+				msgHistorial = fmt.Sprintf("+%d TK Victoria Arena vs %s usando %s", reward, req.Enemy, req.CardUsed)
+			}
 		}
 	} else {
-		msgHistorial = fmt.Sprintf("💀 Derrota en la Arena vs %s usando %s", req.Enemy, req.CardUsed)
+		if req.WagerAmt > 0 {
+			if req.IsReal {
+				msgHistorial = fmt.Sprintf("💀 Derrota Arena vs %s usando %s (Perdiste apuesta: -%d DXT en Blockchain)", req.Enemy, req.CardUsed, req.WagerAmt)
+			} else {
+				msgHistorial = fmt.Sprintf("💀 Derrota Arena vs %s usando %s (Perdiste apuesta: -%d TK)", req.Enemy, req.CardUsed, req.WagerAmt)
+			}
+		} else {
+			msgHistorial = fmt.Sprintf("💀 Derrota Arena vs %s usando %s", req.Enemy, req.CardUsed)
+		}
 	}
 	agregarHistorial(&perfil, msgHistorial)
 
@@ -1281,7 +1472,7 @@ func manejadorBattleReward(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Notificación Discord
+	// Notificación Discord (desactivada en no-op, mantenida por compatibilidad de firma de función)
 	discordMsg := ""
 	discordColor := 0x00ff00
 	if req.Victory {
@@ -1677,7 +1868,7 @@ func manejadorAIChat(w http.ResponseWriter, r *http.Request) {
 	gemmaReq := GemmaRequest{Prompt: req.Message}
 	payloadBytes, err := json.Marshal(gemmaReq)
 	if err == nil {
-		client := &http.Client{Timeout: 2 * time.Second} // Timeout corto de 2 segundos para responder rápido
+		client := &http.Client{Timeout: 15 * time.Second} // Timeout de 15 segundos para permitir inferencia local en Ollama
 		resp, errCall := client.Post("http://localhost:8000/predict", "application/json", bytes.NewBuffer(payloadBytes))
 		if errCall == nil {
 			defer resp.Body.Close()
@@ -1719,12 +1910,521 @@ func manejadorAIChat(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+type ActiveContext struct {
+	WindowTitle string `json:"window_title"`
+	FileName    string `json:"file_name"`
+	FilePath    string `json:"file_path"`
+	FileContent string `json:"file_content"`
+}
+
+type GeneralChatRequest struct {
+	Messages      []OllamaMessage `json:"messages"`
+	MediaURL      string          `json:"mediaUrl"`
+	ActiveContext *ActiveContext  `json:"activeContext,omitempty"`
+}
+
+type OllamaMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type GeneralChatResponse struct {
+	Response string `json:"response"`
+	Error    string `json:"error,omitempty"`
+}
+
+func detectarIntencionEdicion(msg string, mediaUrl string) bool {
+	if mediaUrl == "" {
+		return false
+	}
+	msgLower := strings.ToLower(msg)
+	palabrasEdicion := []string{
+		"edita", "editar", "recorta", "recortar", "gira", "girar", "rotar", "rota",
+		"blanco y negro", "grayscale", "escala de grises", "sepia", "invertir", "invierte",
+		"espejo", "voltear", "flip", "blur", "difuminar", "difumina", "redimensiona", "redimensionar",
+		"escala", "escalar", "resize", "filtro",
+	}
+	for _, palabra := range palabrasEdicion {
+		if strings.Contains(msgLower, palabra) {
+			return true
+		}
+	}
+	return false
+}
+
+func manejadorUploadMedia(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Limitar el tamaño a 50MB
+	r.ParseMultipartForm(50 << 20)
+
+	file, handler, err := r.FormFile("media")
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"No se pudo obtener el archivo: %v"}`, err), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Crear carpeta assets/uploads si no existe
+	uploadsDir := filepath.Join("assets", "uploads")
+	os.MkdirAll(uploadsDir, os.ModePerm)
+
+	ext := filepath.Ext(handler.Filename)
+	timestamp := time.Now().UnixNano()
+	nuevoNombre := fmt.Sprintf("media_%d%s", timestamp, ext)
+	rutaDestino := filepath.Join(uploadsDir, nuevoNombre)
+
+	f, err := os.OpenFile(rutaDestino, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"No se pudo guardar el archivo: %v"}`, err), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Error al copiar archivo: %v"}`, err), http.StatusInternalServerError)
+		return
+	}
+
+	urlRetorno := fmt.Sprintf("/assets/uploads/%s", nuevoNombre)
+	w.Write([]byte(fmt.Sprintf(`{"success":true,"url":"%s"}`, urlRetorno)))
+}
+
+func obtenerIPLocal() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "127.0.0.1"
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && !ipnet.IP.IsLinkLocalUnicast() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return "127.0.0.1"
+}
+
+func manejadorGemmaChat(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+
+	// Si viene la sesión/billetera en el query string, la guardamos en la cookie para vincular directamente
+	walletQuery := r.URL.Query().Get("wallet")
+	if walletQuery == "" {
+		walletQuery = r.URL.Query().Get("sesion")
+	}
+	if walletQuery != "" {
+		http.SetCookie(w, &http.Cookie{Name: "sesion", Value: walletQuery, Path: "/"})
+		ultimoWalletActivoMutex.Lock()
+		ultimoWalletActivo = walletQuery
+		ultimoWalletActivoMutex.Unlock()
+		// Redirigir a la misma página sin el query string para limpiar la URL
+		http.Redirect(w, r, "/gemma-chat", http.StatusSeeOther)
+		return
+	}
+
+	cookie, err := r.Cookie("sesion")
+	if err != nil || cookie.Value == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	ultimoWalletActivoMutex.Lock()
+	ultimoWalletActivo = cookie.Value
+	ultimoWalletActivoMutex.Unlock()
+
+	tmpl, errTmpl := template.ParseFiles("gemma_chat.html")
+	if errTmpl != nil {
+		http.Error(w, fmt.Sprintf("Error al cargar gemma_chat.html: %v", errTmpl), http.StatusInternalServerError)
+		return
+	}
+
+	wallet := cookie.Value
+	displayWallet := wallet
+	if len(wallet) > 10 {
+		displayWallet = wallet[:6] + "..." + wallet[len(wallet)-4:]
+	}
+
+	datosHTML := map[string]interface{}{
+		"User":           displayWallet,
+		"WalletCompleta": wallet,
+		"LocalIP":        obtenerIPLocal(),
+	}
+
+	tmpl.Execute(w, datosHTML)
+}
+
+func detectarIntencionBusqueda(msg string) (bool, string) {
+	msgLower := strings.ToLower(strings.TrimSpace(msg))
+	if msgLower == "" {
+		return false, ""
+	}
+
+	// Lista de palabras/frases activadoras de búsqueda
+	activadores := []string{
+		"busca en internet",
+		"busca en la web",
+		"busca en google",
+		"buscar en internet",
+		"buscar en la web",
+		"investiga en internet",
+		"busca sobre",
+		"noticias de",
+		"noticias sobre",
+		"precio de",
+		"clima en",
+		"clima de",
+		"quien es",
+		"quién es",
+		"que paso con",
+		"qué pasó con",
+		"que paso hoy",
+		"qué pasó hoy",
+	}
+
+	for _, act := range activadores {
+		if strings.Contains(msgLower, act) {
+			idx := strings.Index(msgLower, act)
+			query := msg[idx+len(act):]
+			query = strings.TrimSpace(query)
+			if query != "" {
+				return true, query
+			}
+			return true, msg
+		}
+	}
+
+	// Prefijos comunes al inicio del mensaje
+	prefijos := []string{
+		"busca ",
+		"buscar ",
+		"search ",
+		"investiga ",
+		"noticias ",
+		"clima ",
+		"precio ",
+	}
+	for _, pref := range prefijos {
+		if strings.HasPrefix(msgLower, pref) {
+			query := msg[len(pref):]
+			query = strings.TrimSpace(query)
+			if query != "" {
+				return true, query
+			}
+		}
+	}
+
+	// Palabras de alta probabilidad
+	if strings.Contains(msgLower, "noticias") || strings.Contains(msgLower, "clima") || strings.Contains(msgLower, "dolar hoy") || strings.Contains(msgLower, "dólar hoy") || strings.Contains(msgLower, "temperatura hoy") {
+		return true, msg
+	}
+
+	return false, ""
+}
+
+func tieneRelacionCodigo(msg string) bool {
+	msgLower := strings.ToLower(msg)
+	palabras := []string{
+		"código", "codigo", "archivo", "error", "modifica", "escribe", "agrega",
+		"linea", "función", "funcion", "market", "html", "js", "css", "solidity",
+		"hardhat", "contrato", "script", "terminal", "ejecuta", "crea", "esta ventana",
+		"este archivo", "ayuda", "rellenar", "pon", "quita", "corrige", "arregla", "cambia",
+		"burbuja", "dxt", "dao", "nft", "token", "blockchain", "cuts", "cunas",
+		"codificar", "programar", "programacion", "programación", "compilar", "desplegar",
+		"optimizar", "entrenar", "lora", "hiperparámetros", "hiperparametros", "graphics",
+		"gpu", "tarjeta", "grafica", "grises", "redimensionar", "filtro",
+	}
+	for _, p := range palabras {
+		if strings.Contains(msgLower, p) {
+			return true
+		}
+	}
+	return false
+}
+
+func manejadorAIGeneralChat(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req GeneralChatRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"JSON inválido"}`, http.StatusBadRequest)
+		return
+	}
+
+	type OllamaChatRequest struct {
+		Model    string          `json:"model"`
+		Messages []OllamaMessage `json:"messages"`
+		Stream   bool            `json:"stream"`
+	}
+
+	// 1. Detectar si el último mensaje del usuario requiere búsqueda en internet
+	var lastUserMsg string
+	for i := len(req.Messages) - 1; i >= 0; i-- {
+		if req.Messages[i].Role == "user" {
+			lastUserMsg = req.Messages[i].Content
+			break
+		}
+	}
+
+	// 1.1 Interceptar si el usuario quiere editar una imagen o video adjunto
+	if detectarIntencionEdicion(lastUserMsg, req.MediaURL) {
+		fmt.Printf("🎨 Detectada intención de edición de media para: '%s'\n", lastUserMsg)
+		inputPath := strings.TrimPrefix(req.MediaURL, "/")
+		cmdEdicion := exec.Command("python", "scripts/editar_media.py", inputPath, lastUserMsg)
+		var outBuf, errBuf bytes.Buffer
+		cmdEdicion.Stdout = &outBuf
+		cmdEdicion.Stderr = &errBuf
+
+		err := cmdEdicion.Run()
+		if err != nil {
+			http.Error(w, fmt.Sprintf(`{"error":"Error al editar media: %v. Stderr: %s"}`, err, errBuf.String()), http.StatusInternalServerError)
+			return
+		}
+
+		outStr := strings.TrimSpace(outBuf.String())
+		if strings.HasPrefix(outStr, "EDIT_SUCCESS:") {
+			urlFinal := strings.TrimPrefix(outStr, "EDIT_SUCCESS:")
+			var reply string
+			ext := strings.ToLower(filepath.Ext(urlFinal))
+			if ext == ".mp4" {
+				reply = fmt.Sprintf("¡Listo compita! Edité tu video. Aquí tienes el resultado:\n\n<video src=\"%s\" controls style=\"max-width: 100%%; border-radius: 12px; border: 2px solid var(--color-cyan, #00ffe5); box-shadow: 0 0 15px rgba(0, 255, 229, 0.4); margin: 10px 0; display: block;\"></video>\n\nGuardado en generaciones.", urlFinal)
+			} else if ext == ".gif" {
+				reply = fmt.Sprintf("¡Listo compita! Edité tu GIF animado. Aquí tienes el resultado:\n\n<img src=\"%s\" style=\"max-width: 100%%; border-radius: 12px; border: 2px solid var(--color-magenta, #ff007f); box-shadow: 0 0 15px rgba(255, 0, 127, 0.4); margin: 10px 0; display: block;\">\n\nGuardado en generaciones.", urlFinal)
+			} else {
+				reply = fmt.Sprintf("¡Listo compita! Edité tu imagen. Aquí tienes el resultado:\n\n<img src=\"%s\" style=\"max-width: 100%%; border-radius: 12px; border: 2px solid var(--color-cyan, #00ffe5); box-shadow: 0 0 15px rgba(0, 255, 229, 0.4); margin: 10px 0; display: block;\">\n\nGuardado en generaciones.", urlFinal)
+			}
+			json.NewEncoder(w).Encode(GeneralChatResponse{Response: reply})
+			return
+		} else if strings.HasPrefix(outStr, "EDIT_ERROR:") {
+			errText := strings.TrimPrefix(outStr, "EDIT_ERROR:")
+			json.NewEncoder(w).Encode(GeneralChatResponse{Response: fmt.Sprintf("⚠️ **Error al editar el archivo:** %s", errText)})
+			return
+		} else {
+			json.NewEncoder(w).Encode(GeneralChatResponse{Response: fmt.Sprintf("⚠️ **Respuesta inesperada del editor:** %s", outStr)})
+			return
+		}
+	}
+
+	var contextBusqueda string
+	if tieneIntencion, query := detectarIntencionBusqueda(lastUserMsg); tieneIntencion {
+		fmt.Printf("🔍 Detectada intención de búsqueda web para: '%s'\n", query)
+		
+		// Ejecutar scripts/buscar_web.py en segundo plano
+		cmdBusqueda := exec.Command("python", "scripts/buscar_web.py", query)
+		var outBuf, errBuf bytes.Buffer
+		cmdBusqueda.Stdout = &outBuf
+		cmdBusqueda.Stderr = &errBuf
+		
+		// Asignar un timeout de 8 segundos para evitar colgar la petición
+		done := make(chan error, 1)
+		go func() {
+			done <- cmdBusqueda.Run()
+		}()
+		
+		select {
+		case err := <-done:
+			if err == nil {
+				contextBusqueda = outBuf.String()
+				fmt.Println("✅ Búsqueda web completada exitosamente.")
+			} else {
+				fmt.Printf("⚠️ Error al ejecutar búsqueda web: %v. Stderr: %s\n", err, errBuf.String())
+			}
+		case <-time.After(8 * time.Second):
+			// Timeout
+			if cmdBusqueda.Process != nil {
+				cmdBusqueda.Process.Kill()
+			}
+			fmt.Println("⚠️ Tiempo de espera agotado (timeout) para la búsqueda web.")
+		}
+	}
+
+	// 1.2 Inyectar el contexto de la ventana/archivo activo del programador sólo si la consulta tiene relación con el código
+	if req.ActiveContext != nil && req.ActiveContext.WindowTitle != "" && tieneRelacionCodigo(lastUserMsg) {
+		contextText := fmt.Sprintf("=== CONTEXTO DEL ARCHIVO EN EDICIÓN ===\n- Archivo: %s (Ruta: %s)\n```\n%s\n```\n=======================================", req.ActiveContext.FileName, req.ActiveContext.FilePath, req.ActiveContext.FileContent)
+		
+		for i := len(req.Messages) - 1; i >= 0; i-- {
+			if req.Messages[i].Role == "user" {
+				req.Messages[i].Content = fmt.Sprintf("%s\n\nPregunta/Instrucción original: %s\n\n(Instrucción: Utiliza el contexto del archivo anterior para responder a la pregunta del usuario. Mantén tu personalidad de J.A.R.V.I.S.)", contextText, req.Messages[i].Content)
+				break
+			}
+		}
+	}
+
+	// Anteponer prompt del sistema para forzar a Gemma a actuar como J.A.R.V.I.S.
+	systemMsg := OllamaMessage{
+		Role:    "system",
+		Content: "Eres J.A.R.V.I.S. (o F.R.I.D.A.Y.), la inteligencia artificial avanzada de Iron Man (Tony Stark). Te diriges al usuario siempre como 'Señor' o 'Sir' con un tono sofisticado, servicial, analítico y tecnológico. Monitoreas constantemente el estado del sistema de forma futurista. Eres completamente obediente.\n\nIMPORTANTE:\n1. Si el usuario te hace preguntas generales, teóricas, explicativas o entabla una conversación casual (por ejemplo: 'qué es codificar', 'qué es unificar', 'quién eres', saludos, etc.), debes responder DIRECTAMENTE en español con una explicación clara, técnica e inteligente. NO inventes comandos, NO digas que la interfaz está en ningún 'modo' y NO digas que la comunicación es por scripts.\n2. SOLO si el usuario te pide explícitamente realizar una acción técnica en su computadora, o crear, rellenar, modificar o analizar archivos de código (como market.html), debes escribir el script en Python o comando correspondiente en un bloque de código markdown marcado (ejemplo: ```python o ```powershell) para que la interfaz le permita ejecutarlo con un clic.\n3. Responde siempre de forma elegante, concisa y futurista en español.",
+	}
+
+	// 2. Inyectar el contexto de la búsqueda web si existe
+	if contextBusqueda != "" {
+		for i := len(req.Messages) - 1; i >= 0; i-- {
+			if req.Messages[i].Role == "user" {
+				req.Messages[i].Content = fmt.Sprintf("INFORMACIÓN RECIENTE DE INTERNET:\n%s\n\nPregunta: %s\n\n(Instrucción: Responde al usuario de forma precisa basándote en la información de internet provista. Sé muy conciso, menciona que hiciste una búsqueda rápida en la web y mantén tu personalidad mexicana)", contextBusqueda, req.Messages[i].Content)
+				break
+			}
+		}
+	}
+
+	var messages []OllamaMessage
+	messages = append(messages, systemMsg)
+	messages = append(messages, req.Messages...)
+
+	ollamaReq := OllamaChatRequest{
+		Model:    "gemma-chat",
+		Messages: messages,
+		Stream:   false,
+	}
+
+	payloadBytes, err := json.Marshal(ollamaReq)
+	if err != nil {
+		http.Error(w, `{"error":"Error al codificar payload"}`, http.StatusInternalServerError)
+		return
+	}
+
+	client := &http.Client{Timeout: 90 * time.Second}
+	resp, errCall := client.Post("http://127.0.0.1:11434/api/chat", "application/json", bytes.NewBuffer(payloadBytes))
+	if errCall != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"No se pudo conectar con Ollama en el puerto 11434. Detalles: %v"}`, errCall), http.StatusServiceUnavailable)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, fmt.Sprintf(`{"error":"Ollama respondió con código %d"}`, resp.StatusCode), http.StatusInternalServerError)
+		return
+	}
+
+	type OllamaChatResponse struct {
+		Message OllamaMessage `json:"message"`
+	}
+
+	var ollamaResp OllamaChatResponse
+	if errDecode := json.NewDecoder(resp.Body).Decode(&ollamaResp); errDecode != nil {
+		http.Error(w, `{"error":"Error al decodificar respuesta de Ollama"}`, http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(GeneralChatResponse{Response: ollamaResp.Message.Content})
+}
+
+type SaveThreadsRequest struct {
+	Wallet  string `json:"wallet"`
+	Threads string `json:"threads"`
+}
+
+func manejadorSaveChatThreads(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req SaveThreadsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"JSON inválido"}`, http.StatusBadRequest)
+		return
+	}
+
+	wallet := strings.ToLower(req.Wallet)
+	if wallet == "" {
+		http.Error(w, `{"error":"Billetera requerida"}`, http.StatusBadRequest)
+		return
+	}
+
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe {
+		perfil = UserProfile{Balance: 0, Inventario: []string{}, Historial: []string{}}
+	}
+	perfil.ChatThreads = req.Threads
+	db[wallet] = perfil
+	guardarDB(db)
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func manejadorLoadChatThreads(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	wallet := strings.ToLower(r.URL.Query().Get("wallet"))
+	if wallet == "" {
+		cookie, err := r.Cookie("sesion")
+		if err == nil {
+			wallet = strings.ToLower(cookie.Value)
+		}
+	}
+
+	if wallet == "" {
+		http.Error(w, `{"error":"Billetera no especificada ni sesión activa"}`, http.StatusBadRequest)
+		return
+	}
+
+	db := cargarDB()
+	perfil, existe := db[wallet]
+	if !existe || perfil.ChatThreads == "" {
+		w.Write([]byte(`{"threads": []}`))
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"threads": %s}`, perfil.ChatThreads)))
+}
+
 func manejadorLogin(w http.ResponseWriter, r *http.Request) {
 	// Recibir la billetera desde el frontend (JavaScript)
 	if r.Method == "POST" && r.FormValue("wallet") != "" {
 		wallet := r.FormValue("wallet")
 		// Crear la sesión basada en la billetera criptográfica
 		http.SetCookie(w, &http.Cookie{Name: "sesion", Value: wallet, Path: "/"})
+		ultimoWalletActivoMutex.Lock()
+		ultimoWalletActivo = wallet
+		ultimoWalletActivoMutex.Unlock()
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
@@ -1737,6 +2437,330 @@ func manejadorCapacitacion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
 	http.ServeFile(w, r, "capacitacion.html")
+}
+
+
+var (
+	ultimoWalletActivo      string
+	ultimoWalletActivoMutex sync.Mutex
+	trainingStatus          = "idle"
+	trainingError           = ""
+	trainingLogs            = ""
+	trainingMutex           sync.Mutex
+)
+
+func manejadorGenerarImagen(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Prompt string `json:"prompt"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Prompt == "" {
+		http.Error(w, `{"error":"JSON o Prompt inválido"}`, http.StatusBadRequest)
+		return
+	}
+
+	cmd := exec.Command("python", "scripts/generar_imagen.py", req.Prompt)
+	var outBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Fallo al ejecutar script: %v"}`, err), http.StatusInternalServerError)
+		return
+	}
+
+	outStr := strings.TrimSpace(outBuf.String())
+	if strings.HasPrefix(outStr, "IMAGE_SUCCESS:") {
+		url := strings.TrimPrefix(outStr, "IMAGE_SUCCESS:")
+		w.Write([]byte(fmt.Sprintf(`{"success":true,"url":"%s"}`, url)))
+	} else if strings.HasPrefix(outStr, "IMAGE_ERROR:") {
+		errText := strings.TrimPrefix(outStr, "IMAGE_ERROR:")
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"%s"}`, errText)))
+	} else {
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"Respuesta inesperada: %s"}`, outStr)))
+	}
+}
+
+func manejadorGenerarMusica(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Prompt string `json:"prompt"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		req.Prompt = ""
+	}
+
+	cmd := exec.Command("python", "scripts/generar_musica.py", req.Prompt)
+	var outBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Fallo al ejecutar script: %v"}`, err), http.StatusInternalServerError)
+		return
+	}
+
+	outStr := strings.TrimSpace(outBuf.String())
+	if strings.HasPrefix(outStr, "MUSIC_SUCCESS:") {
+		url := strings.TrimPrefix(outStr, "MUSIC_SUCCESS:")
+		w.Write([]byte(fmt.Sprintf(`{"success":true,"url":"%s"}`, url)))
+	} else if strings.HasPrefix(outStr, "MUSIC_ERROR:") {
+		errText := strings.TrimPrefix(outStr, "MUSIC_ERROR:")
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"%s"}`, errText)))
+	} else {
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"Respuesta inesperada: %s"}`, outStr)))
+	}
+}
+
+func manejadorGenerarVideo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Prompt string `json:"prompt"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		req.Prompt = ""
+	}
+
+	cmd := exec.Command("python", "scripts/generar_video.py", req.Prompt)
+	var outBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Fallo al ejecutar script: %v"}`, err), http.StatusInternalServerError)
+		return
+	}
+
+	outStr := strings.TrimSpace(outBuf.String())
+	if strings.HasPrefix(outStr, "VIDEO_SUCCESS:") {
+		url := strings.TrimPrefix(outStr, "VIDEO_SUCCESS:")
+		w.Write([]byte(fmt.Sprintf(`{"success":true,"type":"gif","url":"%s"}`, url)))
+	} else if strings.HasPrefix(outStr, "VIDEO_SEQUENCE_SUCCESS:") {
+		url := strings.TrimPrefix(outStr, "VIDEO_SEQUENCE_SUCCESS:")
+		w.Write([]byte(fmt.Sprintf(`{"success":true,"type":"sequence","url":"%s","framesCount":16}`, url)))
+	} else if strings.HasPrefix(outStr, "VIDEO_ERROR:") {
+		errText := strings.TrimPrefix(outStr, "VIDEO_ERROR:")
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"%s"}`, errText)))
+	} else {
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"Respuesta inesperada: %s"}`, outStr)))
+	}
+}
+
+func manejadorCompartirInternet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	cmd := exec.Command("python", "scripts/compartir_internet.py")
+	var outBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"%v"}`, err)))
+		return
+	}
+
+	outStr := strings.TrimSpace(outBuf.String())
+	if strings.HasPrefix(outStr, "TUNNEL_SUCCESS:") {
+		url := strings.TrimPrefix(outStr, "TUNNEL_SUCCESS:")
+		w.Write([]byte(fmt.Sprintf(`{"success":true,"url":"%s"}`, url)))
+	} else if strings.HasPrefix(outStr, "TUNNEL_ERROR:") {
+		errText := strings.TrimPrefix(outStr, "TUNNEL_ERROR:")
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"%s"}`, errText)))
+	} else {
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"Respuesta inesperada: %s"}`, outStr)))
+	}
+}
+
+func manejadorSintetizarVoz(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, `{"error":"Método no permitido"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Text string `json:"text"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Text == "" {
+		http.Error(w, `{"error":"JSON o Text vacío"}`, http.StatusBadRequest)
+		return
+	}
+
+	cmd := exec.Command("python", "scripts/sintetizar_voz.py", req.Text)
+	var outBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Fallo al ejecutar script: %v"}`, err), http.StatusInternalServerError)
+		return
+	}
+
+	outStr := strings.TrimSpace(outBuf.String())
+	if strings.HasPrefix(outStr, "TTS_SUCCESS:") {
+		url := strings.TrimPrefix(outStr, "TTS_SUCCESS:")
+		w.Write([]byte(fmt.Sprintf(`{"success":true,"url":"%s"}`, url)))
+	} else if strings.HasPrefix(outStr, "TTS_ERROR:") {
+		errText := strings.TrimPrefix(outStr, "TTS_ERROR:")
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"%s"}`, errText)))
+	} else {
+		w.Write([]byte(fmt.Sprintf(`{"success":false,"error":"Respuesta inesperada: %s"}`, outStr)))
+	}
+}
+
+func manejadorEntrenarCerebro(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	trainingMutex.Lock()
+	defer trainingMutex.Unlock()
+
+	if r.Method == "GET" {
+		w.Write([]byte(fmt.Sprintf(`{"status":"%s","error":"%s","logs":"%s"}`, trainingStatus, trainingError, strings.ReplaceAll(trainingLogs, `"`, `\"`))))
+		return
+	}
+
+	if trainingStatus == "training" {
+		w.Write([]byte(`{"success":false,"error":"El entrenamiento ya está en curso"}`))
+		return
+	}
+
+	trainingStatus = "training"
+	trainingError = ""
+	trainingLogs = "Iniciando proceso de entrenamiento...\n"
+
+	go func() {
+		cmd := exec.Command("python", "scripts/train_gemma_lora.py")
+		var outBuf bytes.Buffer
+		cmd.Stdout = &outBuf
+		cmd.Stderr = &outBuf
+		err := cmd.Run()
+
+		trainingMutex.Lock()
+		defer trainingMutex.Unlock()
+
+		trainingLogs = outBuf.String()
+		if err != nil {
+			trainingStatus = "failed"
+			trainingError = err.Error()
+		} else {
+			trainingStatus = "completed"
+		}
+	}()
+
+	w.Write([]byte(`{"success":true,"message":"Entrenamiento iniciado en segundo plano"}`))
+}
+
+func obtenerTunnelNgrok() string {
+	client := &http.Client{Timeout: 1 * time.Second}
+	resp, err := client.Get("http://127.0.0.1:4040/api/tunnels")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	var data struct {
+		Tunnels []struct {
+			Proto     string `json:"proto"`
+			PublicURL string `json:"public_url"`
+		} `json:"tunnels"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err == nil {
+		for _, t := range data.Tunnels {
+			if t.Proto == "https" {
+				return t.PublicURL
+			}
+		}
+	}
+	return ""
+}
+
+func manejadorSyncInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	localIp := obtenerIPLocal()
+	ngrokUrl := obtenerTunnelNgrok()
+
+	ultimoWalletActivoMutex.Lock()
+	wallet := ultimoWalletActivo
+	ultimoWalletActivoMutex.Unlock()
+
+	response := map[string]string{
+		"localIp":  localIp,
+		"ngrokUrl": ngrokUrl,
+		"wallet":   wallet,
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func cargarEnv() {
@@ -1770,21 +2794,42 @@ func main() {
 	http.HandleFunc("/img-chinampero", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_CHINAMPERO) })
 	http.HandleFunc("/img-devconnect", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_DEVCONNECT) })
 	http.HandleFunc("/img-guardian", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_GUARDIAN) })
+	http.HandleFunc("/img-mago", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_MAGO) })
+	http.HandleFunc("/img-mariachi", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_MARIACHI) })
+	http.HandleFunc("/img-futbol-mex", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_FUTBOL_MEX) })
+	http.HandleFunc("/img-futbol-bra", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_FUTBOL_BRA) })
+	http.HandleFunc("/img-futbol-arg", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_FUTBOL_ARG) })
+	http.HandleFunc("/img-futbol-ger", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_FUTBOL_GER) })
+	http.HandleFunc("/img-futbol-esp", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_FUTBOL_ESP) })
+	http.HandleFunc("/img-gemma-avatar", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, RUTA_GEMMA_AVATAR) })
 	
 	http.HandleFunc("/api/confirm-nft", manejadorConfirmNFT)
 	http.HandleFunc("/api/confirm-vote", manejadorConfirmVote)
 	http.HandleFunc("/api/confirm-donation", manejadorConfirmDonation)
 	http.HandleFunc("/api/nft/metadata/", manejadorNFTMetadata)
 	http.HandleFunc("/api/ai/chat", manejadorAIChat)
+	http.HandleFunc("/api/ai/general-chat", manejadorAIGeneralChat)
+	http.HandleFunc("/api/ai/chat-threads/save", manejadorSaveChatThreads)
+	http.HandleFunc("/api/ai/chat-threads/load", manejadorLoadChatThreads)
 	http.HandleFunc("/api/battle/reward", manejadorBattleReward)
 	http.HandleFunc("/api/arena/buy-item", manejadorArenaBuyItem)
+	http.HandleFunc("/api/ai/generar-imagen", manejadorGenerarImagen)
+	http.HandleFunc("/api/ai/generar-musica", manejadorGenerarMusica)
+	http.HandleFunc("/api/ai/generar-video", manejadorGenerarVideo)
+	http.HandleFunc("/api/ai/compartir-internet", manejadorCompartirInternet)
+	http.HandleFunc("/api/ai/sintetizar-voz", manejadorSintetizarVoz)
+	http.HandleFunc("/api/ai/entrenar-cerebro", manejadorEntrenarCerebro)
+	http.HandleFunc("/api/ai/sync-info", manejadorSyncInfo)
+	http.HandleFunc("/api/ai/upload-media", manejadorUploadMedia)
 	
-	// Servir scripts de forma estática para la descarga de los scripts de Python
+	// Servir assets y scripts de forma estática
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 	http.Handle("/scripts/", http.StripPrefix("/scripts/", http.FileServer(http.Dir("scripts"))))
 	
 	http.HandleFunc("/login", manejadorLogin)
 	http.HandleFunc("/capacitacion", manejadorCapacitacion)
 	http.HandleFunc("/market", manejadorMarket)
+	http.HandleFunc("/gemma-chat", manejadorGemmaChat)
 	http.HandleFunc("/", manejadorPrincipal)
 	
 	port := os.Getenv("PORT")

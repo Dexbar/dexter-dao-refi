@@ -85,7 +85,7 @@
             color: var(--gold);
             background: rgba(255,215,0,0.06);
             border-bottom: 1px solid rgba(255,215,0,0.15);
-            display: {{if .Mensaje}}block{{else}}none{{end}};
+            display: block;
         }
 
         /* ── BALANCE BAR ── */
@@ -302,15 +302,39 @@
             width: 0%;
             transition: width 1s ease-out;
         }
+
+        /* Colores dinámicos del stat bar por elemento */
+        .stat-bar.el-agua { background: #00ffe5; }
+        .stat-bar.el-cosmico { background: #b06fff; }
+        .stat-bar.el-divino { background: #ffd700; }
+        .stat-bar.el-cyber { background: #00ff00; }
+        .stat-bar.el-cosmico-oro { background: linear-gradient(90deg, #ffd700, #ff8c00); }
+        .stat-bar.el-tierra-planta { background: #00ff66; }
+        .stat-bar.el-default { background: #fff; }
+
+        /* Colores dinámicos del precio NFT */
+        .nft-price.key-ajolote { color: var(--pink); }
+        .nft-price.key-luna { color: var(--accent); }
+        .nft-price.key-quetzal { color: var(--gold); }
+        .nft-price.key-androide { color: var(--purple); }
+        .nft-price.key-supremo { color: var(--gold); }
+        .nft-price.key-chinampero { color: #00ff66; }
+        .nft-price.key-guardian { color: #ff5500; }
+        .nft-price.key-futbol_mex { color: #00ff66; }
+        .nft-price.key-futbol_bra { color: #ffd700; }
+        .nft-price.key-futbol_arg { color: #00ffe5; }
+        .nft-price.key-futbol_ger { color: #ffffff; }
+        .nft-price.key-futbol_esp { color: #ff3c3c; }
     </style>
 </head>
-<body>
+<body data-user-inventory='{{if .UserInventory}}{{.UserInventory}}{{else}}[]{{end}}'>
 
 <header>
     <div class="logo">Dexter<span>DAO</span> <span style="font-size:0.8rem;color:var(--muted);font-weight:400;">Marketplace</span></div>
     <div class="header-right">
         <div id="wallet-badge">0x···</div>
         <button class="btn btn-home" onclick="location.href='/'">← Dashboard</button>
+        <button class="btn btn-home" onclick="location.href='/gemma-chat'" style="border-color: var(--accent); color: var(--accent); margin-right: 5px;">💬 Chat con Gemma</button>
         <button class="btn btn-connect" id="btn-connect" onclick="conectarMetaMask()">Conectar MetaMask</button>
     </div>
 </header>
@@ -430,22 +454,12 @@
             <div style="font-size:0.75rem; text-align:left; color:var(--muted); margin-bottom: 12px; margin-top: 5px;">
                 Poder:
                 <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: {{.Poder}}%; 
-                        {{if eq .Elemento `Agua`}}background: #00ffe5;{{else if eq .Elemento `Cósmico`}}background: #b06fff;{{else if eq .Elemento `Divino`}}background: #ffd700;{{else if eq .Elemento `Cyber`}}background: #00ff00;{{else if eq .Elemento `Cósmico/Oro`}}background: linear-gradient(90deg, #ffd700, #ff8c00);{{else if eq .Elemento `Tierra/Planta`}}background: #00ff66;{{else}}background: #fff;{{end}}
-                    "></div>
+                    <div class="stat-bar {{if eq .Elemento `Agua`}}el-agua{{else if eq .Elemento `Cósmico`}}el-cosmico{{else if eq .Elemento `Divino`}}el-divino{{else if eq .Elemento `Cyber`}}el-cyber{{else if eq .Elemento `Cósmico/Oro`}}el-cosmico-oro{{else if eq .Elemento `Tierra/Planta`}}el-tierra-planta{{else}}el-default{{end}}" data-poder="{{.Poder}}"></div>
                 </div>
             </div>
 
             <div class="nft-price-row" style="margin-bottom:0.5rem;">
-                <div class="nft-price" style="
-                    {{if eq .Key `ajolote`}}color:var(--pink){{end}}
-                    {{if eq .Key `luna`}}color:var(--accent){{end}}
-                    {{if eq .Key `quetzal`}}color:var(--gold){{end}}
-                    {{if eq .Key `androide`}}color:var(--purple){{end}}
-                    {{if eq .Key `supremo`}}color:var(--gold){{end}}
-                    {{if eq .Key `chinampero`}}color:#00ff66{{end}}
-                    {{if eq .Key `guardian`}}color:#ff5500{{end}}
-                ">
+                <div class="nft-price key-{{.Key}}">
                     {{.Price}}<span>DXT</span>
                 </div>
             </div>
@@ -458,7 +472,7 @@
             </div>
 
             <div>
-                <button type="button" id="btn-{{.Key}}" class="btn-buy btn-buy-buy" {{if $soldOut}}disabled{{end}} onclick="comprarNFTBlockchain('{{.Key}}', {{.Price}})">
+                <button type="button" id="btn-{{.Key}}" class="btn-buy btn-buy-buy" {{if $soldOut}}disabled{{end}} data-key="{{.Key}}" data-price="{{.Price}}">
                     {{if $soldOut}}SOLD OUT{{else}}Comprar NFT{{end}}
                 </button>
             </div>
@@ -477,6 +491,7 @@
     const CONTRACT_ADDRESS = "{{.TokenAddress}}";
     const DEXTER_NFT_ADDRESS = "{{.NFTAddress}}";
     const DEXTER_NETWORK = "{{.Network}}";
+    const USER_INVENTORY = JSON.parse(document.body.getAttribute('data-user-inventory') || '[]');
 
     // Configuración dinámica de red
     let TARGET_CHAIN_ID = 31337;
@@ -575,6 +590,7 @@
         }
 
         try {
+            console.log("Iniciando compra de:", key, "por", price, "DXT");
             const tokenAddr = CONTRACT_ADDRESS;
             const nftAddr = DEXTER_NFT_ADDRESS;
 
@@ -583,7 +599,10 @@
                 return;
             }
 
-            const provider = new ethers.BrowserProvider(window.ethereum);
+            let provider = new ethers.BrowserProvider(window.ethereum);
+            
+            // Solicitar cuentas antes de hacer cualquier cosa
+            await provider.send("eth_requestAccounts", []);
 
             // Cambiar de red programáticamente si está en otra red
             let network = await provider.getNetwork();
@@ -595,6 +614,8 @@
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: TARGET_CHAIN_HEX }],
                     });
+                    // Recrear el provider para aplicar el cambio de red
+                    provider = new ethers.BrowserProvider(window.ethereum);
                 } catch (switchError) {
                     if (switchError.code === 4902) {
                         try {
@@ -607,6 +628,7 @@
                                     nativeCurrency: { name: TARGET_NATIVE_NAME, symbol: TARGET_NATIVE_SYMBOL, decimals: 18 }
                                 }],
                             });
+                            provider = new ethers.BrowserProvider(window.ethereum);
                         } catch (addError) {
                             console.error("Error al agregar la red:", addError);
                         }
@@ -662,7 +684,7 @@
             console.log("Acuñando NFT en Blockchain...");
             
             // Mapear key a tipo
-            const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero", "guardian"];
+            const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero", "guardian", "futbol_mex", "futbol_bra", "futbol_arg", "futbol_ger", "futbol_esp"];
             const nftType = nftKeys.indexOf(key);
 
             const mintTx = await nftContractWrite.mintNFT(nftType);
@@ -708,6 +730,33 @@
             }
         }
 
+        // Renderizar distintivo de "adquirido" para los NFTs de la bóveda
+        if (typeof USER_INVENTORY !== 'undefined' && USER_INVENTORY.length > 0) {
+            USER_INVENTORY.forEach(key => {
+                const card = document.querySelector(`.nft-card.${key}`);
+                if (card) {
+                    const nftBody = card.querySelector('.nft-body');
+                    if (nftBody) {
+                        // Crear el badge de "Ya adquirido" si no existe ya
+                        if (!nftBody.querySelector('.owned-badge')) {
+                            const badge = document.createElement('div');
+                            badge.className = 'owned-badge';
+                            badge.innerText = '✓ En tu Bóveda';
+                            nftBody.insertBefore(badge, nftBody.firstChild);
+                        }
+                        
+                        // Modificar el botón para mostrar que ya se adquirió (pero permitir comprar más si el suministro no se agotó)
+                        const btn = document.getElementById(`btn-${key}`);
+                        if (btn && btn.innerText !== "SOLD OUT") {
+                            btn.innerText = "Adquirir de nuevo";
+                            btn.style.background = 'linear-gradient(135deg, var(--muted), #333344)';
+                            btn.style.color = '#fff';
+                        }
+                    }
+                }
+            });
+        }
+
         // Cuenta regresiva del próximo drop
         const proximoDropUnix = parseInt("{{.ProximoDropUnix}}") || 0;
         function actualizarCuentaRegresiva() {
@@ -739,6 +788,23 @@
             actualizarCuentaRegresiva();
             setInterval(actualizarCuentaRegresiva, 1000);
         }
+
+        // Ajustar el ancho de las barras de estadísticas de forma dinámica para evitar quejas del validador de CSS
+        document.querySelectorAll('.stat-bar').forEach(bar => {
+            const poder = bar.getAttribute('data-poder');
+            if (poder) {
+                bar.style.width = poder + '%';
+            }
+        });
+
+        // Manejar el click de los botones de compra para evitar Go templates en atributos onclick
+        document.querySelectorAll('.btn-buy-buy').forEach(button => {
+            button.addEventListener('click', () => {
+                const key = button.getAttribute('data-key');
+                const price = parseFloat(button.getAttribute('data-price') || '0');
+                comprarNFTBlockchain(key, price);
+            });
+        });
     });
 </script>
 </body>

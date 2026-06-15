@@ -3,6 +3,22 @@ const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");
 
+// Cargar .env de forma segura sobreescribiendo variables existentes
+const envPath = path.join(__dirname, "../.env");
+if (fs.existsSync(envPath)) {
+  try {
+    const dotenv = require("dotenv");
+    const envConfig = dotenv.config({ path: envPath }).parsed;
+    if (envConfig) {
+      for (const k in envConfig) {
+        process.env[k] = envConfig[k];
+      }
+    }
+  } catch (e) {
+    console.warn("Advertencia: No se pudo cargar dotenv:", e.message);
+  }
+}
+
 async function main() {
   const txHash = process.argv[2];
   const txType = process.argv[3]; // 'nft_mint', 'proposal_vote', 'donation'
@@ -31,6 +47,8 @@ async function main() {
     expectedTargetAddress = deployed.DexterGov;
   } else if (txType === "donation") {
     expectedTargetAddress = deployed.DexterCrowdfund;
+  } else if (txType === "battle_wager") {
+    expectedTargetAddress = deployed.DexterDAO;
   } else {
     console.error("Error: Tipo de transacción desconocido.");
     process.exit(1);
@@ -46,11 +64,17 @@ async function main() {
   if (network === "localhost" || network === "hardhat") {
     rpcUrl = "http://127.0.0.1:8545";
   } else if (network === "sepolia") {
-    rpcUrl = process.env.SEPOLIA_RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.SEPOLIA_RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   } else if (network === "alfajores") {
     rpcUrl = process.env.ALFAJORES_RPC_URL || "https://alfajores-forno.celo-testnet.org";
   } else {
-    rpcUrl = process.env.RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   }
 
   try {
@@ -81,7 +105,42 @@ async function main() {
       process.exit(0);
     }
 
+    // 4. Verificación específica de Apuesta (battle_wager)
+    if (txType === "battle_wager") {
+      const transferTopic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+      const transferLog = receipt.logs.find(log => 
+        log.address.toLowerCase() === expectedTargetAddress.toLowerCase() && 
+        log.topics[0] === transferTopic
+      );
+      if (!transferLog) {
+        console.log("VERIFY_FAILURE:ERC20 Transfer log not found");
+        process.exit(0);
+      }
+      
+      const fromAddr = "0x" + transferLog.topics[1].slice(26).toLowerCase();
+      const toAddr = "0x" + transferLog.topics[2].slice(26).toLowerCase();
+      const expectedEscrow = deployed.DexterNFT.toLowerCase();
+      
+      if (fromAddr !== expectedWallet.toLowerCase()) {
+        console.log(`VERIFY_FAILURE:Wager sender mismatch (From: ${fromAddr}, Expected: ${expectedWallet})`);
+        process.exit(0);
+      }
+      if (toAddr !== expectedEscrow) {
+        console.log(`VERIFY_FAILURE:Wager recipient mismatch (To: ${toAddr}, Expected Escrow: ${expectedEscrow})`);
+        process.exit(0);
+      }
+      
+      const amountTransferredWei = BigInt(transferLog.data);
+      const expectedAmountWei = ethers.parseUnits(process.argv[5], 18);
+      
+      if (amountTransferredWei !== expectedAmountWei) {
+        console.log(`VERIFY_FAILURE:Wager amount mismatch (Transferred: ${amountTransferredWei.toString()}, Expected: ${expectedAmountWei.toString()})`);
+        process.exit(0);
+      }
+    }
+
     console.log("VERIFY_SUCCESS:true");
+
   } catch (error) {
     const isConnectionError = error.message.includes("ECONNREFUSED") || 
                               error.message.includes("could not detect network") ||

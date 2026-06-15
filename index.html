@@ -58,6 +58,12 @@
 		.nft-card.guardian { color: #ff5500; border: 1px solid rgba(255,85,0,0.5); }
 		.nft-card.guardian:hover { animation: pulse-glow 2s infinite; border-color:#ff5500; }
 
+		.nft-card.mago { color: #a855f7; border: 1px solid rgba(168,85,247,0.5); }
+		.nft-card.mago:hover { animation: pulse-glow 2s infinite; border-color:#a855f7; }
+
+		.nft-card.mariachi { color: #eab308; border: 1px solid rgba(234,179,8,0.5); }
+		.nft-card.mariachi:hover { animation: pulse-glow 2s infinite; border-color:#eab308; }
+
 		.nft-card.supremo { color: #ffd700; border: 1px solid rgba(255,215,0,0.8); background: linear-gradient(135deg, rgba(6,6,16,0.9), rgba(255,215,0,0.08)); }
 		.nft-card.supremo:hover { animation: pulse-glow 1.5s infinite; border-color:#ffffff; box-shadow: 0 0 25px rgba(255,215,0,0.6); }
 
@@ -944,6 +950,176 @@
 		.btn-run-cmd:hover {
 			box-shadow: 0 0 10px rgba(0, 255, 229, 0.4);
 		}
+		
+		/* --- ESTILOS RETRO YUGIOH --- */
+		.yugioh-card {
+			background: linear-gradient(135deg, #c58e4c, #7d4d23) !important;
+			border: 4px double #3b220d !important;
+			box-shadow: 0 0 15px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,0.5) !important;
+			padding: 10px !important;
+			border-radius: 8px !important;
+			display: flex;
+			flex-direction: column;
+			position: relative;
+			color: #000 !important;
+			text-shadow: none !important;
+		}
+		.yugioh-card-inner {
+			background: #fdf5e6;
+			border: 2px solid #5a3a1a;
+			padding: 8px;
+			border-radius: 4px;
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+		}
+		.yugioh-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 2px solid #5a3a1a;
+			padding-bottom: 4px;
+			margin-bottom: 4px;
+		}
+		.yugioh-name {
+			font-family: 'Georgia', serif;
+			font-size: 1.1rem !important;
+			font-weight: 900 !important;
+			color: #1a0f00 !important;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+		.yugioh-attribute {
+			background: radial-gradient(circle, #ffeedd, #d2b48c);
+			border: 1px solid #5a3a1a;
+			border-radius: 50%;
+			width: 26px;
+			height: 26px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.65rem;
+			font-weight: bold;
+			color: #3b220d;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+		}
+		.yugioh-stars {
+			display: flex;
+			gap: 2px;
+			margin: 2px 0 6px 0;
+			justify-content: flex-start;
+		}
+		.yugioh-star {
+			color: #ffd700;
+			text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+			font-size: 0.8rem;
+		}
+		.yugioh-img-wrap {
+			border: 3px solid #5a3a1a;
+			background: #000;
+			overflow: hidden;
+			height: 150px;
+			box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.yugioh-img-wrap img {
+			height: 100%;
+			width: 100%;
+			object-fit: cover;
+		}
+		.yugioh-body {
+			background: #faf0e6;
+			border: 2px solid #5a3a1a;
+			padding: 6px 8px;
+			margin-top: 6px;
+			border-radius: 3px;
+			font-size: 0.72rem;
+			color: #2b180a !important;
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			box-shadow: inset 0 0 5px rgba(90,58,26,0.15);
+		}
+		.yugioh-type {
+			font-weight: bold;
+			font-family: sans-serif;
+			margin-bottom: 4px;
+			border-bottom: 1px solid rgba(90,58,26,0.2);
+			padding-bottom: 2px;
+		}
+		.yugioh-desc {
+			font-style: italic;
+			line-height: 1.3;
+			margin-bottom: 6px;
+			color: #3b220d;
+		}
+		.yugioh-stats {
+			display: flex;
+			justify-content: flex-end;
+			gap: 15px;
+			font-family: monospace;
+			font-size: 0.85rem;
+			font-weight: bold;
+			border-top: 1px solid rgba(90,58,26,0.2);
+			padding-top: 4px;
+			color: #1a0f00;
+		}
+		/* Estilos para cartas de Magia y Trampa */
+		.yugioh-spell-card {
+			background: linear-gradient(135deg, #007777, #004444) !important;
+			border: 3.5px double #002222 !important;
+			color: #fff !important;
+		}
+		.yugioh-spell-card .yugioh-card-inner {
+			background: #e6f2f2;
+			border-color: #004444;
+		}
+		.yugioh-spell-card .yugioh-body {
+			background: #f0f8f8;
+			border-color: #004444;
+			color: #003333 !important;
+		}
+		.yugioh-spell-card .yugioh-name {
+			color: #002222 !important;
+		}
+		
+		.yugioh-trap-card {
+			background: linear-gradient(135deg, #b02a6b, #70103e) !important;
+			border: 3.5px double #400020 !important;
+			color: #fff !important;
+		}
+		.yugioh-trap-card .yugioh-card-inner {
+			background: #fcecf3;
+			border-color: #70103e;
+		}
+		.yugioh-trap-card .yugioh-body {
+			background: #fff0f5;
+			border-color: #70103e;
+			color: #500028 !important;
+		}
+		.yugioh-trap-card .yugioh-name {
+			color: #400020 !important;
+		}
+
+		.item-shop-card.spell {
+			border-color: rgba(0, 150, 150, 0.5);
+			background: rgba(0, 100, 100, 0.08);
+		}
+		.item-shop-card.spell:hover {
+			border-color: #00e5e5;
+			background: rgba(0, 229, 229, 0.12);
+		}
+		.item-shop-card.trap {
+			border-color: rgba(180, 42, 107, 0.5);
+			background: rgba(110, 16, 62, 0.08);
+		}
+		.item-shop-card.trap:hover {
+			border-color: #ff3399;
+			background: rgba(255, 51, 153, 0.12);
+		}
 	</style>
 </head>
 <body>
@@ -953,6 +1129,7 @@
 	<div style="text-align: right; max-width: 1200px; margin: 0 auto 20px auto; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
 		<span style="color: #aaa; margin-right: 5px;">Cuenta Web3: <strong style="color: #f6851b; text-shadow: 0 0 10px #f6851b;">{{.User}}</strong></span>
 		<button type="button" id="btn-toggle-arena" onclick="toggleArena()" style="background: linear-gradient(135deg, #ff00ff, #7928ca); color: #fff; width: auto; padding: 6px 16px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; transition: 0.2s; box-shadow: 0 0 10px rgba(255,0,255,0.4);">🎮 Arena de Batalla</button>
+		<button type="button" onclick="location.href='/gemma-chat'" style="background: linear-gradient(135deg, #0077ff, #00ffe5); color: #000; width: auto; padding: 6px 16px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; transition: 0.2s; box-shadow: 0 0 10px rgba(0, 119, 255, 0.3);">💬 Chat con Gemma</button>
 		<button type="button" onclick="location.href='/capacitacion'" style="background: linear-gradient(135deg, #00ff66, #00ffe5); color: #000; width: auto; padding: 6px 16px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; transition: 0.2s;">🎓 CAPACITACIÓN AI</button>
 		<form method="POST" style="display:inline; margin: 0;"><input type="hidden" name="accion" value="logout"><button type="submit" style="background:#333; color:#fff; width:auto; padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;">DESCONECTAR</button></form>
 	</div>
@@ -978,6 +1155,16 @@
 					<select id="player-card-selector" onchange="seleccionarCartaBatalla()">
 						<!-- Se llenará dinámicamente con JS -->
 					</select>
+					
+					<label for="battle-wager-selector" style="font-weight: bold; color: #ffd700; margin-left: 15px;">Apuesta:</label>
+					<select id="battle-wager-selector" style="background: #111; color: #ffd700; border: 1px solid #ffd700; padding: 6px 12px; border-radius: 4px; font-size: 0.85em; cursor: pointer; display: inline-block; vertical-align: middle;">
+						<option value="0">Modo Práctica (Sin Apuesta)</option>
+						<option value="50">50 DXT</option>
+						<option value="100">100 DXT</option>
+						<option value="200">200 DXT</option>
+						<option value="500">500 DXT</option>
+					</select>
+					
 					<button type="button" onclick="iniciarCombate()" style="background: #ff00ff; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: auto; margin-top: 0; margin-left: 10px; display: inline-block;">Iniciar Duelo</button>
 				</div>
 
@@ -990,10 +1177,11 @@
 							<span style="font-size: 0.75rem; color: #ffd700;" id="arena-tk-balance-display">Saldo: {{.Balance}} TK</span>
 						</h3>
 						<div class="shop-items-grid">
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">🧪</div>
+									<div class="item-icon">🔮🧪</div>
 									<div class="item-name">Poción de Vida</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">Restaura 40 HP en combate.</div>
 								</div>
 								<div>
@@ -1001,10 +1189,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('potion_life', 150, 'Poción de Vida')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">🧪✨</div>
+									<div class="item-icon">🔮✨</div>
 									<div class="item-name">Súper Poción</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">Restaura 100 HP en combate.</div>
 								</div>
 								<div>
@@ -1012,10 +1201,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('super_potion', 350, 'Súper Poción')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card trap">
 								<div>
-									<div class="item-icon">🛡️⚡</div>
+									<div class="item-icon">⚡🛡️</div>
 									<div class="item-name">Escudo Plasma</div>
+									<div style="font-size: 0.62rem; color: #ff3399; font-weight: bold; margin-bottom: 4px;">[CARTA DE TRAMPA]</div>
 									<div class="item-desc">Genera 50 de Escudo de Energía.</div>
 								</div>
 								<div>
@@ -1023,10 +1213,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('plasma_shield', 200, 'Escudo Plasma')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">🔥🧪</div>
+									<div class="item-icon">🔮🔥</div>
 									<div class="item-name">Elíxir de Furia</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">Aumenta +20% tu daño este combate.</div>
 								</div>
 								<div>
@@ -1034,10 +1225,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('elixir_fury', 250, 'Elíxir de Furia')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">⚔️⚡</div>
+									<div class="item-icon">🔮⚔️</div>
 									<div class="item-name">Cyber Sable</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">+15 daño extra en cada ataque básico.</div>
 								</div>
 								<div>
@@ -1045,10 +1237,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('cyber_sword', 400, 'Cyber Sable')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">☣️🧪</div>
+									<div class="item-icon">🔮☣️</div>
 									<div class="item-name">Bomba Ácida</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">Inflige 60 daño directo incondicional.</div>
 								</div>
 								<div>
@@ -1056,10 +1249,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('acid_bomb', 300, 'Bomba Ácida')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">🔨🌌</div>
+									<div class="item-icon">🔮🔨</div>
 									<div class="item-name">Martillo Gravitacional</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">80 daño pesado y 35% de prob. de aturdir.</div>
 								</div>
 								<div>
@@ -1067,10 +1261,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('gravity_hammer', 500, 'Martillo Gravitacional')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card trap">
 								<div>
-									<div class="item-icon">🛡️🌵</div>
+									<div class="item-icon">⚡🌵</div>
 									<div class="item-name">Escudo de Espinas</div>
+									<div style="font-size: 0.62rem; color: #ff3399; font-weight: bold; margin-bottom: 4px;">[CARTA DE TRAMPA]</div>
 									<div class="item-desc">30 de escudo e inflige 20 de daño reflectivo.</div>
 								</div>
 								<div>
@@ -1078,10 +1273,11 @@
 									<button type="button" class="btn-buy-item" onclick="comprarItemArena('spike_shield', 350, 'Escudo de Espinas')">Comprar</button>
 								</div>
 							</div>
-							<div class="item-shop-card">
+							<div class="item-shop-card spell">
 								<div>
-									<div class="item-icon">🔫⚡</div>
+									<div class="item-icon">🔮🔫</div>
 									<div class="item-name">Rayo de Plasma</div>
+									<div style="font-size: 0.62rem; color: #00e5e5; font-weight: bold; margin-bottom: 4px;">[CARTA MÁGICA]</div>
 									<div class="item-desc">Dispara energía que causa 55 de daño Cyber.</div>
 								</div>
 								<div>
@@ -1103,6 +1299,7 @@
 				<div class="battlefield">
 					<!-- LUCHADOR JUGADOR -->
 					<div class="battle-card-container" id="player-fighter-container">
+						<div style="font-weight: bold; font-size: 0.85rem; color: #00ffe5; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 8px #00ffe5;">🔵 Esquina Azul (Tu Ajolote)</div>
 						<div class="turn-pointer-arrow" id="player-turn-pointer">▼</div>
 						<div id="player-battle-card-view" style="width: 260px; min-height: 300px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 15px; color: #555; position: relative;">
 							Selecciona una carta
@@ -1120,6 +1317,7 @@
 
 					<!-- LUCHADOR ENEMIGO -->
 					<div class="battle-card-container" id="opponent-fighter-container">
+						<div style="font-weight: bold; font-size: 0.85rem; color: #ff00ff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 8px #ff00ff;">🔴 Esquina Roja (Rival)</div>
 						<div class="turn-pointer-arrow" id="opponent-turn-pointer" style="color: #ff00ff; text-shadow: 0 0 12px #ff00ff;">▼</div>
 						<div id="opponent-battle-card-view" style="width: 260px; min-height: 300px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 15px; color: #555; position: relative;">
 							Duelo no iniciado
@@ -1139,7 +1337,7 @@
 					<button type="button" id="btn-special" class="btn-battle btn-battle-special" onclick="ejecutarAccionBatalla('special')" disabled style="margin-top: 0;">✨ Habilidad</button>
 					<button type="button" id="btn-defend" class="btn-battle btn-battle-defend" onclick="ejecutarAccionBatalla('defend')" disabled style="margin-top: 0;">🛡️ Defender</button>
 					<button type="button" id="btn-backpack" class="btn-battle btn-battle-backpack" onclick="abrirMochilaCombate()" disabled style="margin-top: 0;">🎒 Mochila</button>
-					<button type="button" id="btn-flee" class="btn-battle btn-battle-flee" onclick="ejecutarAccionBatalla('flee')" disabled style="margin-top: 0;">🏃 Retirarse</button>
+					<button type="button" id="btn-flee" class="btn-battle btn-battle-flee" onclick="ejecutarAccionBatalla('flee')" disabled style="margin-top: 0;">🏳️ Tirar la Toalla</button>
 
 					<!-- POPUP SELECCIONADOR DE MOCHILA EN BATTLE -->
 					<div class="battle-backpack-popup" id="battle-backpack-popup">
@@ -1153,9 +1351,9 @@
 
 				<!-- HISTORIAL DE LOGS -->
 				<div class="battle-log-container" style="position: relative; z-index: 10;">
-					<h4 style="margin: 0 0 10px 0; color: #ff00ff; text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px;">Bitácora del Combate</h4>
+					<h4 style="margin: 0 0 10px 0; color: #ff00ff; text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px;">Crónica de la Pelea 🥊</h4>
 					<ul class="battle-log-list" id="battle-log-list">
-						<li style="color: #888; text-align: center; list-style: none;">Selecciona tu carta e inicia el duelo para pelear.</li>
+						<li style="color: #888; text-align: center; list-style: none;">Elige tu luchador y sube al ring para iniciar la pelea.</li>
 					</ul>
 				</div>
 			</div>
@@ -1305,18 +1503,9 @@
 		<div class="card gov-card">
 			<h2 style="color:#ffcc00; margin-top: 0;">🗳️ GOBERNANZA</h2>
 			
-			<!-- Sección de simulación Web2 -->
-			<div style="border-bottom: 1px solid rgba(255,204,0,0.2); padding-bottom: 15px; margin-bottom: 15px;">
-				<h3 style="color: #ffcc00; font-size: 0.95em; margin-top: 0; text-transform: uppercase;">Simulación Local (Web2)</h3>
-				<p style="font-size: 0.85em; color: #ccc;">Votos rápidos en base de datos local:</p>
-				<form method="POST">
-					<button type="submit" name="votar" value="robot" class="btn-gov">NUEVO NFT: ROBOT ({{.VotosRobot}})</button>
-					<button type="submit" name="votar" value="pago" class="btn-gov">SUBIR PAGO ({{.VotosPago}})</button>
-				</form>
-			</div>
-
 			<!-- Sección de Blockchain Real (Gobernanza dApp) -->
 			<div>
+
 				<h3 style="color: #00ffe5; font-size: 0.95em; margin-top: 0; text-transform: uppercase;">Gobernanza en Blockchain (dApp)</h3>
 				<p style="font-size: 0.85em; color: #ccc; margin-bottom: 12px;">Tu voto se calcula según tus tokens DXT en blockchain:</p>
 				
@@ -1345,27 +1534,17 @@
 			</form>
 			
 			<div id="contract-info" style="margin-top: 15px; display: none; text-align: left; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid #00ff00;">
-				<p style="margin: 5px 0;">🪙 <strong>Token:</strong> <span id="token-name">Cargando...</span> (<span id="token-symbol">...</span>)</p>
+				<p style="margin: 5px 0;">🪙 <strong>Token DXT:</strong> <span id="token-name">Cargando...</span> (<span id="token-symbol">...</span>)</p>
 				<p style="margin: 5px 0;">💰 <strong>Saldo en Blockchain:</strong> <span id="blockchain-balance" style="color: #00ff00; font-weight: bold; font-size: 1.2em;">0.00</span> <span id="token-symbol-balance">DXT</span></p>
-				<p style="margin: 5px 0; font-size: 0.75em; color: #666; word-break: break-all;">Contrato: <span id="token-address" style="font-family: monospace;"></span></p>
+				<p style="margin: 5px 0; font-size: 0.75em; color: #666; word-break: break-all;">Dirección: <span id="token-address" style="font-family: monospace;"></span></p>
+				<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(0,255,0,0.3); font-size: 0.8em; color: #aaa;">
+					<div style="margin-bottom: 4px;">🎮 <strong>NFTs (DXNFT):</strong> <span id="nft-contract-addr-display" style="font-family: monospace; font-size: 0.95em; color: #00ff66;"></span></div>
+					<div style="margin-bottom: 4px;">🗳️ <strong>Gobernanza (Gov):</strong> <span id="gov-contract-addr-display" style="font-family: monospace; font-size: 0.95em; color: #00ff66;"></span></div>
+					<div style="margin-bottom: 4px;">🤝 <strong>Crowdfunding (Crowd):</strong> <span id="crowd-contract-addr-display" style="font-family: monospace; font-size: 0.95em; color: #00ff66;"></span></div>
+				</div>
 			</div>
 		</div>
 
-		<!-- ALERTAS DISCORD -->
-		<div class="card discord-card" style="min-width: 320px;">
-			<h2 style="color:#5865F2; margin-top: 0;">🔌 ALERTAS EN DISCORD</h2>
-			<p>Vincula un Webhook de tu canal de Discord para recibir notificaciones de transacciones en tiempo real con imágenes de tus NFTs:</p>
-			<form method="POST">
-				<input type="hidden" name="actualizar_webhook" value="1">
-				<input type="text" name="webhook_url" value="{{.DiscordWebhook}}" placeholder="Pega tu Discord Webhook URL..." style="margin-bottom: 10px; color: #5865F2; border-color: #5865F2;">
-				<button type="submit" class="btn-discord">VINCULAR WEBHOOK</button>
-			</form>
-			{{if .DiscordWebhook}}
-				<p style="color:#00ff00; font-size:0.85em; margin-top:10px; text-align:center;">✓ Discord Webhook Vinculado Exitosamente</p>
-			{{else}}
-				<p style="color:#666; font-size:0.85em; margin-top:10px; text-align:center;">Webhook no configurado en este perfil.</p>
-			{{end}}
-		</div>
 
 		<!-- RECOMPENSA DIARIA -->
 		<div class="card daily-card">
@@ -1421,71 +1600,8 @@
 				Postula iniciativas comunitarias para la DAO o dona fondos a propuestas activas.
 			</p>
 
-			<!-- Pestañas -->
-			<div style="display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 1px solid rgba(255, 215, 0, 0.15); padding-bottom: 8px;">
-				<button type="button" id="tab-crowd-local" onclick="switchCrowdTab('local')" style="flex: 1; background: rgba(255, 215, 0, 0.15); color: #ffd700; font-size: 0.8em; padding: 6px; border-radius: 4px; font-weight: bold; border: 1px solid rgba(255, 215, 0, 0.3); cursor: pointer; transition: 0.3s;">
-					Simulado (Web2)
-				</button>
-				<button type="button" id="tab-crowd-chain" onclick="switchCrowdTab('chain')" style="flex: 1; background: transparent; color: #aaa; font-size: 0.8em; padding: 6px; border-radius: 4px; font-weight: bold; border: 1px solid transparent; cursor: pointer; transition: 0.3s;">
-					Blockchain (Web3)
-				</button>
-			</div>
-
-			<!-- SECCIÓN SIMULADA (LOCAL) -->
-			<div id="crowd-section-local">
-				<div style="max-height: 280px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
-					{{range .DonacionesLocales}}
-					<div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid rgba(255, 215, 0, 0.15); text-align: left;">
-						<div style="font-weight: bold; color: #ffd700; font-size: 0.85em; margin-bottom: 4px;">#{{.ID}} {{.Title}}</div>
-						<div style="font-size: 0.75em; color: #ccc; margin-bottom: 8px; line-height: 1.3;">{{.Description}}</div>
-						<div style="font-size: 0.7em; color: #888; margin-bottom: 6px; word-break: break-all;">Beneficiario: <span style="font-family: monospace; color: #aaa;">{{.Recipient}}</span></div>
-						
-						<!-- Progreso -->
-						<div style="display: flex; justify-content: space-between; font-size: 0.7em; margin-bottom: 4px;">
-							<span>Recaudado: <strong>{{.AmountRaised}} TK</strong></span>
-							<span>Meta: {{.Goal}} TK</span>
-						</div>
-						<div class="stat-bar-container" style="background: rgba(255,255,255,0.05); height: 6px; margin-bottom: 10px; border-radius: 3px;">
-							<div class="stat-bar" data-width="{{.Percent}}%" style="height: 100%; background: #ffd700; border-radius: 3px;"></div>
-						</div>
-
-						<!-- Formulario Donación -->
-						{{if .Completed}}
-							<div style="text-align: center; color: #00ff00; font-size: 0.75em; font-weight: bold; padding: 4px; border: 1px dashed #00ff00; border-radius: 4px; background: rgba(0,255,0,0.05);">
-								✓ META ALCANZADA
-							</div>
-						{{else}}
-							<form method="POST" style="display: flex; gap: 6px; margin: 0;">
-								<input type="hidden" name="donar_local" value="1">
-								<input type="hidden" name="proposal_id" value="{{.ID}}">
-								<input type="number" name="cantidad" placeholder="Monto TK..." min="1" required style="flex: 1; padding: 5px; font-size: 0.75em; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.3); color: #fff; border-radius: 4px;">
-								<button type="submit" style="background: #ffd700; color: #000; font-size: 0.75em; padding: 5px 10px; font-weight: bold; border-radius: 4px; margin-top: 0; width: auto; cursor: pointer;">DONAR</button>
-							</form>
-						{{end}}
-					</div>
-					{{else}}
-					<p style="font-size: 0.75em; color: #888; text-align: center; padding: 15px;">No hay propuestas de donación simuladas.</p>
-					{{end}}
-				</div>
-
-				<!-- Crear Propuesta Local -->
-				<div style="border-top: 1px solid rgba(255, 215, 0, 0.15); padding-top: 12px;">
-					<h4 style="color: #ffd700; margin: 0 0 8px 0; font-size: 0.8em; text-transform: uppercase; text-align: left;">Postular Iniciativa Local</h4>
-					<form method="POST" style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
-						<input type="hidden" name="proponer_donacion" value="1">
-						<input type="text" name="titulo" placeholder="Título del proyecto..." required style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
-						<textarea name="descripcion" placeholder="Descripción de la iniciativa..." rows="2" required style="width: 100%; box-sizing: border-box; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px; font-family: sans-serif; resize: vertical;"></textarea>
-						<div style="display: flex; gap: 6px;">
-							<input type="number" name="goal" placeholder="Meta TK..." min="10" required style="flex: 1; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px;">
-							<input type="text" name="recipient" placeholder="Beneficiario (0x...)" value="{{.WalletCompleta}}" required style="flex: 1.5; padding: 6px; font-size: 0.75em; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); color:#fff; border-radius:4px; font-family: monospace;">
-						</div>
-						<button type="submit" style="background: #ffd700; color: #000; font-size: 0.75em; padding: 8px; font-weight: bold; border-radius: 4px; width: 100%; cursor: pointer;">POSTULAR INICIATIVA SIMULADA</button>
-					</form>
-				</div>
-			</div>
-
 			<!-- SECCIÓN BLOCKCHAIN (REAL) -->
-			<div id="crowd-section-chain" style="display: none;">
+			<div id="crowd-section-chain">
 				<div id="chain-campaigns-container" style="max-height: 280px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
 					<p style="font-size: 0.75em; color: #888; text-align: center; padding: 15px;">Cargando campañas desde la blockchain...</p>
 				</div>
@@ -1506,6 +1622,7 @@
 				</div>
 			</div>
 		</div>
+
 
 		<!-- GALERÍA NFT -->
 		<div class="nft-card maestro">
@@ -1682,6 +1799,56 @@
 				{{end}}
 			</form>
 		</div>
+
+		<div class="nft-card mago holo-shine">
+			<h3>🔮 AJOLOTE MAGO</h3>
+			<img src="/img-mago" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-cosmico" style="background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.3); color: #c084fc;">🌌 Cósmico</span>
+				<span class="stat-badge">⚡ Poder: 94</span>
+				<span class="stat-badge">💎 Rareza: 88%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 94%; background: #c084fc;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneMago}}
+					<button type="submit" name="vender" value="mago" style="background:#ff3333; color:#fff;">REVENDER (1500 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="mago" style="background:#a855f7; color:#fff;">COMPRAR (1200 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card mariachi holo-shine">
+			<h3>🎺 AJOLOTE MARIACHI</h3>
+			<img src="/img-mariachi" class="nft-img">
+			
+			<div class="card-stats">
+				<span class="stat-badge el-chinampero" style="background: rgba(234,179,8,0.1); border-color: rgba(234,179,8,0.3); color: #fef08a;">🌱 Tierra/Planta</span>
+				<span class="stat-badge">⚡ Poder: 88</span>
+				<span class="stat-badge">💎 Rareza: 75%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 88%; background: #fef08a;"></div>
+				</div>
+			</div>
+
+			<form method="POST">
+				{{if .TieneMariachi}}
+					<button type="submit" name="vender" value="mariachi" style="background:#ff3333; color:#fff;">REVENDER (1000 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="mariachi" style="background:#eab308; color:#000;">COMPRAR (800 TK)</button>
+				{{end}}
+			</form>
+		</div>
 	</div>
 
 	<script>
@@ -1693,6 +1860,9 @@
 		const DEXTER_NETWORK = "{{.Network}}";
 		const FIGHTER_STATS = {{.FighterStatsJSON}};
 		const USER_WALLET = "{{.WalletCompleta}}";
+
+		let currentWagerTxHash = "";
+		let currentWagerAmt = 0;
 
 		// --- GEMMA AI CONSOLE LOGIC ---
 		let currentGemmaCommand = "";
@@ -2031,6 +2201,39 @@
 					osc.start(now + idx * 0.12);
 					osc.stop(now + idx * 0.12 + 0.3);
 				});
+			},
+			bell: () => {
+				if (isMuted) return;
+				const ctx = getAudioContext();
+				const now = ctx.currentTime;
+				
+				function playStrike(time) {
+					const osc = ctx.createOscillator();
+					const oscDetune = ctx.createOscillator();
+					const gain = ctx.createGain();
+					
+					osc.connect(gain);
+					oscDetune.connect(gain);
+					gain.connect(ctx.destination);
+					
+					osc.type = "sine";
+					osc.frequency.setValueAtTime(987.77, time); // B5 note
+					
+					oscDetune.type = "sine";
+					oscDetune.frequency.setValueAtTime(1479.98, time); // Detuned harmonic
+					
+					gain.gain.setValueAtTime(0.12, time);
+					gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+					
+					osc.start(time);
+					oscDetune.start(time);
+					osc.stop(time + 0.5);
+					oscDetune.stop(time + 0.5);
+				}
+				
+				playStrike(now);
+				playStrike(now + 0.12);
+				playStrike(now + 0.24);
 			}
 		};
 
@@ -2212,6 +2415,8 @@
 		{{if .TieneChinampero}}INVENTARIO_CARTAS.push("chinampero");{{end}}
 		{{if .TieneSupremo}}INVENTARIO_CARTAS.push("supremo");{{end}}
 		{{if .TieneGuardian}}INVENTARIO_CARTAS.push("guardian");{{end}}
+		{{if .TieneMago}}INVENTARIO_CARTAS.push("mago");{{end}}
+		{{if .TieneMariachi}}INVENTARIO_CARTAS.push("mariachi");{{end}}
 
 		const CARDS_DATA = {
 			"starter": {
@@ -2309,6 +2514,30 @@
 				imgPath: "/img-guardian",
 				description: "Forjado en la red Celo con fuego digital y capacidades de protección on-chain.",
 				color: "#ff5500"
+			},
+			"mago": {
+				key: "mago",
+				name: "mago",
+				displayName: "Ajolote Mago",
+				element: "Cósmico",
+				power: 94,
+				hp: 120,
+				maxHp: 120,
+				imgPath: "/img-mago",
+				description: "Maestro de las artes arcanas y conjuros del blockchain.",
+				color: "#a855f7"
+			},
+			"mariachi": {
+				key: "mariachi",
+				name: "mariachi",
+				displayName: "Ajolote Mariachi",
+				element: "Tierra/Planta",
+				power: 88,
+				hp: 140,
+				maxHp: 140,
+				imgPath: "/img-mariachi",
+				description: "Alegra los bloques con su trompeta y melodías tradicionales.",
+				color: "#eab308"
 			}
 		};
 
@@ -2390,15 +2619,15 @@
 
 		// Estructura de items
 		const ARENA_ITEMS_META = {
-			potion_life: { icon: "🧪", displayName: "Poción de Vida", desc: "Restaura 40 HP.", cost: 150 },
-			super_potion: { icon: "🧪✨", displayName: "Súper Poción", desc: "Restaura 100 HP.", cost: 350 },
-			plasma_shield: { icon: "🛡️⚡", displayName: "Escudo Plasma", desc: "Genera 50 de Escudo.", cost: 200 },
-			elixir_fury: { icon: "🔥🧪", displayName: "Elíxir de Furia", desc: "Daño +20% este combate.", cost: 250 },
-			cyber_sword: { icon: "⚔️⚡", displayName: "Cyber Sable", desc: "Ataques básicos causan +15 de daño extra.", cost: 400 },
-			acid_bomb: { icon: "☣️🧪", displayName: "Bomba Ácida", desc: "Inflige 60 de daño directo incondicional.", cost: 300 },
-			gravity_hammer: { icon: "🔨🌌", displayName: "Martillo Gravitacional", desc: "80 de daño pesado y 35% prob. de stun.", cost: 500 },
-			spike_shield: { icon: "🛡️🌵", displayName: "Escudo de Espinas", desc: "Otorga 30 de escudo e inflige 20 de daño reflectivo.", cost: 350 },
-			plasma_beam: { icon: "🔫⚡", displayName: "Rayo de Plasma", desc: "Dispara energía que causa 55 de daño Cyber.", cost: 450 }
+			potion_life: { icon: "🧪", displayName: "Poción de Vida", desc: "Restaura 40 HP.", cost: 150, type: "spell" },
+			super_potion: { icon: "🧪✨", displayName: "Súper Poción", desc: "Restaura 100 HP.", cost: 350, type: "spell" },
+			plasma_shield: { icon: "🛡️⚡", displayName: "Escudo Plasma", desc: "Genera 50 de Escudo.", cost: 200, type: "trap" },
+			elixir_fury: { icon: "🔥🧪", displayName: "Elíxir de Furia", desc: "Daño +20% este combate.", cost: 250, type: "spell" },
+			cyber_sword: { icon: "⚔️⚡", displayName: "Cyber Sable", desc: "Ataques básicos causan +15 de daño extra.", cost: 400, type: "spell" },
+			acid_bomb: { icon: "☣️🧪", displayName: "Bomba Ácida", desc: "Inflige 60 de daño directo incondicional.", cost: 300, type: "spell" },
+			gravity_hammer: { icon: "🔨🌌", displayName: "Martillo Gravitacional", desc: "80 de daño pesado y 35% prob. de stun.", cost: 500, type: "spell" },
+			spike_shield: { icon: "🛡️🌵", displayName: "Escudo de Espinas", desc: "Otorga 30 de escudo e inflige 20 de daño reflectivo.", cost: 350, type: "trap" },
+			plasma_beam: { icon: "🔫⚡", displayName: "Rayo de Plasma", desc: "Dispara energía que causa 55 de daño Cyber.", cost: 450, type: "spell" }
 		};
 
 		// Obtener mochila del localStorage
@@ -2445,8 +2674,10 @@
 					const meta = ARENA_ITEMS_META[itemId];
 					const row = document.createElement('div');
 					row.className = 'backpack-item-row';
+					const labelColor = meta.type === "spell" ? "#00e5e5" : "#ff3399";
+					const typeLabel = meta.type === "spell" ? "[MAGIA 🔮]" : "[TRAMPA ⚡]";
 					row.innerHTML = `
-						<span>${meta.icon} <strong>${meta.displayName}</strong></span>
+						<span>${meta.icon} <strong style="color: ${labelColor};">${meta.displayName}</strong> <span style="font-size: 0.65rem; color: #888;">${typeLabel}</span></span>
 						<span class="backpack-item-qty">x${qty}</span>
 					`;
 					listContainer.appendChild(row);
@@ -2526,8 +2757,10 @@
 					const btn = document.createElement('button');
 					btn.type = 'button';
 					btn.className = 'battle-backpack-item-btn';
+					const labelColor = meta.type === "spell" ? "#00e5e5" : "#ff3399";
+					const typeLabel = meta.type === "spell" ? "MAGIA" : "TRAMPA";
 					btn.innerHTML = `
-						<span>${meta.icon} <strong>${meta.displayName}</strong></span>
+						<span>${meta.icon} <strong style="color: ${labelColor};">${meta.displayName}</strong> <small style="color: #888;">(${typeLabel})</small></span>
 						<span>x${qty}</span>
 					`;
 					btn.onclick = () => {
@@ -2965,47 +3198,64 @@
 		}
 
 		function renderBattleCard(card, isPlayer) {
-			let isHolo = card.key !== "ajolote" && card.key !== "starter" ? "holo-shine" : "";
 			let elementBadge = "";
-			if (card.element === "Agua") elementBadge = "💧 Agua";
-			else if (card.element === "Cósmico") elementBadge = "🌌 Cósmico";
-			else if (card.element === "Divino") elementBadge = "✨ Divino";
-			else if (card.element === "Cyber") elementBadge = "🤖 Cyber";
-			else if (card.element === "Cósmico/Oro") elementBadge = "👑 Cósmico/Oro";
-			else if (card.element === "Tierra/Planta") elementBadge = "🌱 Tierra/Planta";
-			else if (card.element === "Fuego") elementBadge = "🔥 Fuego";
-			else elementBadge = card.element;
+			if (card.element === "Agua") elementBadge = "AGUA 💧";
+			else if (card.element === "Cósmico") elementBadge = "LUZ 🌌";
+			else if (card.element === "Divino") elementBadge = "DIVINO ✨";
+			else if (card.element === "Cyber") elementBadge = "CYBER 🤖";
+			else if (card.element === "Cósmico/Oro") elementBadge = "ORO 👑";
+			else if (card.element === "Tierra/Planta") elementBadge = "TIERRA 🌱";
+			else if (card.element === "Fuego") elementBadge = "FUEGO 🔥";
+			else elementBadge = card.element.toUpperCase();
 
-			// Determinar color de borde neon
-			let borderStyle = `border: 1px solid rgba(255,255,255,0.15);`;
-			if (card.color) {
-				borderStyle = `border: 1.5px solid ${card.color}; box-shadow: 0 0 10px ${card.color}44;`;
+			const level = Math.ceil(card.power / 10);
+			let starsHtml = "";
+			for (let i = 0; i < level; i++) {
+				starsHtml += `<span class="yugioh-star">★</span>`;
 			}
 
 			const stats = FIGHTER_STATS[card.key] || { wins: 0, losses: 0 };
 			const total = stats.wins + stats.losses;
 			const winrate = total > 0 ? Math.round((stats.wins / total) * 100) : 0;
 			const recordHtml = `
-				<div style="font-size: 0.65rem; color: #00ffe5; margin-top: 8px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; display: flex; justify-content: space-between;">
+				<div style="font-size: 0.6rem; color: #5a3a1a; margin-top: 4px; border-top: 1px dashed rgba(90,58,26,0.3); padding-top: 4px; display: flex; justify-content: space-between; font-weight: bold;">
 					<span>🏆 Récord: ${stats.wins}V - ${stats.losses}D</span>
 					<span>${winrate}% WR</span>
 				</div>
 			`;
 
+			const isHolo = card.key !== "ajolote" && card.key !== "starter" ? "holo-shine" : "";
+
+			// ATK y DEF escalados
+			const atk = card.power * 10;
+			const def = card.hp * 10;
+
 			return `
-			<div class="nft-card ${card.key} ${isHolo}" style="width: 240px; margin: 0; transform: none; ${borderStyle} background: rgba(10, 10, 15, 0.9);">
-				<div class="rarity" style="top: 8px; right: 8px; font-size: 0.65rem; background: rgba(0,0,0,0.65);">${elementBadge}</div>
-				<div class="nft-img-wrap" style="height: 160px;">
-					<img src="${card.imgPath}" class="nft-img" style="transform: none;">
-				</div>
-				<div class="nft-body" style="padding: 12px; text-align: left;">
-					<div class="nft-name" style="font-size: 1.05rem; font-weight: bold; margin-bottom: 2px; color: #fff;">${card.displayName}</div>
-					<div class="nft-desc" style="font-size: 0.72rem; margin-bottom: 8px; line-height: 1.3; height: 35px; overflow: hidden; color: #aaa;">${card.description}</div>
-					<div class="card-stats" style="margin: 0; justify-content: flex-start; gap: 6px; display: flex;">
-						<span class="stat-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">⚡ Pod: ${card.power}</span>
-						<span class="stat-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">❤️ HP: ${card.hp}</span>
+			<div class="yugioh-card ${isHolo}" style="width: 240px; margin: 0;">
+				<div class="yugioh-card-inner">
+					<div class="yugioh-header">
+						<span class="yugioh-name">${card.displayName}</span>
+						<span class="yugioh-attribute">${elementBadge.split(" ")[0]}</span>
 					</div>
-					${recordHtml}
+					<div class="yugioh-stars">
+						${starsHtml}
+					</div>
+					<div class="yugioh-img-wrap">
+						<img src="${card.imgPath}">
+					</div>
+					<div class="yugioh-body">
+						<div>
+							<div class="yugioh-type">[Ajolote / Efecto]</div>
+							<div class="yugioh-desc">${card.description}</div>
+						</div>
+						<div>
+							${recordHtml}
+							<div class="yugioh-stats">
+								<span>ATK / ${atk}</span>
+								<span>DEF / ${def}</span>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 			`;
@@ -3013,35 +3263,55 @@
 
 		function renderOpponentCard(enemy) {
 			let elementBadge = "";
-			if (enemy.element === "Agua") elementBadge = "💧 Agua";
-			else if (enemy.element === "Cósmico") elementBadge = "🌌 Cósmico";
-			else if (enemy.element === "Divino") elementBadge = "✨ Divino";
-			else if (enemy.element === "Cyber") elementBadge = "🤖 Cyber";
-			else if (enemy.element === "Tierra/Planta") elementBadge = "🌱 Tierra/Planta";
-			else if (enemy.element === "Fuego") elementBadge = "🔥 Fuego";
-			else elementBadge = enemy.element;
+			if (enemy.element === "Agua") elementBadge = "AGUA 💧";
+			else if (enemy.element === "Cósmico") elementBadge = "LUZ 🌌";
+			else if (enemy.element === "Divino") elementBadge = "DIVINO ✨";
+			else if (enemy.element === "Cyber") elementBadge = "CYBER 🤖";
+			else if (enemy.element === "Tierra/Planta") elementBadge = "TIERRA 🌱";
+			else if (enemy.element === "Fuego") elementBadge = "FUEGO 🔥";
+			else elementBadge = enemy.element.toUpperCase();
 
-			let borderStyle = `border: 1.5px solid ${enemy.color || '#ff003c'}; box-shadow: 0 0 10px ${enemy.color || '#ff003c'}44;`;
+			const level = Math.ceil(enemy.power / 10);
+			let starsHtml = "";
+			for (let i = 0; i < level; i++) {
+				starsHtml += `<span class="yugioh-star">★</span>`;
+			}
+
+			// ATK y DEF escalados
+			const atk = enemy.power * 10;
+			const def = enemy.hp * 10;
 
 			return `
-			<div class="nft-card supremo" style="width: 240px; margin: 0; transform: none; ${borderStyle} background: rgba(20, 5, 10, 0.95); color: #ff3cac;">
-				<div class="rarity" style="top: 8px; right: 8px; font-size: 0.65rem; background: rgba(0,0,0,0.65);">${elementBadge}</div>
-				<div class="nft-img-wrap" style="height: 160px; filter: hue-rotate(320deg) contrast(1.2);">
-					<img src="${enemy.imgPath}" class="nft-img" style="transform: none;">
-				</div>
-				<div class="nft-body" style="padding: 12px; text-align: left;">
-					<div class="nft-name" style="font-size: 1.05rem; font-weight: bold; margin-bottom: 2px; color: #fff;">${enemy.name}</div>
-					<div class="nft-desc" style="font-size: 0.72rem; margin-bottom: 8px; line-height: 1.3; height: 35px; overflow: hidden; color: #aaa;">${enemy.description}</div>
-					<div class="card-stats" style="margin: 0; justify-content: flex-start; gap: 6px; display: flex;">
-						<span class="stat-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ff5555;">⚡ Pod: ${enemy.power}</span>
-						<span class="stat-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ff5555;">❤️ HP: ${enemy.hp}</span>
+			<div class="yugioh-card" style="width: 240px; margin: 0; background: linear-gradient(135deg, #a03c5a, #5b102b) !important; border-color: #3b0d1e !important;">
+				<div class="yugioh-card-inner" style="background: #fdeef4; border-color: #5a1a31;">
+					<div class="yugioh-header" style="border-bottom-color: #5a1a31;">
+						<span class="yugioh-name" style="color: #1a000a !important;">${enemy.name}</span>
+						<span class="yugioh-attribute" style="background: radial-gradient(circle, #ffeedd, #d2b48c); border-color: #5a1a31;">${elementBadge.split(" ")[0]}</span>
+					</div>
+					<div class="yugioh-stars">
+						${starsHtml}
+					</div>
+					<div class="yugioh-img-wrap" style="border-color: #5a1a31; filter: hue-rotate(320deg) contrast(1.2);">
+						<img src="${enemy.imgPath}">
+					</div>
+					<div class="yugioh-body" style="background: #faf0f2; border-color: #5a1a31; color: #2b0a14 !important;">
+						<div>
+							<div class="yugioh-type" style="border-bottom-color: rgba(90,26,49,0.2);">[Jefe / Efecto]</div>
+							<div class="yugioh-desc" style="color: #3b0d1a;">${enemy.description}</div>
+						</div>
+						<div>
+							<div class="yugioh-stats" style="border-top-color: rgba(90,26,49,0.2); color: #1a000a;">
+								<span>ATK / ${atk}</span>
+								<span>DEF / ${def}</span>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 			`;
 		}
 
-		function iniciarCombate() {
+		async function iniciarCombate() {
 			if (activeBattle) return;
 			
 			const selector = document.getElementById('player-card-selector');
@@ -3052,6 +3322,83 @@
 				alert('Selecciona una carta para combatir.');
 				return;
 			}
+
+			const wagerAmt = parseInt(document.getElementById('battle-wager-selector').value) || 0;
+			const isRealCard = key !== "starter";
+			
+			let txHash = "";
+
+			if (wagerAmt > 0) {
+				if (isRealCard) {
+					if (typeof window.ethereum === 'undefined') {
+						alert('MetaMask no está detectado. Debes tener MetaMask conectado para realizar apuestas de criptos.');
+						return;
+					}
+					
+					// Deshabilitar botón durante el proceso de transacción
+					const btnDuelo = document.querySelector("button[onclick='iniciarCombate()']");
+					const origBtnText = btnDuelo.innerText;
+					btnDuelo.disabled = true;
+					btnDuelo.innerText = "Procesando Apuesta...";
+
+					try {
+						let provider = new ethers.BrowserProvider(window.ethereum);
+						await provider.send("eth_requestAccounts", []);
+						provider = await ensureTargetNetwork(provider);
+						
+						const readProvider = await getReadProvider(provider);
+						const signer = await provider.getSigner();
+						const userAddress = await signer.getAddress();
+						
+						const tokenAbi = [
+							"function balanceOf(address account) public view returns (uint256)",
+							"function transfer(address to, uint256 value) public returns (bool)"
+						];
+						
+						const tokenContractRead = new ethers.Contract(DXT_TOKEN_ADDRESS, tokenAbi, readProvider);
+						const tokenContractWrite = new ethers.Contract(DXT_TOKEN_ADDRESS, tokenAbi, signer);
+						
+						const priceWei = ethers.parseUnits(wagerAmt.toString(), 18);
+						
+						const balance = await tokenContractRead.balanceOf(userAddress);
+						if (balance < priceWei) {
+							alert(`Saldo DXT insuficiente para apostar. Tienes ${ethers.formatUnits(balance, 18)} DXT y necesitas ${wagerAmt} DXT.`);
+							btnDuelo.disabled = false;
+							btnDuelo.innerText = origBtnText;
+							return;
+						}
+						
+						alert(`Para iniciar el combate con apuesta, debes transferir ${wagerAmt} DXT al contrato de DexterNFT (Escrow). Confirma la transacción en MetaMask...`);
+						
+						const tx = await tokenContractWrite.transfer(DEXTER_NFT_ADDRESS, priceWei);
+						btnDuelo.innerText = "Confirmando Apuesta...";
+						const receipt = await tx.wait();
+						
+						txHash = receipt.hash;
+						alert(`¡Apuesta on-chain realizada con éxito! Hash: ${txHash}`);
+						
+					} catch (e) {
+						console.error(e);
+						alert('Transacción de apuesta fallida o rechazada: ' + (e.reason || e.message));
+						btnDuelo.disabled = false;
+						btnDuelo.innerText = origBtnText;
+						return;
+					}
+					
+					btnDuelo.disabled = false;
+					btnDuelo.innerText = origBtnText;
+				} else {
+					const balanceLocal = parseInt("{{.Balance}}") || 0;
+					if (balanceLocal < wagerAmt) {
+						alert(`Saldo local TK insuficiente para apostar en práctica. Tienes ${balanceLocal} TK y necesitas ${wagerAmt} TK.`);
+						return;
+					}
+					alert(`Has apostado ${wagerAmt} TK de práctica. Si ganas se duplicará, si pierdes se descontará.`);
+				}
+			}
+
+			currentWagerAmt = wagerAmt;
+			currentWagerTxHash = txHash;
 
 			// Inicializar estado jugador
 			playerFighter = JSON.parse(JSON.stringify(card));
@@ -3084,6 +3431,7 @@
 
 			// Bloquear selector y activar controles de batalla
 			selector.disabled = true;
+			document.getElementById('battle-wager-selector').disabled = true;
 			document.getElementById('btn-attack').disabled = false;
 			document.getElementById('btn-special').disabled = false;
 			document.getElementById('btn-defend').disabled = false;
@@ -3097,19 +3445,26 @@
 
 			// Limpiar bitácora
 			const logList = document.getElementById('battle-log-list');
-			logList.innerHTML = `<li style="color: #00ffe5; font-weight: bold;">⚔️ ¡EL DUELO HA EMPEZADO! Tu enemigo es ${opponentFighter.name} (${opponentFighter.element}).</li>`;
+			logList.innerHTML = `<li style="color: #00ffe5; font-weight: bold;">🥊 ¡Damas y caballeros, subiendo al ring en la esquina azul: ${playerFighter.displayName}! Y en la esquina roja: ${opponentFighter.name}! ¡QUE COMIENCE LA PELEA! 🥊</li>`;
+			if (wagerAmt > 0) {
+				if (isRealCard) {
+					logList.innerHTML += `<li style="color: #ffd700; font-weight: bold;">💰 Bolsa de Apuestas on-chain: ${wagerAmt} DXT (Tx: ${txHash.slice(0, 10)}...)</li>`;
+				} else {
+					logList.innerHTML += `<li style="color: #ffd700; font-weight: bold;">💰 Bolsa de Apuestas de práctica: ${wagerAmt} TK</li>`;
+				}
+			}
 
 			// Inicializar interfaz de turnos e indicadores
 			actualizarTurnosUI(true);
 			actualizarEstadosBadges();
-			SOUNDS.shield(); // Sonido de inicio de duelo
+			SOUNDS.bell(); // Sonido de inicio de pelea (timbre de boxeo)
 		}
 
 		function agregarLogBatalla(log, color = '#aaa') {
 			const logList = document.getElementById('battle-log-list');
 			const li = document.createElement('li');
 			li.style.color = color;
-			li.innerHTML = `<span class="battle-log-turn">[Turno ${turnCount}]</span> ${log}`;
+			li.innerHTML = `<span class="battle-log-turn">[Round ${turnCount}]</span> ${log}`;
 			logList.appendChild(li);
 			logList.scrollTop = logList.scrollHeight;
 		}
@@ -3153,11 +3508,10 @@
 			if (!activeBattle || actionInProgress) return;
 			actionInProgress = true;
 
-			// --- TURNO JUGADOR ---
-			playerIsDefending = false;
-			let dmg = 0;
+			// --- FASES DE TURNO (JUGADOR) ---
+			agregarLogBatalla(`🃏 **[DRAW PHASE]** - Robas tu carta del deck.`, '#00ffe5');
 			
-			// Procesar curaciones por regeneración (Tierra/Planta)
+			// Procesar curaciones por regeneración (Tierra/Planta) en Standby Phase
 			if (playerRegenTurns > 0) {
 				playerRegenTurns--;
 				const healAmt = 15;
@@ -3165,17 +3519,28 @@
 				crearPopupBatalla(true, `+${healAmt}`, true);
 				SOUNDS.heal();
 				spawnBurst("Tierra/Planta", true);
-				agregarLogBatalla(`🌾 Efecto Chinampero: Regeneración cura +${healAmt} HP. (${playerRegenTurns} turnos restantes)`, '#00ff66');
+				agregarLogBatalla(`⚙️ **[STANDBY PHASE]** - Regeneración Chinampa cura +${healAmt} HP. (${playerRegenTurns} turnos restantes)`, '#00ff66');
 				document.getElementById('player-hp-bar').style.width = (playerHP / playerMaxHP * 100) + '%';
 				document.getElementById('player-hp-text').innerText = `${playerHP} / ${playerMaxHP} HP`;
 				actualizarEstadosBadges();
+			} else {
+				agregarLogBatalla(`⚙️ **[STANDBY PHASE]** - Sin efectos activos.`, '#aaa');
 			}
 
-			// Desplazamiento de ataque visual del jugador
+			// Main Phase & Battle Phase log
+			let typeLabel = "ataque básico";
+			if (action === 'special') typeLabel = "habilidad especial de monstruo";
+			else if (action === 'defend') typeLabel = "acción de defensa en concha";
+			else if (action === 'flee') typeLabel = "rendición de duelo";
+			agregarLogBatalla(`🔮 **[MAIN PHASE]** - Declaras tu acción de ${typeLabel}.`, '#ffcc00');
+			agregarLogBatalla(`⚔️ **[BATTLE PHASE]** - Inicia el intercambio de golpes.`, '#ff3333');
+
+			playerIsDefending = false;
+			let dmg = 0;
+			
 			const playerCard = document.getElementById('player-fighter-container');
 			const opponentCard = document.getElementById('opponent-fighter-container');
 
-			// Apuntar indicador visual al enemigo mientras piensa
 			actualizarTurnosUI(false);
 
 			if (action === 'attack') {
@@ -3194,7 +3559,11 @@
 						crearPopupBatalla(false, "ESQUIVADO");
 						SOUNDS.dodge();
 					}, 200);
-					agregarLogBatalla(`Atacaste a ${opponentFighter.name} pero ¡esquivó tu ataque! 💨`, '#888');
+					const boxingDodges = [
+						`Lanzas un directo pero ${opponentFighter.name} hace un elegante esquive de cintura y lo deja en el aire. 💨`,
+						`¡Lanzas un jab pero el rival se quita el golpe con juego de piernas! 💨`
+					];
+					agregarLogBatalla(boxingDodges[Math.floor(Math.random() * boxingDodges.length)], '#888');
 				} else {
 					const mult = calcularMultiplicadorElemental(playerFighter.element, opponentFighter.element);
 					let baseDmg = Math.floor(playerFighter.power * 0.25) + Math.floor(Math.random() * 8);
@@ -3240,16 +3609,26 @@
 						actualizarEstadosBadges();
 					}, 200);
 
-					let elemStr = mult > 1 ? " ¡Eficacia elemental! ⚡" : "";
-					let critStr = isCrit ? " ¡💥 GOLPE CRÍTICO! 💥" : "";
-					agregarLogBatalla(`Atacaste a ${opponentFighter.name} e infligiste ${finalDmg} de daño.${elemStr}${critStr}`, isCrit ? '#ff00ff' : '#00ffe5');
+					let elemStr = mult > 1 ? " ¡Un golpe con ventaja táctica! ⚡" : "";
+					let hitType = "";
+					if (isCrit) {
+						hitType = `¡💥 IMPACTO DE PODER! ¡Conectas un uppercut demoledor al mentón! (Causas ${finalDmg} de daño)${elemStr}`;
+					} else {
+						const golpes = [
+							`Conectas un jab rápido de izquierda en el rostro de ${opponentFighter.name} (Causas ${finalDmg} de daño).`,
+							`Metes un cross de derecha directo a la guardia de ${opponentFighter.name} (Causas ${finalDmg} de daño).`,
+							`Castigas con un gancho al hígado a ${opponentFighter.name} (Causas ${finalDmg} de daño).`
+						];
+						hitType = golpes[Math.floor(Math.random() * golpes.length)] + elemStr;
+					}
+					agregarLogBatalla(hitType, isCrit ? '#ff00ff' : '#00ffe5');
 				}
 
 			} else if (action === 'defend') {
 				playerIsDefending = true;
 				SOUNDS.shield();
 				spawnBurst("Cósmico", true);
-				agregarLogBatalla(`Te pusiste a la defensiva. El daño del rival se reducirá un 50% el siguiente turno.`, '#ffcc00');
+				agregarLogBatalla(`Subes bien la guardia y te cubres con los guantes. Reducirás el daño del rival un 50% el siguiente round. 🛡️`, '#ffcc00');
 
 			} else if (action === 'special') {
 				const key = playerFighter.key;
@@ -3427,7 +3806,8 @@
 				
 				document.getElementById('btn-special').disabled = true;
 			} else if (action === 'flee') {
-				finalizarCombate(false);
+				agregarLogBatalla(`🏳️ Decides tirar la toalla. ¡Tu esquina detiene la pelea!`, '#ff3333');
+				setTimeout(() => finalizarCombate(false), 500);
 				return;
 			}
 
@@ -3442,20 +3822,31 @@
 				return;
 			}
 
+			// --- TURNO JUGADOR END PHASE ---
+			agregarLogBatalla(`🔚 **[END PHASE]** - Tu turno finaliza. Cedes el control.`, '#aaa');
+			actualizarTurnosUI(false);
+
 			// --- TURNO ENEMIGO (Asíncrono con retraso) ---
 			setTimeout(() => {
 				if (!activeBattle) return;
+
+				agregarLogBatalla(`🃏 **[DRAW PHASE - RIVAL]** - El oponente roba su carta.`, '#ff5555');
+				agregarLogBatalla(`⚙️ **[STANDBY PHASE - RIVAL]** - Resolviendo estados del oponente.`, '#ff5555');
 
 				if (opponentStunned) {
 					opponentStunned = false;
 					SOUNDS.click();
 					agregarLogBatalla(`El enemigo está aturdido y pierde su turno.`, '#888');
+					agregarLogBatalla(`🔚 **[END PHASE - RIVAL]** - Turno del oponente finalizado.`, '#aaa');
 					turnCount++;
 					actionInProgress = false;
 					actualizarTurnosUI(true); // Regresar al jugador
 					actualizarEstadosBadges();
 					return;
 				}
+
+				agregarLogBatalla(`🔮 **[MAIN PHASE - RIVAL]** - El oponente planifica su estrategia.`, '#ff5555');
+				agregarLogBatalla(`⚔️ **[BATTLE PHASE - RIVAL]** - El oponente entra en combate.`, '#ff3333');
 
 				opponentIsDefending = false;
 				const rand = Math.random();
@@ -3464,7 +3855,7 @@
 					opponentIsDefending = true;
 					SOUNDS.shield();
 					spawnBurst(opponentFighter.element, false);
-					agregarLogBatalla(`${opponentFighter.name} se ha defendido. Reducirá el daño recibido a la mitad.`, '#ff5555');
+					agregarLogBatalla(`${opponentFighter.name} sube la guardia en concha cubriendo su rostro. Reducirá tu daño a la mitad el siguiente round. 🛡️`, '#ff5555');
 					actualizarEstadosBadges();
 
 				} else if (rand < 0.45) {
@@ -3530,7 +3921,11 @@
 							crearPopupBatalla(true, "ESQUIVADO");
 							SOUNDS.dodge();
 						}, 200);
-						agregarLogBatalla(`${opponentFighter.name} intentó atacarte, pero ¡esquivaste su ataque! 💨`, '#888');
+						const esquives = [
+							`${opponentFighter.name} suelta un jab, pero realizas un rápido cabeceo esquivando el golpe. 💨`,
+							`${opponentFighter.name} intenta conectarte con un gancho, ¡pero bailas en el ring y sales de la zona de fuego! 💨`
+						];
+						agregarLogBatalla(esquives[Math.floor(Math.random() * esquives.length)], '#888');
 					} else {
 						const mult = calcularMultiplicadorElemental(opponentFighter.element, playerFighter.element);
 						const baseDmg = Math.floor(opponentFighter.power * 0.22) + Math.floor(Math.random() * 6);
@@ -3587,9 +3982,19 @@
 							}, 200);
 						}
 
-						let elemStr = mult > 1 ? " ¡Eficacia elemental enemiga! ⚠️" : "";
-						let critStr = isEnemyCrit ? " ¡💥 IMPACTO CRÍTICO ENEMIGO! 💥" : "";
-						agregarLogBatalla(`${opponentFighter.name} atacó e infligió ${enemyDmg} de daño.${elemStr}${critStr}`, isEnemyCrit ? '#ff3333' : '#ff5555');
+						let elemStr = mult > 1 ? " ¡Un golpe elemental muy bien colocado! ⚠️" : "";
+						let hitType = "";
+						if (isEnemyCrit) {
+							hitType = `💥 ¡EL RIVAL CONECTA UN MAZAZO CRÍTICO! Te mete un uppercut seco que te sacude por completo (Recibes ${enemyDmg} de daño)${elemStr}`;
+						} else {
+							const golpesRival = [
+								`${opponentFival || opponentFighter.name} te conecta un gancho directo al mentón (Recibes ${enemyDmg} de daño).`,
+								`${opponentFighter.name} te clava un jab en corto abriendo tu guardia (Recibes ${enemyDmg} de daño).`,
+								`${opponentFighter.name} mete un fuerte gancho al cuerpo (Recibes ${enemyDmg} de daño).`
+							];
+							hitType = golpesRival[Math.floor(Math.random() * golpesRival.length)] + elemStr;
+						}
+						agregarLogBatalla(hitType, isEnemyCrit ? '#ff3333' : '#ff5555');
 					}
 				}
 
@@ -3598,6 +4003,7 @@
 					return;
 				}
 
+				agregarLogBatalla(`🔚 **[END PHASE - RIVAL]** - Turno del oponente finalizado. Es tu turno.`, '#00ffe5');
 				turnCount++;
 				actionInProgress = false;
 				actualizarTurnosUI(true); // Regresar al turno del jugador
@@ -3615,6 +4021,7 @@
 			document.getElementById('btn-backpack').disabled = true;
 			document.getElementById('btn-flee').disabled = true;
 			document.getElementById('player-card-selector').disabled = false;
+			document.getElementById('battle-wager-selector').disabled = false;
 
 			// Ocultar popup de mochila si está abierto
 			document.getElementById('battle-backpack-popup').style.display = 'none';
@@ -3642,7 +4049,7 @@
 			actualizarEstadosBadges();
 
 			if (victory) {
-				agregarLogBatalla(`🏆 ¡VICTORIA! Has derrotado a ${opponentFighter.name}. Solicitando recompensa al servidor...`, '#00ff66');
+				agregarLogBatalla(`🏆 ¡GANADOR POR K.O.! Mandas a la lona a ${opponentFighter.name} tras un gancho definitivo. Solicitando recompensa al servidor...`, '#00ff66');
 				
 				// Llamar a la API del servidor Go
 				try {
@@ -3656,7 +4063,9 @@
 							cardUsed: playerFighter.displayName,
 							cardKey: playerFighter.key,
 							isReal: isRealCard,
-							victory: true
+							victory: true,
+							wagerAmt: currentWagerAmt,
+							wagerTxHash: currentWagerTxHash
 						})
 					});
 					
@@ -3669,22 +4078,23 @@
 						}
 						
 						agregarLogBatalla(`🎉 Recompensa acreditada: ${rewardStr}.`, '#ffd700');
-						alert(`¡Felicidades! Ganaste el duelo. Recompensa: ${rewardStr}`);
+						alert(`🏆 ¡Felicidades, Campeón! Ganaste por K.O. Recompensa: ${rewardStr}`);
 						
 						// Recargar datos suavemente
 						setTimeout(() => {
 							location.reload();
 						}, 3000);
 					} else {
-						agregarLogBatalla(`❌ Error al conectar con el servidor para cobrar recompensa.`, '#ff3333');
+						const errRes = await response.json();
+						agregarLogBatalla(`❌ Error al reclamar recompensa: ${errRes.error || response.statusText}`, '#ff3333');
 					}
 				} catch (e) {
 					console.error("Error cobrando recompensa:", e);
 					agregarLogBatalla(`❌ Falló la transacción de recompensa de batalla.`, '#ff3333');
 				}
 			} else {
-				agregarLogBatalla(`💀 DERROTA. Has sido vencido por ${opponentFighter.name}. ¡Sigue entrenando o adquiere mejores cartas en el mercado!`, '#ff3333');
-				alert('Duelo perdido. ¡Compra cartas con más poder en la tienda para asegurar tu victoria!');
+				agregarLogBatalla(`💀 ¡K.O.! Has sido noqueado en la lona por ${opponentFighter.name}. ¡Sigue entrenando para la revancha!`, '#ff3333');
+				alert('💀 Has sido noqueado. ¡Entrena más o compra cartas con más poder en la tienda para la revancha!');
 				
 				// Enviar registro de derrota para las estadísticas
 				try {
@@ -3698,7 +4108,9 @@
 							cardUsed: playerFighter.displayName,
 							cardKey: playerFighter.key,
 							isReal: isRealCard,
-							victory: false
+							victory: false,
+							wagerAmt: currentWagerAmt,
+							wagerTxHash: currentWagerTxHash
 						})
 					});
 					
@@ -3737,6 +4149,36 @@
 			TARGET_NATIVE_NAME = "CELO";
 		}
 
+		async function ensureTargetNetwork(provider) {
+			let network = await provider.getNetwork();
+			let chainId = Number(network.chainId);
+			if (chainId !== TARGET_CHAIN_ID) {
+				console.log(`Cambio de red programático a ${TARGET_NETWORK_NAME} (${TARGET_CHAIN_HEX})...`);
+				try {
+					await window.ethereum.request({
+						method: 'wallet_switchEthereumChain',
+						params: [{ chainId: TARGET_CHAIN_HEX }],
+					});
+				} catch (switchError) {
+					if (switchError.code === 4902) {
+						await window.ethereum.request({
+							method: 'wallet_addEthereumChain',
+							params: [{
+								chainId: TARGET_CHAIN_HEX,
+								chainName: TARGET_NETWORK_NAME,
+								rpcUrls: [TARGET_RPC_URL],
+								nativeCurrency: { name: TARGET_NATIVE_NAME, symbol: TARGET_NATIVE_SYMBOL, decimals: 18 }
+							}],
+						});
+					} else {
+						throw switchError;
+					}
+				}
+				return new ethers.BrowserProvider(window.ethereum);
+			}
+			return provider;
+		}
+
 		// Intentar autoconectar si el usuario ya tiene un contrato guardado en el servidor Go
 		window.addEventListener('load', async () => {
 			const serverContract = "{{.ContractAddress}}";
@@ -3766,6 +4208,30 @@
 					cargarCrowdfundBlockchain();
 				}
 			}
+
+			// Cargar direcciones adicionales en la interfaz
+			let explorerUrl = "";
+			if (DEXTER_NETWORK === "sepolia") {
+				explorerUrl = "https://sepolia.etherscan.io/address/";
+			} else if (DEXTER_NETWORK === "alfajores") {
+				explorerUrl = "https://celo-alfajores.blockscout.com/address/";
+			}
+
+			function formatAddr(addr) {
+				if (!addr || addr === "") return "No configurado";
+				const trunc = addr.slice(0, 8) + "..." + addr.slice(-6);
+				if (explorerUrl !== "") {
+					return `<a href="${explorerUrl}${addr}" target="_blank" style="color: #00ffe5; text-decoration: none; font-family: monospace;">${trunc}</a>`;
+				}
+				return `<span style="color: #00ff66; font-family: monospace;" title="${addr}">${trunc}</span>`;
+			}
+
+			const nftDisplay = document.getElementById('nft-contract-addr-display');
+			const govDisplay = document.getElementById('gov-contract-addr-display');
+			const crowdDisplay = document.getElementById('crowd-contract-addr-display');
+			if (nftDisplay) nftDisplay.innerHTML = formatAddr(DEXTER_NFT_ADDRESS);
+			if (govDisplay) govDisplay.innerHTML = formatAddr(DEXTER_GOV_ADDRESS);
+			if (crowdDisplay) crowdDisplay.innerHTML = formatAddr(DEXTER_CROWDFUND_ADDRESS);
 
 			// Temporizador de recompensa diaria
 			let tiempoRestante = parseInt("{{.TiempoRestante}}") || 0;
@@ -3961,7 +4427,8 @@
 			}
 
 			try {
-				const provider = new ethers.BrowserProvider(window.ethereum);
+				let provider = new ethers.BrowserProvider(window.ethereum);
+				provider = await ensureTargetNetwork(provider);
 				const readProvider = await getReadProvider(provider);
 				const signer = await provider.getSigner();
 				const userAddress = await signer.getAddress();
@@ -4043,7 +4510,8 @@
 			}
 
 			try {
-				const provider = new ethers.BrowserProvider(window.ethereum);
+				let provider = new ethers.BrowserProvider(window.ethereum);
+				provider = await ensureTargetNetwork(provider);
 				const signer = await provider.getSigner();
 
 				const govAbi = [
@@ -4099,41 +4567,7 @@
 				
 				// Solicitar conexión de cuenta antes de intentar cambiar de red
 				await provider.send("eth_requestAccounts", []);
-
-				// Cambiar de red programáticamente si está en otra red
-				let network = await provider.getNetwork();
-				let chainId = Number(network.chainId);
-				if (chainId !== TARGET_CHAIN_ID) {
-					console.log(`Cambio de red programático a ${TARGET_NETWORK_NAME} (${TARGET_CHAIN_ID})...`);
-					try {
-						await window.ethereum.request({
-							method: 'wallet_switchEthereumChain',
-							params: [{ chainId: TARGET_CHAIN_HEX }],
-						});
-						// Re-instanciar provider después de cambiar de red
-						provider = new ethers.BrowserProvider(window.ethereum);
-					} catch (switchError) {
-						if (switchError.code === 4902) {
-							try {
-								await window.ethereum.request({
-									method: 'wallet_addEthereumChain',
-									params: [{
-										chainId: TARGET_CHAIN_HEX,
-										chainName: TARGET_NETWORK_NAME,
-										rpcUrls: [TARGET_RPC_URL],
-										nativeCurrency: { name: TARGET_NATIVE_NAME, symbol: TARGET_NATIVE_SYMBOL, decimals: 18 }
-									}],
-								});
-								// Re-instanciar provider después de agregar y cambiar de red
-								provider = new ethers.BrowserProvider(window.ethereum);
-							} catch (addError) {
-								console.error("Error al agregar la red:", addError);
-							}
-						} else {
-							console.error("Error al cambiar de red:", switchError);
-						}
-					}
-				}
+				provider = await ensureTargetNetwork(provider);
 
 				const readProvider = await getReadProvider(provider);
 				const signer = await provider.getSigner();
@@ -4427,29 +4861,7 @@
 		}
 
 		// --- Crowdfunding & Donation Proposals JS Interface ---
-		function switchCrowdTab(tab) {
-			if (tab === 'local') {
-				document.getElementById('crowd-section-local').style.display = 'block';
-				document.getElementById('crowd-section-chain').style.display = 'none';
-				document.getElementById('tab-crowd-local').style.background = 'rgba(255, 215, 0, 0.15)';
-				document.getElementById('tab-crowd-local').style.color = '#ffd700';
-				document.getElementById('tab-crowd-local').style.borderColor = 'rgba(255, 215, 0, 0.3)';
-				document.getElementById('tab-crowd-chain').style.background = 'transparent';
-				document.getElementById('tab-crowd-chain').style.color = '#aaa';
-				document.getElementById('tab-crowd-chain').style.borderColor = 'transparent';
-			} else {
-				document.getElementById('crowd-section-local').style.display = 'none';
-				document.getElementById('crowd-section-chain').style.display = 'block';
-				document.getElementById('tab-crowd-local').style.background = 'transparent';
-				document.getElementById('tab-crowd-local').style.color = '#aaa';
-				document.getElementById('tab-crowd-local').style.borderColor = 'transparent';
-				document.getElementById('tab-crowd-chain').style.background = 'rgba(255, 215, 0, 0.15)';
-				document.getElementById('tab-crowd-chain').style.color = '#ffd700';
-				document.getElementById('tab-crowd-chain').style.borderColor = 'rgba(255, 215, 0, 0.3)';
-				
-				cargarCrowdfundBlockchain();
-			}
-		}
+
 
 		async function cargarCrowdfundBlockchain() {
 			if (!DEXTER_CROWDFUND_ADDRESS || typeof window.ethereum === 'undefined') return;
@@ -4614,7 +5026,8 @@
 			}
 			
 			try {
-				const provider = new ethers.BrowserProvider(window.ethereum);
+				let provider = new ethers.BrowserProvider(window.ethereum);
+				provider = await ensureTargetNetwork(provider);
 				const signer = await provider.getSigner();
 				const userAddress = await signer.getAddress();
 				
@@ -4665,7 +5078,8 @@
 			}
 			
 			try {
-				const provider = new ethers.BrowserProvider(window.ethereum);
+				let provider = new ethers.BrowserProvider(window.ethereum);
+				provider = await ensureTargetNetwork(provider);
 				const signer = await provider.getSigner();
 				const userAddress = await signer.getAddress();
 				
@@ -4717,7 +5131,8 @@
 			if (!DEXTER_CROWDFUND_ADDRESS || typeof window.ethereum === 'undefined') return;
 			
 			try {
-				const provider = new ethers.BrowserProvider(window.ethereum);
+				let provider = new ethers.BrowserProvider(window.ethereum);
+				provider = await ensureTargetNetwork(provider);
 				const signer = await provider.getSigner();
 				
 				const crowdfundAbi = [
@@ -4791,8 +5206,8 @@
 			position: absolute;
 			bottom: 70px;
 			right: 0;
-			width: 380px;
-			height: 500px;
+			width: 480px;
+			height: 600px;
 			background: rgba(10, 10, 10, 0.9);
 			backdrop-filter: blur(20px);
 			border: 1px solid rgba(0, 255, 0, 0.4);
@@ -5061,7 +5476,10 @@
 						<div class="gemma-header-subtitle">Comandos de Terminal del DAO</div>
 					</div>
 				</div>
-				<button class="gemma-close-btn" onclick="toggleGemmaChat()">×</button>
+				<div style="display: flex; align-items: center; gap: 8px;">
+					<button onclick="location.href='/gemma-chat'" style="background: rgba(0,255,0,0.1); border: 1px solid rgba(0,255,0,0.4); color: #00ff00; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; cursor: pointer; transition: all 0.2s; margin-top: 0; width: auto;" title="Abrir Entorno Completo">💬 Abrir Completo</button>
+					<button class="gemma-close-btn" onclick="toggleGemmaChat()">×</button>
+				</div>
 			</div>
 
 			<!-- Mensajes -->
@@ -5077,7 +5495,7 @@
 
 			<!-- Entrada de Texto -->
 			<div class="gemma-chat-input-area">
-				<input type="text" class="gemma-input" id="gemma-input" placeholder="Pregunta sobre comandos..." onkeydown="if(event.key==='Enter') sendGemmaMessage()">
+				<input type="text" class="gemma-input" id="gemma-chat-input" placeholder="Pregunta sobre comandos..." onkeydown="if(event.key==='Enter') sendGemmaMessage()">
 				<button type="button" class="gemma-send-btn" onclick="sendGemmaMessage()">▶</button>
 			</div>
 		</div>
@@ -5092,14 +5510,14 @@
 			const win = document.getElementById('gemma-chat-window');
 			if (isGemmaChatOpen) {
 				win.classList.add('active');
-				document.getElementById('gemma-input').focus();
+				document.getElementById('gemma-chat-input').focus();
 			} else {
 				win.classList.remove('active');
 			}
 		}
 
 		async function sendGemmaMessage() {
-			const inputEl = document.getElementById('gemma-input');
+			const inputEl = document.getElementById('gemma-chat-input');
 			const text = inputEl.value.trim();
 			if (!text) return;
 

@@ -45,11 +45,23 @@ contract DexterNFT is ERC721, Ownable {
         nftTypes[5] = NFTType("Ajolote Chinampero", 1500 * 10**18, 200, 0);
         // 6: Ajolote Guardian (guardian), Price: 3000 DXT, Max Supply: 40
         nftTypes[6] = NFTType("Ajolote Guardian", 3000 * 10**18, 40, 0);
+        
+        // Fútbol Mundialista Edition (Max Supply: 20 each)
+        // 7: Ajolote Tricolor (futbol_mex), Price: 1000 DXT, Max Supply: 20
+        nftTypes[7] = NFTType("Ajolote Tricolor", 1000 * 10**18, 20, 0);
+        // 8: Ajolote Canarinho (futbol_bra), Price: 1000 DXT, Max Supply: 20
+        nftTypes[8] = NFTType("Ajolote Canarinho", 1000 * 10**18, 20, 0);
+        // 9: Ajolote Albiceleste (futbol_arg), Price: 1000 DXT, Max Supply: 20
+        nftTypes[9] = NFTType("Ajolote Albiceleste", 1000 * 10**18, 20, 0);
+        // 10: Ajolote Kaiser (futbol_ger), Price: 1000 DXT, Max Supply: 20
+        nftTypes[10] = NFTType("Ajolote Kaiser", 1000 * 10**18, 20, 0);
+        // 11: Ajolote Furia Roja (futbol_esp), Price: 1000 DXT, Max Supply: 20
+        nftTypes[11] = NFTType("Ajolote Furia Roja", 1000 * 10**18, 20, 0);
     }
 
     // Función para comprar / acuñar un NFT pagando con tokens DXT ERC-20
     function mintNFT(uint256 _nftType) external returns (uint256) {
-        require(_nftType <= 6, "Tipo de NFT invalido");
+        require(_nftType <= 11, "Tipo de NFT invalido");
         NFTType storage nft = nftTypes[_nftType];
         require(nft.currentSupply < nft.maxSupply, "Suministro maximo alcanzado para este tipo");
 
@@ -78,7 +90,7 @@ contract DexterNFT is ERC721, Ownable {
         uint256 maxSupply,
         uint256 currentSupply
     ) {
-        require(_nftType <= 6, "Tipo de NFT invalido");
+        require(_nftType <= 11, "Tipo de NFT invalido");
         NFTType memory nft = nftTypes[_nftType];
         return (nft.name, nft.price, nft.maxSupply, nft.currentSupply);
     }

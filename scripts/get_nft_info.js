@@ -3,6 +3,22 @@ const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");
 
+// Cargar .env de forma segura sobreescribiendo variables existentes
+const envPath = path.join(__dirname, "../.env");
+if (fs.existsSync(envPath)) {
+  try {
+    const dotenv = require("dotenv");
+    const envConfig = dotenv.config({ path: envPath }).parsed;
+    if (envConfig) {
+      for (const k in envConfig) {
+        process.env[k] = envConfig[k];
+      }
+    }
+  } catch (e) {
+    console.warn("Advertencia: No se pudo cargar dotenv:", e.message);
+  }
+}
+
 async function main() {
   const tokenIdStr = process.argv[2];
   if (!tokenIdStr) {
@@ -32,11 +48,17 @@ async function main() {
   if (network === "localhost" || network === "hardhat") {
     rpcUrl = "http://127.0.0.1:8545";
   } else if (network === "sepolia") {
-    rpcUrl = process.env.SEPOLIA_RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.SEPOLIA_RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   } else if (network === "alfajores") {
     rpcUrl = process.env.ALFAJORES_RPC_URL || "https://alfajores-forno.celo-testnet.org";
   } else {
-    rpcUrl = process.env.RPC_URL || "https://rpc.ankr.com/eth_sepolia";
+    rpcUrl = process.env.RPC_URL;
+    if (!rpcUrl || rpcUrl.includes("blockchain.googleapis.com")) {
+      rpcUrl = "https://ethereum-sepolia.publicnode.com";
+    }
   }
 
   const provider = new ethers.JsonRpcProvider(rpcUrl);
@@ -55,10 +77,14 @@ async function main() {
     
     console.log(`NFT_INFO_SUCCESS:${key}:${owner}`);
   } catch (error) {
-    // Fallback gracioso para desarrollo local / demo si el nodo de blockchain está apagado
-    const isConnectionError = error.message.includes("ECONNREFUSED") || 
-                              error.message.includes("could not detect network") ||
-                              error.message.includes("failed to detect network");
+    // Fallback gracioso para desarrollo local / demo si el nodo de blockchain está apagado o rate-limited
+    const errMsg = (error.message || "").toLowerCase();
+    const isConnectionError = errMsg.includes("econnrefused") || 
+                              errMsg.includes("could not detect network") ||
+                              errMsg.includes("failed to detect network") ||
+                              errMsg.includes("429") ||
+                              errMsg.includes("retry limit") ||
+                              errMsg.includes("resource_exhausted");
     if (isConnectionError) {
       const nftKeys = ["ajolote", "luna", "quetzal", "androide", "supremo", "chinampero"];
       const mockTypeId = tokenId % 6;

@@ -355,6 +355,11 @@ type PageData struct {
 	TieneMago         bool
 	TieneMariachi     bool
 	TienePoap         bool
+	TieneFutbolMex    bool
+	TieneFutbolBra    bool
+	TieneFutbolArg    bool
+	TieneFutbolGer    bool
+	TieneFutbolEsp    bool
 	DiscordWebhook    string
 	TokenAddress      string
 	NFTAddress        string
@@ -1089,6 +1094,11 @@ func manejadorPrincipal(w http.ResponseWriter, r *http.Request) {
 		TieneMago:         tieneItem(perfil.Inventario, "mago"),
 		TieneMariachi:     tieneItem(perfil.Inventario, "mariachi"),
 		TienePoap:         perfil.TienePoap,
+		TieneFutbolMex:    tieneItem(perfil.Inventario, "futbol_mex"),
+		TieneFutbolBra:    tieneItem(perfil.Inventario, "futbol_bra"),
+		TieneFutbolArg:    tieneItem(perfil.Inventario, "futbol_arg"),
+		TieneFutbolGer:    tieneItem(perfil.Inventario, "futbol_ger"),
+		TieneFutbolEsp:    tieneItem(perfil.Inventario, "futbol_esp"),
 		DiscordWebhook:    perfil.DiscordWebhook,
 		TokenAddress:      addrs.DexterDAO,
 		NFTAddress:        addrs.DexterNFT,
@@ -2096,6 +2106,11 @@ func detectarIntencionBusqueda(msg string) (bool, string) {
 		"qué pasó con",
 		"que paso hoy",
 		"qué pasó hoy",
+	}
+
+	// Evitar scraping de URLs locales que confunden al modelo
+	if strings.Contains(msgLower, "http://localhost") || strings.Contains(msgLower, "127.0.0.1") {
+		return false, ""
 	}
 
 	for _, act := range activadores {

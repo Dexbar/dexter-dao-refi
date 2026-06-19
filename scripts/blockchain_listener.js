@@ -295,6 +295,14 @@ async function main() {
   setInterval(() => {}, 1000);
 }
 
+process.on("uncaughtException", (err) => {
+  console.error("🔥 Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("🔥 Unhandled Rejection at:", promise, "reason:", reason);
+});
+
 main().catch(err => {
   console.error("Critical failure in listener daemon:", err);
   process.exit(1);

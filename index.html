@@ -1440,6 +1440,46 @@
 					</div>
 				{{end}}
 				
+				{{if .TieneFutbolMex}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-tierra ax-float-3" title="Ajolote Tricolor" style="left: 25%; top: 65%;">
+						<img src="/img-futbol-mex" alt="Ajolote Tricolor" />
+						<span>Tricolor 🇲🇽</span>
+					</div>
+				{{end}}
+
+				{{if .TieneFutbolBra}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-agua ax-float-4" title="Ajolote Canarinho" style="left: 75%; top: 70%;">
+						<img src="/img-futbol-bra" alt="Ajolote Canarinho" />
+						<span>Canarinho 🇧🇷</span>
+					</div>
+				{{end}}
+
+				{{if .TieneFutbolArg}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-divino ax-float-1" title="Ajolote Albiceleste" style="left: 45%; top: 75%;">
+						<img src="/img-futbol-arg" alt="Ajolote Albiceleste" />
+						<span>Albiceleste 🇦🇷</span>
+					</div>
+				{{end}}
+
+				{{if .TieneFutbolGer}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-cyber ax-float-2" title="Ajolote Kaiser" style="left: 10%; top: 50%;">
+						<img src="/img-futbol-ger" alt="Ajolote Kaiser" />
+						<span>Kaiser 🇩🇪</span>
+					</div>
+				{{end}}
+
+				{{if .TieneFutbolEsp}}
+					{{$noOwned = false}}
+					<div class="floating-axolotl glow-fuego ax-float-5" title="Ajolote Furia Roja" style="left: 85%; top: 35%;">
+						<img src="/img-futbol-esp" alt="Ajolote Furia Roja" />
+						<span>Furia Roja 🇪🇸</span>
+					</div>
+				{{end}}
+				
 				{{if $noOwned}}
 					<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #555; z-index: 5; pointer-events: auto;">
 						<div style="font-size: 3rem; margin-bottom: 10px;">🏝️</div>
@@ -1846,6 +1886,121 @@
 					<button type="submit" name="vender" value="mariachi" style="background:#ff3333; color:#fff;">REVENDER (1000 TK)</button>
 				{{else}}
 					<button type="submit" name="comprar" value="mariachi" style="background:#eab308; color:#000;">COMPRAR (800 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card futbol_mex holo-shine">
+			<h3>⚽ AJOLOTE TRICOLOR</h3>
+			<img src="/img-futbol-mex" class="nft-img">
+			<div class="card-stats">
+				<span class="stat-badge el-tierra">🌱 Tierra/Planta</span>
+				<span class="stat-badge">⚡ Poder: 90</span>
+				<span class="stat-badge">💎 Rareza: 95%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 90%; background: #00ff66;"></div>
+				</div>
+			</div>
+			<form method="POST">
+				{{if .TieneFutbolMex}}
+					<button type="submit" name="vender" value="futbol_mex" style="background:#ff3333; color:#fff;">REVENDER (600 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="futbol_mex" style="background:#ff00ff; color:#fff;">COMPRAR (1000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card futbol_bra holo-shine">
+			<h3>⚽ AJOLOTE CANARINHO</h3>
+			<img src="/img-futbol-bra" class="nft-img">
+			<div class="card-stats">
+				<span class="stat-badge el-agua">💧 Agua</span>
+				<span class="stat-badge">⚡ Poder: 94</span>
+				<span class="stat-badge">💎 Rareza: 95%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 94%; background: #00ffe5;"></div>
+				</div>
+			</div>
+			<form method="POST">
+				{{if .TieneFutbolBra}}
+					<button type="submit" name="vender" value="futbol_bra" style="background:#ff3333; color:#fff;">REVENDER (600 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="futbol_bra" style="background:#ff00ff; color:#fff;">COMPRAR (1000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card futbol_arg holo-shine">
+			<h3>⚽ AJOLOTE ALBICELESTE</h3>
+			<img src="/img-futbol-arg" class="nft-img">
+			<div class="card-stats">
+				<span class="stat-badge el-divino">✨ Divino</span>
+				<span class="stat-badge">⚡ Poder: 93</span>
+				<span class="stat-badge">💎 Rareza: 95%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 93%; background: #ffd700;"></div>
+				</div>
+			</div>
+			<form method="POST">
+				{{if .TieneFutbolArg}}
+					<button type="submit" name="vender" value="futbol_arg" style="background:#ff3333; color:#fff;">REVENDER (600 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="futbol_arg" style="background:#ff00ff; color:#fff;">COMPRAR (1000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card futbol_ger holo-shine">
+			<h3>⚽ AJOLOTE KAISER</h3>
+			<img src="/img-futbol-ger" class="nft-img">
+			<div class="card-stats">
+				<span class="stat-badge el-cyber">🤖 Cyber</span>
+				<span class="stat-badge">⚡ Poder: 92</span>
+				<span class="stat-badge">💎 Rareza: 95%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 92%; background: #00ff00;"></div>
+				</div>
+			</div>
+			<form method="POST">
+				{{if .TieneFutbolGer}}
+					<button type="submit" name="vender" value="futbol_ger" style="background:#ff3333; color:#fff;">REVENDER (600 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="futbol_ger" style="background:#ff00ff; color:#fff;">COMPRAR (1000 TK)</button>
+				{{end}}
+			</form>
+		</div>
+
+		<div class="nft-card futbol_esp holo-shine">
+			<h3>⚽ AJOLOTE FURIA ROJA</h3>
+			<img src="/img-futbol-esp" class="nft-img">
+			<div class="card-stats">
+				<span class="stat-badge el-fuego">🔥 Fuego</span>
+				<span class="stat-badge">⚡ Poder: 91</span>
+				<span class="stat-badge">💎 Rareza: 95%</span>
+			</div>
+			<div style="font-size:0.75rem; text-align:left; color:#aaa; margin-top:5px; margin-bottom:10px;">
+				Poder:
+				<div class="stat-bar-container">
+					<div class="stat-bar" style="width: 91%; background: #ff5500;"></div>
+				</div>
+			</div>
+			<form method="POST">
+				{{if .TieneFutbolEsp}}
+					<button type="submit" name="vender" value="futbol_esp" style="background:#ff3333; color:#fff;">REVENDER (600 TK)</button>
+				{{else}}
+					<button type="submit" name="comprar" value="futbol_esp" style="background:#ff00ff; color:#fff;">COMPRAR (1000 TK)</button>
 				{{end}}
 			</form>
 		</div>
@@ -2417,6 +2572,11 @@
 		{{if .TieneGuardian}}INVENTARIO_CARTAS.push("guardian");{{end}}
 		{{if .TieneMago}}INVENTARIO_CARTAS.push("mago");{{end}}
 		{{if .TieneMariachi}}INVENTARIO_CARTAS.push("mariachi");{{end}}
+		{{if .TieneFutbolMex}}INVENTARIO_CARTAS.push("futbol_mex");{{end}}
+		{{if .TieneFutbolBra}}INVENTARIO_CARTAS.push("futbol_bra");{{end}}
+		{{if .TieneFutbolArg}}INVENTARIO_CARTAS.push("futbol_arg");{{end}}
+		{{if .TieneFutbolGer}}INVENTARIO_CARTAS.push("futbol_ger");{{end}}
+		{{if .TieneFutbolEsp}}INVENTARIO_CARTAS.push("futbol_esp");{{end}}
 
 		const CARDS_DATA = {
 			"starter": {
@@ -2538,6 +2698,66 @@
 				imgPath: "/img-mariachi",
 				description: "Alegra los bloques con su trompeta y melodías tradicionales.",
 				color: "#eab308"
+			},
+			"futbol_mex": {
+				key: "futbol_mex",
+				name: "futbol_mex",
+				displayName: "Ajolote Tricolor",
+				element: "Tierra/Planta",
+				power: 90,
+				hp: 150,
+				maxHp: 150,
+				imgPath: "/img-futbol-mex",
+				description: "¡Viva México! Ajolote tricolor con camiseta verde, dominando el balón en la cancha del mundial virtual.",
+				color: "#22c55e"
+			},
+			"futbol_bra": {
+				key: "futbol_bra",
+				name: "futbol_bra",
+				displayName: "Ajolote Canarinho",
+				element: "Agua",
+				power: 94,
+				hp: 160,
+				maxHp: 160,
+				imgPath: "/img-futbol-bra",
+				description: "Joga bonito. Ajolote de verde e amarelo haciendo gambetas y samba con el balón blockchain.",
+				color: "#eab308"
+			},
+			"futbol_arg": {
+				key: "futbol_arg",
+				name: "futbol_arg",
+				displayName: "Ajolote Albiceleste",
+				element: "Divino",
+				power: 93,
+				hp: 150,
+				maxHp: 150,
+				imgPath: "/img-futbol-arg",
+				description: "La octava maravilla. Ajolote albiceleste con el 10 en la espalda, organizando el mediocampo del mundial.",
+				color: "#00ffe5"
+			},
+			"futbol_ger": {
+				key: "futbol_ger",
+				name: "futbol_ger",
+				displayName: "Ajolote Kaiser",
+				element: "Cyber",
+				power: 92,
+				hp: 145,
+				maxHp: 145,
+				imgPath: "/img-futbol-ger",
+				description: "Precisión y potencia. Ajolote kaiser con camiseta blanca y negra, ejecutando un tiro libre con fuerza robótica.",
+				color: "#ffffff"
+			},
+			"futbol_esp": {
+				key: "futbol_esp",
+				name: "futbol_esp",
+				displayName: "Ajolote Furia Roja",
+				element: "Fuego",
+				power: 91,
+				hp: 140,
+				maxHp: 140,
+				imgPath: "/img-futbol-esp",
+				description: "Furia roja. Ajolote español haciendo tiquitaca y controlando la posesión en el partido del bloque.",
+				color: "#ff3c3c"
 			}
 		};
 
@@ -4129,7 +4349,7 @@
 		let TARGET_CHAIN_ID = 31337;
 		let TARGET_CHAIN_HEX = "0x7a69";
 		let TARGET_NETWORK_NAME = "Hardhat Local";
-		let TARGET_RPC_URL = "http://localhost:8545";
+		let TARGET_RPC_URL = "http://127.0.0.1:8545";
 		let TARGET_NATIVE_SYMBOL = "ETH";
 		let TARGET_NATIVE_NAME = "ETH";
 

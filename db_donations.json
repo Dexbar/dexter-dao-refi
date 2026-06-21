@@ -1,8 +1,8 @@
 [
   {
     "id": 0,
-    "title": "Limpieza de Canales en Xochimilco",
-    "description": "Fondo comunitario para la compra de herramientas de limpieza y organización de brigadas vecinales para sanear los canales secundarios.",
+    "title": "Dexter DAO - ReFi & Axolotl Conservation",
+    "description": "¡Proyecto oficial aprobado y listado en Giveth.io! Iniciativa regenerativa (ReFi) para la preservación ecológica de los ajolotes en Xochimilco y restauración del ecosistema de canales.",
     "recipient": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
     "goal": 1500,
     "amountRaised": 450,
@@ -15,6 +15,42 @@
     "recipient": "0x350f9cf31bc1eb56c596b38fa96d9a24831e6b32",
     "goal": 3000,
     "amountRaised": 1200,
+    "completed": false
+  },
+  {
+    "id": 2,
+    "title": "Bitfinding (Respuesta de Seguridad en Tiempo Real)",
+    "description": "Desarrollo de infraestructura y agentes éticos automatizados que monitorean Ethereum y Capa 2 para mitigar ataques y rescatar fondos vulnerables en segundos.",
+    "recipient": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    "goal": 5000,
+    "amountRaised": 2100,
+    "completed": false
+  },
+  {
+    "id": 3,
+    "title": "Dedaub Decompiler",
+    "description": "Herramienta gratuita para la seguridad de Ethereum que convierte código de bytes EVM a código legible tipo Solidity, facilitando la auditoría de contratos inteligentes cerrados.",
+    "recipient": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    "goal": 4000,
+    "amountRaised": 900,
+    "completed": false
+  },
+  {
+    "id": 4,
+    "title": "soldb (Solidity Debugger)",
+    "description": "Depurador de código abierto basado en la línea de comandos para contratos inteligentes de Solidity en Ethereum L1 y L2, integrado con Foundry, Hardhat y Tenderly.",
+    "recipient": "0x350f9cf31bc1eb56c596b38fa96d9a24831e6b32",
+    "goal": 2500,
+    "amountRaised": 650,
+    "completed": false
+  },
+  {
+    "id": 5,
+    "title": "Coalición para la Recuperación de Criptomonedas",
+    "description": "Iniciativa para coordinar equipos de DeFi, VASPs, investigadores y abogados para rastrear transacciones maliciosas y recuperar activos post-robo.",
+    "recipient": "0x350f9cf31bc1eb56c596b38fa96d9a24831e6b32",
+    "goal": 6000,
+    "amountRaised": 1800,
     "completed": false
   }
 ]

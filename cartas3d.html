@@ -1,0 +1,2896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexter DAO — 3D VR Casino Club</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Three.js and OrbitControls CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            --bg: #020208;
+            --panel: rgba(10, 10, 24, 0.85);
+            --border: rgba(0, 255, 229, 0.25);
+            --accent-cyan: #00ffe5;
+            --accent-purple: #b06fff;
+            --accent-pink: #ff3cac;
+            --accent-gold: #ffd700;
+            --accent-green: #a6e3a1;
+            --text: #e8e8f0;
+            --muted: #666680;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% -20%, rgba(176, 111, 255, 0.25), transparent 70%),
+                radial-gradient(circle at 50% 120%, rgba(0, 255, 229, 0.15), transparent 70%);
+            perspective: 1500px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1300px;
+            text-align: center;
+            padding: 15px;
+            z-index: 10;
+        }
+
+        .logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 15px rgba(0, 255, 229, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .logo span {
+            color: var(--accent-purple);
+            text-shadow: 0 0 15px rgba(176, 111, 255, 0.5);
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .container {
+            width: 100%;
+            max-width: 1300px;
+            padding: 0 20px 40px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 25px;
+            z-index: 5;
+        }
+
+        /* ── CONTROL PANEL (LEFT) ── */
+        .control-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: fit-content;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-select {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: var(--muted);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-select:hover {
+            color: #fff;
+            border-color: rgba(255,255,255,0.15);
+            transform: translateX(4px);
+        }
+
+        .btn-select.active {
+            background: linear-gradient(135deg, rgba(0, 255, 229, 0.12), rgba(176, 111, 255, 0.12));
+            border-color: var(--accent-cyan);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(0, 255, 229, 0.15);
+        }
+
+        .btn-select .badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-left: auto;
+            font-weight: bold;
+        }
+
+        .badge-active { background: rgba(0, 255, 229, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+        .badge-avail { background: rgba(255, 215, 0, 0.2); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+
+        /* ── ACTION CONTROLS ── */
+        .wager-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .btn-action-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .btn-casino {
+            background: rgba(10, 10, 26, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-casino:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        .btn-casino:not(:disabled):active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary-casino {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #000;
+            border: none;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(0, 255, 229, 0.2);
+        }
+
+        /* ── LOG CONSOLE ── */
+        .log-console {
+            background: #04040c;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 10px;
+            height: 100px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.65rem;
+            color: var(--accent-green);
+            text-align: left;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .log-line {
+            margin-bottom: 3px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .btn-back:hover {
+            color: var(--text);
+            border-color: var(--accent-cyan);
+        }
+
+        /* ── VIEWPORT CARD (RIGHT) ── */
+        .viewport-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* HUD overlay */
+        .hud-overlay {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .hud-panel {
+            background: rgba(5, 5, 15, 0.9);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .hud-status {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 229, 0.12);
+            border: 1px solid var(--accent-cyan);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 8px var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 255, 229, 0.15);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* ── THREE.JS CANVAS CONTAINER ── */
+        .stage-3d {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #webgl-canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #020208;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">Dexter<span>DAO</span> <span>VR 3D Casino</span></div>
+    <div class="subtitle">Sala de Juegos con Renderizado WebGL y Soporte de Realidad Virtual (WebXR)</div>
+</header>
+
+<div class="container">
+    <!-- CONTROL PANEL -->
+    <div class="control-panel">
+        <div class="section-title">🎰 SELECCIÓN DE JUEGO</div>
+        <div class="game-selector">
+            <button class="btn-select active" onclick="switchGame('brisca')">
+                <span>🏆 La Brisca 3D VR</span>
+                <span class="badge badge-active">Activo</span>
+            </button>
+            <button class="btn-select" onclick="switchGame('baraja')">
+                <span>🃏 Ases y Reyes 3D VR</span>
+                <span class="badge badge-avail">Disponible</span>
+            </button>
+            <button class="btn-select" onclick="switchGame('slots')">
+                <span>🎰 Tragamonedas 3D VR</span>
+                <span class="badge badge-avail">Slots</span>
+            </button>
+            <button class="btn-select" onclick="switchGame('sudoku')">
+                <span>🧩 Sudoku 3D VR</span>
+                <span class="badge badge-avail">Sudoku</span>
+            </button>
+            <button class="btn-select" onclick="switchGame('chess')">
+                <span>♟️ Ajedrez 3D VR</span>
+                <span class="badge badge-avail">Ajedrez</span>
+            </button>
+            <button class="btn-select" onclick="switchGame('bingo')">
+                <span>🎯 Bingo 3D VR</span>
+                <span class="badge badge-avail">Bingo</span>
+            </button>
+        </div>
+
+        <div class="section-title">⚡ PANEL DE APUESTAS</div>
+        <div class="wager-controls">
+            <div style="font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between;">
+                <span>Tu Saldo:</span>
+                <span id="player-balance-txt" style="color: var(--accent-gold); font-weight: bold;">100 TK</span>
+            </div>
+            <div class="btn-action-panel">
+                <button class="btn-casino" id="btn-bet-minus" onclick="adjustBet(-10)">Apuesta -10</button>
+                <button class="btn-casino" id="btn-bet-plus" onclick="adjustBet(10)">Apuesta +10</button>
+                <button class="btn-casino btn-primary-casino" id="btn-main-action" style="grid-column: span 2;" onclick="triggerMainGameAction()">Jugar Ronda ($10)</button>
+            </div>
+        </div>
+
+        <div class="section-title">📂 CONSOLA DE EVENTOS</div>
+        <div class="log-console" id="log-box">
+            <div class="log-line">[SISTEMA] Bienvenido a la sala de Realidad Virtual (WebXR) de Dexter DAO.</div>
+            <div class="log-line">[SISTEMA] Arrastra sobre la mesa para rotar la cámara 3D. Usa el scroll para hacer zoom.</div>
+        </div>
+
+        <a href="/juegos" class="btn-back">Volver al Arcade</a>
+    </div>
+
+    <!-- VIEWPORT -->
+    <div class="viewport-card">
+        <!-- HUD -->
+        <div class="hud-overlay">
+            <div class="hud-panel" id="hud-opponent-panel">🤖 Gemma-Bot: 0 bazas</div>
+            <div class="hud-panel" id="hud-wager-panel" style="color: var(--accent-gold)">💰 Pozo: 0 DXT</div>
+        </div>
+
+        <!-- 3D WEBGL STAGE -->
+        <div class="stage-3d">
+            <div id="webgl-canvas-container"></div>
+        </div>
+
+        <!-- Status HUD -->
+        <div class="hud-status" id="hud-status">Iniciando motor WebGL 3D...</div>
+    </div>
+</div>
+
+<script>
+    window.errors = [];
+    window.onerror = function(message, source, lineno, colno, error) {
+        const errDiv = document.createElement('div');
+        errDiv.style.position = 'fixed';
+        errDiv.style.top = '0';
+        errDiv.style.left = '0';
+        errDiv.style.width = '100%';
+        errDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.95)';
+        errDiv.style.color = 'white';
+        errDiv.style.zIndex = '999999';
+        errDiv.style.padding = '20px';
+        errDiv.style.fontFamily = 'monospace';
+        errDiv.style.whiteSpace = 'pre-wrap';
+        errDiv.innerText = 'UNCAUGHT EXCEPTION:\n' + message + '\nat ' + source + ':' + lineno + ':' + colno + '\n' + (error ? error.stack : '');
+        document.body.appendChild(errDiv);
+        
+        window.errors.push({
+            message: message,
+            source: source,
+            lineno: lineno,
+            colno: colno,
+            error: error ? error.stack : null
+        });
+        return false;
+    };
+
+    // Audio Synthesizer for Retro Arcade Effects
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        const now = audioCtx.currentTime;
+        if (type === 'deal') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'flip') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(300, now + 0.12);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        } else if (type === 'spin') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.linearRampToValueAtTime(500, now + 0.15);
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'win') {
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, index) => {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(freq, now + index * 0.07);
+                g.gain.setValueAtTime(0.08, now + index * 0.07);
+                g.gain.exponentialRampToValueAtTime(0.005, now + index * 0.07 + 0.25);
+                o.start(now + index * 0.07);
+                o.stop(now + index * 0.07 + 0.25);
+            });
+        } else if (type === 'lose') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(250, now);
+            osc.frequency.linearRampToValueAtTime(80, now + 0.35);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+    }
+
+    // Logging console handler
+    function log(msg) {
+        const box = document.getElementById('log-box');
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.innerText = msg;
+        box.appendChild(line);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    // Game variables
+    let currentBet = 10;
+    let balance = 100;
+    let currentMode = 'brisca'; // brisca, baraja, slots, sudoku, chess, bingo
+    let briscaNeedToDraw = false;
+    let userWallet = "";
+
+    // Three.js State Variables
+    let scene, camera, renderer, controls;
+    let gameGroup; // Holds dynamic meshes for current game
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    let animatedCards = []; // List of cards to lerp position/rotation
+
+    // Slots WebGL meshes
+    let slotsCabinet = null;
+    let reelCylinders = [];
+    let slotsSpinning = false;
+    let reelSpeeds = [0, 0, 0];
+    let reelTargetRotations = [0, 0, 0];
+
+    // Moved slots variables to prevent TDZ error
+    let currentThemeKey = 'fruits';
+    const themesList = ['fruits', 'space', 'quetzal'];
+    let activePaylines = 1;
+    let freeSpinsLeft = 0;
+    let slotsBonusActive = false;
+    let bonusChestMeshes = [];
+
+    // Bingo WebGL meshes
+    let bingoCage = null;
+    let bingoBalls = [];
+    let bingoTómbolaActive = false;
+    let bingoDrawnBallMesh = null;
+
+    // Sudoku WebGL meshes
+    let sudokuCellPlanes = [];
+    let sudokuSelectedCellIdx = -1;
+    let sudokuBoard = [];
+    let sudokuSolution = [];
+
+    // Chess WebGL meshes
+    let chessSqPlanes = [];
+    let chessSelectedSq = -1;
+    let chessBoard = [];
+
+    // Card details
+    const suits = ['Oros', 'Copas', 'Espadas', 'Bastos'];
+    const suitSymbols = { 'Oros': '🪙', 'Copas': '🏆', 'Espadas': '⚔️', 'Bastos': '🪵' };
+    const briscaCardRanks = [1, 3, 12, 11, 10, 7, 6, 5, 4, 2];
+    const briscaCardValues = { 1: 11, 3: 10, 12: 4, 11: 3, 10: 2, 7: 0, 6: 0, 5: 0, 4: 0, 2: 0 };
+    const briscaLabelNames = { 1: 'As', 3: '3', 12: 'Rey', 11: 'Caba', 10: 'Sota', 2: '2', 4: '4', 5: '5', 6: '6', 7: '7' };
+    
+    // WebGL Card Textures Builder
+    function createCardTexture(label, suit, symbol, val, isFaceDown) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 384;
+        const ctx = canvas.getContext('2d');
+        
+        if (isFaceDown) {
+            ctx.fillStyle = '#0a0a20';
+            ctx.fillRect(0, 0, 256, 384);
+            
+            ctx.strokeStyle = '#b06fff';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(12, 12, 232, 360);
+            
+            // Draw circuit-like grid patterns
+            ctx.strokeStyle = 'rgba(0, 255, 229, 0.25)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 384; i += 32) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(256, i + 128); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(256, i); ctx.lineTo(0, i + 128); ctx.stroke();
+            }
+            
+            ctx.fillStyle = '#00ffe5';
+            ctx.font = '900 48px Rajdhani';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('DEXTER', 128, 170);
+            ctx.fillStyle = '#ff3cac';
+            ctx.fillText('DAO', 128, 220);
+        } else {
+            ctx.fillStyle = '#16151f';
+            ctx.fillRect(0, 0, 256, 384);
+            
+            let color = '#ffd700'; // Oros
+            if (suit === 'Espadas') color = '#00ffe5';
+            else if (suit === 'Copas') color = '#ff3cac';
+            else if (suit === 'Bastos') color = '#a6e3a1';
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 6;
+            ctx.strokeRect(12, 12, 232, 360);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px Outfit';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(label, 25, 25);
+            
+            ctx.textAlign = 'right';
+            ctx.fillText(symbol, 231, 25);
+            
+            ctx.font = '900 120px Outfit';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = color;
+            ctx.fillText(symbol, 128, 180);
+            
+            ctx.fillStyle = '#88889a';
+            ctx.font = 'bold 24px Outfit';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(`${val} PTS`, 128, 350);
+        }
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    function createCardMesh(label, suit, symbol, val) {
+        const frontTex = createCardTexture(label, suit, symbol, val, false);
+        const backTex = createCardTexture(label, suit, symbol, val, true);
+        
+        const edgeMat = new THREE.MeshStandardMaterial({ color: 0x22222a, roughness: 0.5 });
+        const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.2 });
+        const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.2 });
+        
+        const materials = [edgeMat, edgeMat, edgeMat, edgeMat, frontMat, backMat];
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.02), materials);
+        return mesh;
+    }
+
+    // Build premium casino scenery in 3D
+    function buildCasinoScenery(scene) {
+        // Floor / Red Carpet with golden patterns
+        const floorGeo = new THREE.PlaneGeometry(20, 20);
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#4a0e17'; // Deep red
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = '#ffd700'; // Gold pattern
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 256; i += 32) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i + 128, 256);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(i, 256);
+            ctx.lineTo(i + 128, 0);
+            ctx.stroke();
+        }
+        const floorTex = new THREE.CanvasTexture(canvas);
+        floorTex.wrapS = THREE.RepeatWrapping;
+        floorTex.wrapT = THREE.RepeatWrapping;
+        floorTex.repeat.set(5, 5);
+        const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -1.2;
+        scene.add(floor);
+
+        // Pillars (Wooden columns with Gold Torus bands)
+        const pillarGeo = new THREE.CylinderGeometry(0.25, 0.25, 6, 16);
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x422213, roughness: 0.7 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2 });
+
+        const pillarPositions = [
+            [-5, -4], [5, -4], [-5, 4], [5, 4]
+        ];
+
+        pillarPositions.forEach(pos => {
+            const pillarGroup = new THREE.Group();
+            
+            const mainPillar = new THREE.Mesh(pillarGeo, woodMat);
+            mainPillar.position.y = 1.8;
+            pillarGroup.add(mainPillar);
+
+            // Add gold ring at bottom, middle, top
+            const ringGeo = new THREE.TorusGeometry(0.27, 0.03, 8, 24);
+            const ring1 = new THREE.Mesh(ringGeo, goldMat);
+            ring1.rotation.x = Math.PI / 2;
+            ring1.position.y = -0.5;
+            pillarGroup.add(ring1);
+
+            const ring2 = ring1.clone();
+            ring2.position.y = 1.8;
+            pillarGroup.add(ring2);
+
+            const ring3 = ring1.clone();
+            ring3.position.y = 4.1;
+            pillarGroup.add(ring3);
+
+            pillarGroup.position.set(pos[0], -1.2, pos[1]);
+            scene.add(pillarGroup);
+        });
+
+        // Background Walls with Glowing Neons
+        const wallGeo = new THREE.PlaneGeometry(20, 6);
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.9 });
+        
+        // Back Wall
+        const backWall = new THREE.Mesh(wallGeo, wallMat);
+        backWall.position.set(0, 1.8, -6);
+        scene.add(backWall);
+
+        // Left Wall
+        const leftWall = new THREE.Mesh(wallGeo, wallMat);
+        leftWall.position.set(-8, 1.8, 0);
+        leftWall.rotation.y = Math.PI / 2;
+        scene.add(leftWall);
+
+        // Right Wall
+        const rightWall = new THREE.Mesh(wallGeo, wallMat);
+        rightWall.position.set(8, 1.8, 0);
+        rightWall.rotation.y = -Math.PI / 2;
+        scene.add(rightWall);
+
+        // Wall Neon Lights (cyan/purple glowing strips)
+        const neonVerticalGeo = new THREE.BoxGeometry(0.08, 5, 0.02);
+        const cyanMat = new THREE.MeshBasicMaterial({ color: 0x00ffe5 });
+        const purpleMat = new THREE.MeshBasicMaterial({ color: 0xb06fff });
+
+        // Back Wall neons
+        for (let i = -6; i <= 6; i += 3) {
+            const neon = new THREE.Mesh(neonVerticalGeo, i % 2 === 0 ? cyanMat : purpleMat);
+            neon.position.set(i, 1.8, -5.9);
+            scene.add(neon);
+        }
+
+        // Left Wall neons
+        for (let i = -4; i <= 4; i += 3) {
+            const neon = new THREE.Mesh(neonVerticalGeo, i % 2 === 0 ? cyanMat : purpleMat);
+            neon.position.set(-7.9, 1.8, i);
+            neon.rotation.y = Math.PI / 2;
+            scene.add(neon);
+        }
+
+        // Right Wall neons
+        for (let i = -4; i <= 4; i += 3) {
+            const neon = new THREE.Mesh(neonVerticalGeo, i % 2 === 0 ? cyanMat : purpleMat);
+            neon.position.set(7.9, 1.8, i);
+            neon.rotation.y = -Math.PI / 2;
+            scene.add(neon);
+        }
+
+        // Background Decorative Slot Cabinets
+        const decCabinetGeo = new THREE.BoxGeometry(0.8, 1.8, 0.6);
+        const decCabinetMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.5 });
+        const decScreenGeo = new THREE.PlaneGeometry(0.6, 0.5);
+        
+        const screenCanvas1 = document.createElement('canvas');
+        screenCanvas1.width = 64; screenCanvas1.height = 64;
+        const sCtx1 = screenCanvas1.getContext('2d');
+        sCtx1.fillStyle = '#050510'; sCtx1.fillRect(0, 0, 64, 64);
+        sCtx1.font = '24px Outfit'; sCtx1.textAlign = 'center'; sCtx1.textBaseline = 'middle';
+        sCtx1.fillStyle = '#ff3cac'; sCtx1.fillText('🎰', 32, 32);
+        const decScreenTex1 = new THREE.CanvasTexture(screenCanvas1);
+        const decScreenMat1 = new THREE.MeshBasicMaterial({ map: decScreenTex1 });
+
+        const slotPlacements = [
+            { pos: [-6.5, -0.3, -3], rot: Math.PI / 2 },
+            { pos: [-6.5, -0.3, -1.5], rot: Math.PI / 2 },
+            { pos: [6.5, -0.3, -3], rot: -Math.PI / 2 },
+            { pos: [6.5, -0.3, -1.5], rot: -Math.PI / 2 }
+        ];
+
+        slotPlacements.forEach(sp => {
+            const cabinet = new THREE.Mesh(decCabinetGeo, decCabinetMat);
+            cabinet.position.set(sp.pos[0], sp.pos[1], sp.pos[2]);
+            cabinet.rotation.y = sp.rot;
+
+            const screen = new THREE.Mesh(decScreenGeo, decScreenMat1);
+            screen.position.set(0, 0.4, 0.31);
+            cabinet.add(screen);
+
+            const decGlowGeo = new THREE.BoxGeometry(0.82, 0.05, 0.62);
+            const decGlowMat = new THREE.MeshBasicMaterial({ color: 0x00ffe5 });
+            const glowStrip = new THREE.Mesh(decGlowGeo, decGlowMat);
+            glowStrip.position.y = 0.85;
+            cabinet.add(glowStrip);
+
+            scene.add(cabinet);
+        });
+    }
+
+    // Initialize 3D Engine
+    function fetchSyncInfo() {
+        fetch('/api/ai/sync-info')
+            .then(res => res.json())
+            .then(data => {
+                userWallet = data.wallet || "";
+                if (!userWallet) {
+                    if (typeof window.ethereum !== 'undefined') {
+                        window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+                            if (accounts.length > 0) {
+                                userWallet = accounts[0];
+                                log(`[SISTEMA] MetaMask wallet detectado: ${userWallet}`);
+                            } else {
+                                userWallet = "0x" + Math.random().toString(16).substring(2, 10);
+                                log(`[SISTEMA] Wallet no detectado. Asignando ID temporal: ${userWallet}`);
+                            }
+                        });
+                    } else {
+                        userWallet = "0x" + Math.random().toString(16).substring(2, 10);
+                        log(`[SISTEMA] MetaMask no disponible. ID temporal: ${userWallet}`);
+                    }
+                } else {
+                    log(`[SISTEMA] Wallet del servidor detectado: ${userWallet}`);
+                }
+            })
+            .catch(err => {
+                userWallet = "0x" + Math.random().toString(16).substring(2, 10);
+                log(`[SISTEMA] Error cargando wallet del servidor. ID temporal: ${userWallet}`);
+            });
+    }
+
+    function init3D() {
+        console.log("[DEBUG] init3D started");
+        try {
+            fetchSyncInfo();
+            console.log("[DEBUG] fetchSyncInfo called");
+            const container = document.getElementById('webgl-canvas-container');
+            const width = container.clientWidth || 800;
+            const height = container.clientHeight || 600;
+            console.log("[DEBUG] dimensions:", width, height);
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020208);
+            scene.fog = new THREE.FogExp2(0x020208, 0.05);
+
+            camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
+            camera.position.set(0, 3.2, 4.2);
+            console.log("[DEBUG] scene & camera created");
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.xr.enabled = true;
+            container.appendChild(renderer.domElement);
+            console.log("[DEBUG] renderer created and appended");
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.05; // Lock camera above table
+            controls.minDistance = 2;
+            controls.maxDistance = 10;
+            controls.target.set(0, 0, 0);
+            console.log("[DEBUG] controls created");
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+            scene.add(ambientLight);
+
+            const neonLight = new THREE.PointLight(0x00ffe5, 1.8, 10);
+            neonLight.position.set(0, 2.5, 0);
+            scene.add(neonLight);
+
+            const spotLight = new THREE.SpotLight(0xb06fff, 2.5, 12, Math.PI / 3, 0.5, 1);
+            spotLight.position.set(0, 4, 0);
+            scene.add(spotLight);
+            console.log("[DEBUG] lighting added");
+
+            // Build premium casino scenery
+            console.log("[DEBUG] calling buildCasinoScenery");
+            buildCasinoScenery(scene);
+            console.log("[DEBUG] buildCasinoScenery finished");
+
+            // Static Green Felt Casino Table
+            const feltGeo = new THREE.CylinderGeometry(2, 2, 0.06, 32);
+            const feltMat = new THREE.MeshStandardMaterial({ color: 0x0e3d26, roughness: 0.9 });
+            const feltMesh = new THREE.Mesh(feltGeo, feltMat);
+            feltMesh.position.y = -0.03;
+            scene.add(feltMesh);
+
+            // Wood Rim
+            const rimGeo = new THREE.TorusGeometry(2, 0.08, 16, 64);
+            const rimMat = new THREE.MeshStandardMaterial({ color: 0x3d2416, roughness: 0.4 });
+            const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+            rimMesh.rotation.x = Math.PI / 2;
+            scene.add(rimMesh);
+
+            // Neon Glow Rim
+            const rimGlowGeo = new THREE.TorusGeometry(2.08, 0.015, 8, 64);
+            const rimGlowMat = new THREE.MeshBasicMaterial({ color: 0x00ffe5 });
+            const rimGlowMesh = new THREE.Mesh(rimGlowGeo, rimGlowMat);
+            rimGlowMesh.rotation.x = Math.PI / 2;
+            rimGlowMesh.position.y = 0.01;
+            scene.add(rimGlowMesh);
+
+            // Game components container group
+            gameGroup = new THREE.Group();
+            scene.add(gameGroup);
+
+            // WebXR VR Button Setup
+            setupVRButton(container);
+
+            // Event Listeners
+            renderer.domElement.addEventListener('click', onCanvasClick);
+            window.addEventListener('resize', onWindowResize);
+            console.log("[DEBUG] event listeners setup");
+
+            // Start render loop
+            renderer.setAnimationLoop(animate);
+            console.log("[DEBUG] setAnimationLoop called");
+
+            document.getElementById('hud-status').innerText = 'WebGL listo. CARGANDO LA BRISCA 3D...';
+            console.log("[DEBUG] calling loadBriscaLayout");
+            loadBriscaLayout();
+            console.log("[DEBUG] loadBriscaLayout finished");
+        } catch (e) {
+            console.error("Error in init3D:", e);
+            if (window.onerror) {
+                window.onerror(e.message, 'init3D', 0, 0, e);
+            }
+        }
+    }
+
+    function setupVRButton(container) {
+        if ('xr' in navigator) {
+            navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+                if (supported) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-casino btn-primary-casino';
+                    btn.style.position = 'absolute';
+                    btn.style.bottom = '15px';
+                    btn.style.right = '15px';
+                    btn.style.zIndex = '100';
+                    btn.innerText = 'ENTRAR A VR';
+                    
+                    let currentSession = null;
+                    btn.onclick = () => {
+                        if (currentSession === null) {
+                            navigator.xr.requestSession('immersive-vr').then((session) => {
+                                currentSession = session;
+                                btn.innerText = 'SALIR DE VR';
+                                renderer.xr.setSession(session);
+                                session.addEventListener('end', () => {
+                                    currentSession = null;
+                                    btn.innerText = 'ENTRAR A VR';
+                                });
+                            });
+                        } else {
+                            currentSession.end();
+                        }
+                    };
+                    container.appendChild(btn);
+                }
+            });
+        }
+    }
+
+    function onWindowResize() {
+        const container = document.getElementById('webgl-canvas-container');
+        const width = container.clientWidth || 800;
+        const height = container.clientHeight || 600;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+
+    // Raycaster interaction
+    function onCanvasClick(e) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(gameGroup.children, true);
+
+        if (intersects.length > 0) {
+            let rootObj = intersects[0].object;
+            // Go up parent tree until we find userData
+            while (rootObj.parent && !rootObj.userData.type && rootObj.parent !== scene) {
+                rootObj = rootObj.parent;
+            }
+            
+            const data = rootObj.userData;
+            if (data.type === 'brisca-player-card') {
+                playPlayerCardBrisca(data.index);
+            } else if (data.type === 'brisca-deck-pile') {
+                if (briscaNeedToDraw) {
+                    drawBriscaCards();
+                }
+            } else if (data.type === 'ar-player-card') {
+                toggleDiscardCard(data.index);
+            } else if (data.type === 'chess-square') {
+                handleChessSquareClick(data.index);
+            } else if (data.type === 'sudoku-cell') {
+                selectSudokuCell(data.index);
+            } else if (data.type === 'bingo-tombola') {
+                drawBingoBall();
+            } else if (data.type === 'slots-lever') {
+                spinSlots();
+            } else if (data.type === 'slots-bonus-chest') {
+                openBonusChest(data.index, rootObj);
+            }
+        }
+    }
+
+    // Animation Tick Loop
+    let animateFrameCount = 0;
+    function animate() {
+        animateFrameCount++;
+        if (animateFrameCount <= 5) {
+            console.log("[DEBUG] animate tick", animateFrameCount);
+        }
+        // Update Controls
+        controls.update();
+
+        // 1. Lerp animated card positions & rotations
+        animatedCards.forEach(card => {
+            if (card.mesh) {
+                card.mesh.position.lerp(card.targetPos, card.lerpSpeed);
+                card.mesh.rotation.x = THREE.MathUtils.lerp(card.mesh.rotation.x, card.targetRot.x, card.lerpSpeed);
+                card.mesh.rotation.y = THREE.MathUtils.lerp(card.mesh.rotation.y, card.targetRot.y, card.lerpSpeed);
+                card.mesh.rotation.z = THREE.MathUtils.lerp(card.mesh.rotation.z, card.targetRot.z, card.lerpSpeed);
+            }
+        });
+
+        // 2. Slots Spin Cylinder Animations
+        if (slotsSpinning) {
+            for (let i = 0; i < 3; i++) {
+                if (reelCylinders[i]) {
+                    reelCylinders[i].rotation.x += reelSpeeds[i];
+                    reelSpeeds[i] *= 0.98; // Deceleration
+                    
+                    // Stop condition
+                    if (reelSpeeds[i] < 0.02) {
+                        reelCylinders[i].rotation.x = THREE.MathUtils.lerp(reelCylinders[i].rotation.x, reelTargetRotations[i], 0.15);
+                    }
+                }
+            }
+        }
+
+        // 3. Bingo Wire Cage rotation & ball physics
+        if (bingoCage && bingoTómbolaActive) {
+            bingoCage.rotation.y += 0.06;
+            bingoCage.rotation.x += 0.02;
+
+            bingoBalls.forEach(ball => {
+                ball.velocity.x += (Math.random() - 0.5) * 0.008;
+                ball.velocity.y += (Math.random() - 0.5) * 0.008;
+                ball.velocity.z += (Math.random() - 0.5) * 0.008;
+                ball.mesh.position.add(ball.velocity);
+
+                // Keep inside the sphere cage radius of 0.5
+                const dist = ball.mesh.position.length();
+                if (dist > 0.45) {
+                    ball.mesh.position.setLength(0.45);
+                    ball.velocity.negate();
+                }
+            });
+        }
+
+        // Render Scene
+        renderer.render(scene, camera);
+    }
+
+    function clearGameScene() {
+        // Clear dynamic elements
+        animatedCards = [];
+        reelCylinders = [];
+        bingoBalls = [];
+        sudokuCellPlanes = [];
+        chessSqPlanes = [];
+        
+        while (gameGroup.children.length > 0) {
+            gameGroup.remove(gameGroup.children[0]);
+        }
+        
+        if (bingoDrawnBallMesh) {
+            scene.remove(bingoDrawnBallMesh);
+            bingoDrawnBallMesh = null;
+        }
+
+        // Display panels check
+        document.getElementById('hud-opponent-panel').style.display = 'flex';
+        document.getElementById('hud-wager-panel').style.display = 'flex';
+    }
+
+    function adjustBet(amt) {
+        if (currentBet + amt >= 10 && currentBet + amt <= balance) {
+            currentBet += amt;
+            document.getElementById('btn-main-action').innerText = `Jugar Ronda ($${currentBet})`;
+            log(`[SISTEMA] Apuesta modificada a: $${currentBet} DXT`);
+        }
+    }
+
+    // Switch between game modes
+    function switchGame(mode) {
+        if (currentMode === mode) return;
+        currentMode = mode;
+
+        document.querySelectorAll('.btn-select').forEach((btn) => {
+            btn.classList.toggle('active', btn.getAttribute('onclick').includes(mode));
+        });
+
+        log(`[SISTEMA] Cargando juego: ${mode.toUpperCase()} 3D...`);
+        document.getElementById('hud-status').innerText = `Juego Activo: ${mode.toUpperCase()} 3D`;
+        
+        clearGameScene();
+
+        // Reset slots states
+        slotsBonusActive = false;
+        freeSpinsLeft = 0;
+
+        // Disconnect from websocket when leaving baraja
+        if (ws) {
+            log(`[WS] Desconectando de la sala de Baraja.`);
+            ws.close();
+            ws = null;
+        }
+
+        if (mode === 'brisca') {
+            loadBriscaLayout();
+        } else if (mode === 'baraja') {
+            loadBarajaLayout();
+        } else if (mode === 'slots') {
+            loadSlotsLayout();
+        } else if (mode === 'sudoku') {
+            loadSudokuLayout();
+        } else if (mode === 'chess') {
+            loadChessLayout();
+        } else if (mode === 'bingo') {
+            loadBingoLayout();
+        }
+
+        enableBarajaButtons();
+    }
+
+    // ── GAME 1: LA BRISCA 3D ──
+    let briscaDeck = [];
+    let briscaPlayerHand = [];
+    let briscaGemmaHand = [];
+    let briscaTrump = null;
+    let briscaPlayerPoints = 0;
+    let briscaGemmaPoints = 0;
+    let briscaPlayerBazas = 0;
+    let briscaGemmaBazas = 0;
+    let briscaWager = 20;
+    let briscaRoundActive = false;
+
+    function loadBriscaLayout() {
+        document.getElementById('hud-opponent-panel').innerText = `🤖 Gemma-Bot: ${briscaGemmaPoints} pts (${briscaGemmaBazas} bazas)`;
+        document.getElementById('hud-wager-panel').innerText = `💰 Pozo: ${briscaWager} DXT`;
+        briscaNeedToDraw = false;
+        
+        // Setup initial 3D deck and spots
+        const deckMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(0.6, 0.9, 0.15),
+            new THREE.MeshStandardMaterial({ map: createCardTexture('', '', '', 0, true), roughness: 0.5 })
+        );
+        deckMesh.rotation.x = Math.PI / 2;
+        deckMesh.position.set(-0.8, 0.07, 0);
+        deckMesh.userData = { type: 'brisca-deck-pile' };
+        gameGroup.add(deckMesh);
+
+        startBriscaGame();
+    }
+
+    function createBriscaDeck() {
+        let deck = [];
+        suits.forEach(s => {
+            briscaCardRanks.forEach(r => {
+                deck.push({ rank: r, val: briscaCardValues[r], suit: s, symbol: suitSymbols[s], label: briscaLabelNames[r] });
+            });
+        });
+        deck.sort(() => Math.random() - 0.5);
+        return deck;
+    }
+
+    function startBriscaGame() {
+        briscaDeck = createBriscaDeck();
+        briscaPlayerPoints = 0;
+        briscaGemmaPoints = 0;
+        briscaPlayerBazas = 0;
+        briscaGemmaBazas = 0;
+        briscaWager = currentBet * 2;
+        
+        // Deal 3 cards to each
+        briscaPlayerHand = [briscaDeck.pop(), briscaDeck.pop(), briscaDeck.pop()];
+        briscaGemmaHand = [briscaDeck.pop(), briscaDeck.pop(), briscaDeck.pop()];
+        briscaTrump = briscaDeck.pop();
+        
+        log(`[SISTEMA] Palo de triunfo: ${briscaTrump.suit} ${briscaTrump.symbol}`);
+        updateBriscaVisuals();
+    }
+
+    function updateBriscaVisuals() {
+        document.getElementById('hud-opponent-panel').innerText = `🤖 Gemma-Bot: ${briscaGemmaPoints} pts (${briscaGemmaBazas} bazas)`;
+        document.getElementById('hud-wager-panel').innerText = `💰 Pozo: ${briscaWager} DXT`;
+
+        // Clean previous hands card meshes
+        animatedCards = animatedCards.filter(c => {
+            if (c.mesh.userData.type === 'brisca-player-card' || c.mesh.userData.type === 'brisca-opponent-card' || c.mesh.userData.type === 'brisca-trump-card') {
+                gameGroup.remove(c.mesh);
+                return false;
+            }
+            return true;
+        });
+
+        // 1. Render Player Hand
+        briscaPlayerHand.forEach((card, idx) => {
+            if (!card) return;
+            const mesh = createCardMesh(card.label, card.suit, card.symbol, card.val);
+            
+            // Initial pos at deck
+            mesh.position.set(-0.8, 0.4, 0);
+            mesh.rotation.set(Math.PI / 2, 0, 0);
+            mesh.userData = { type: 'brisca-player-card', index: idx };
+            gameGroup.add(mesh);
+
+            // Animate card deal to hand
+            animatedCards.push({
+                mesh: mesh,
+                targetPos: new THREE.Vector3(-0.7 + idx * 0.7, 0.4, 1.2),
+                targetRot: new THREE.Vector3(-Math.PI / 6, 0, 0),
+                lerpSpeed: 0.08
+            });
+            playSound('deal');
+        });
+
+        // 2. Render Opponent Hand (Face down)
+        briscaGemmaHand.forEach((card, idx) => {
+            if (!card) return;
+            const backTex = createCardTexture('', '', '', 0, true);
+            const mat = new THREE.MeshStandardMaterial({ map: backTex });
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.02), mat);
+            mesh.position.set(-0.8, 0.4, 0);
+            mesh.rotation.set(Math.PI / 2, 0, 0);
+            mesh.userData = { type: 'brisca-opponent-card' };
+            gameGroup.add(mesh);
+
+            animatedCards.push({
+                mesh: mesh,
+                targetPos: new THREE.Vector3(-0.7 + idx * 0.7, 0.4, -1.2),
+                targetRot: new THREE.Vector3(Math.PI / 6, Math.PI, 0),
+                lerpSpeed: 0.08
+            });
+        });
+
+        // 3. Render Trump Card
+        if (briscaTrump) {
+            const mesh = createCardMesh(briscaTrump.label, briscaTrump.suit, briscaTrump.symbol, briscaTrump.val);
+            mesh.position.set(-0.8, 0.2, 0);
+            mesh.rotation.set(Math.PI / 2, 0, 0);
+            mesh.userData = { type: 'brisca-trump-card' };
+            gameGroup.add(mesh);
+
+            animatedCards.push({
+                mesh: mesh,
+                targetPos: new THREE.Vector3(-0.8, 0.025, 0.5),
+                targetRot: new THREE.Vector3(0, Math.PI / 2, 0), // Lying flat but rotated
+                lerpSpeed: 0.1
+            });
+        }
+    }
+
+    function playPlayerCardBrisca(idx) {
+        if (briscaRoundActive) return;
+        const card = briscaPlayerHand[idx];
+        if (!card) return;
+
+        briscaRoundActive = true;
+        playSound('deal');
+
+        // Locate card mesh
+        const cardAnimObj = animatedCards.find(c => c.mesh.userData.type === 'brisca-player-card' && c.mesh.userData.index === idx);
+        if (cardAnimObj) {
+            cardAnimObj.targetPos.set(0.4, 0.05, 0.3);
+            cardAnimObj.targetRot.set(0, 0, -Math.PI / 12);
+            cardAnimObj.mesh.userData.type = 'played-player';
+        }
+
+        briscaPlayerHand[idx] = null;
+        log(`[TÚ] Juegas: ${card.label} de ${card.suit}`);
+
+        // Bot turn in 1s
+        setTimeout(() => {
+            const botActive = briscaGemmaHand.filter(Boolean);
+            if (botActive.length === 0) return;
+            const botCard = botActive[Math.floor(Math.random() * botActive.length)];
+            const botIdx = briscaGemmaHand.indexOf(botCard);
+            briscaGemmaHand[botIdx] = null;
+
+            // Animate opponent card to center & reveal it
+            const oppAnimObj = animatedCards.find(c => c.mesh.userData.type === 'brisca-opponent-card');
+            if (oppAnimObj) {
+                // Rebuild with front face card
+                const oppMesh = createCardMesh(botCard.label, botCard.suit, botCard.symbol, botCard.val);
+                oppMesh.position.copy(oppAnimObj.mesh.position);
+                oppMesh.rotation.copy(oppAnimObj.mesh.rotation);
+                oppMesh.userData = { type: 'played-opponent' };
+                gameGroup.remove(oppAnimObj.mesh);
+                gameGroup.add(oppMesh);
+
+                // Update animation tracker
+                oppAnimObj.mesh = oppMesh;
+                oppAnimObj.targetPos.set(-0.4, 0.05, -0.3);
+                oppAnimObj.targetRot.set(0, Math.PI, Math.PI / 12);
+            }
+
+            playSound('deal');
+            log(`[BOT] Gemma-Bot juega: ${botCard.label} de ${botCard.suit}`);
+
+            // Evaluate round after 1.5s
+            setTimeout(() => {
+                evaluateBriscaTrick(card, botCard);
+            }, 1500);
+
+        }, 1200);
+    }
+
+    function evaluateBriscaTrick(pCard, bCard) {
+        const triunfo = briscaTrump.suit;
+        let playerWins = false;
+
+        if (pCard.suit === bCard.suit) {
+            playerWins = briscaCardRanks.indexOf(pCard.rank) < briscaCardRanks.indexOf(bCard.rank);
+        } else {
+            if (pCard.suit === triunfo) playerWins = true;
+            else if (bCard.suit === triunfo) playerWins = false;
+            else playerWins = true;
+        }
+
+        const trickPts = pCard.val + bCard.val;
+        if (playerWins) {
+            briscaPlayerPoints += trickPts;
+            briscaPlayerBazas++;
+            playSound('win');
+            log(`[SISTEMA] ¡Ganaste la baza! +${trickPts} puntos.`);
+        } else {
+            briscaGemmaPoints += trickPts;
+            briscaGemmaBazas++;
+            playSound('lose');
+            log(`[SISTEMA] Gemma-Bot gana la baza. +${trickPts} puntos.`);
+        }
+
+        // Animate played cards flying off the table
+        const playedMeshes = animatedCards.filter(c => c.mesh.userData.type === 'played-player' || c.mesh.userData.type === 'played-opponent');
+        playedMeshes.forEach(c => {
+            c.targetPos.set(playerWins ? 2 : -2, 0.2, playerWins ? 2 : -2);
+            c.targetRot.set(Math.random(), Math.random(), Math.random());
+            c.lerpSpeed = 0.05;
+        });
+
+        setTimeout(() => {
+            // Remove them completely
+            playedMeshes.forEach(c => {
+                gameGroup.remove(c.mesh);
+                const pos = animatedCards.indexOf(c);
+                if (pos > -1) animatedCards.splice(pos, 1);
+            });
+
+            // Check if we need to draw
+            if (briscaDeck.length > 0 || briscaTrump) {
+                briscaNeedToDraw = true;
+                log(`[SISTEMA] ¡Haz click en el mazo a la izquierda para robar tus cartas!`);
+                document.getElementById('hud-status').innerText = 'ROBAR CARTA (Haz click en el mazo)';
+            } else {
+                briscaRoundActive = false;
+                updateBriscaVisuals();
+
+                // Check End Game
+                if (briscaPlayerHand.filter(Boolean).length === 0 && briscaGemmaHand.filter(Boolean).length === 0) {
+                    endBriscaGame();
+                }
+            }
+        }, 1000);
+    }
+
+    function drawBriscaCards() {
+        if (!briscaNeedToDraw) return;
+        briscaNeedToDraw = false;
+        playSound('deal');
+        
+        if (briscaDeck.length > 0) {
+            briscaPlayerHand = briscaPlayerHand.map(c => c || briscaDeck.pop());
+            briscaGemmaHand = briscaGemmaHand.map(c => c || briscaDeck.pop());
+        } else if (briscaTrump) {
+            if (!briscaPlayerHand[0] || !briscaPlayerHand[1] || !briscaPlayerHand[2]) {
+                briscaPlayerHand = briscaPlayerHand.map(c => c || briscaTrump);
+                briscaTrump = null;
+            } else {
+                briscaGemmaHand = briscaGemmaHand.map(c => c || briscaTrump);
+                briscaTrump = null;
+            }
+        }
+
+        document.getElementById('hud-status').innerText = 'Juego Activo: BRISCA 3D';
+        log(`[SISTEMA] Has robado cartas del mazo.`);
+        
+        briscaRoundActive = false;
+        updateBriscaVisuals();
+
+        // Check End Game
+        if (briscaPlayerHand.filter(Boolean).length === 0 && briscaGemmaHand.filter(Boolean).length === 0) {
+            endBriscaGame();
+        }
+    }
+
+    function endBriscaGame() {
+        log(`[SISTEMA] Fin de la partida de Brisca.`);
+        log(`[SISTEMA] Puntuaciones finales: Tú: ${briscaPlayerPoints} PTS | Gemma-Bot: ${briscaGemmaPoints} PTS`);
+        
+        if (briscaPlayerPoints > briscaGemmaPoints) {
+            balance += briscaWager;
+            log(`[SISTEMA] ¡FELICIDADES! Has ganado la partida y obtienes +$${briscaWager} TK.`);
+            playSound('win');
+        } else if (briscaPlayerPoints < briscaGemmaPoints) {
+            balance -= currentBet;
+            log(`[SISTEMA] Derrota. Perdiste tu apuesta de $${currentBet} TK.`);
+            playSound('lose');
+        } else {
+            log(`[SISTEMA] Empate. Se devuelven las apuestas.`);
+        }
+        
+        document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+    }
+
+    // ── GAME 2: ASES Y REYES 3D (POKER WEBGL MULTIPLAYER WS) ──
+    let arPot = 0;
+    let arDiscardSelection = [];
+    let ws = null;
+    let mySeat = -1;
+    let wsPlayers = {};
+    let wsBets = {};
+    let wsFolds = {};
+    let wsPhase = "join";
+    let wsTurn = -1;
+    let wsYourCards = [];
+    let wsOpponentsCount = {};
+    let wsAllCards = {};
+    let prevPhase = "";
+
+    function getLocalSeat(seat) {
+        if (mySeat === -1) return seat;
+        return (seat - mySeat + 3) % 3 + 1;
+    }
+
+    function getCardFromIndex(index) {
+        const s = suits[Math.floor(index / 10)];
+        const r = briscaCardRanks[index % 10];
+        return { rank: r, val: briscaCardValues[r], suit: s, symbol: suitSymbols[s], label: briscaLabelNames[r] };
+    }
+
+    function connectPokerWS() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/poker`;
+        
+        log(`[WS] Conectando a sala multijugador...`);
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            log(`[WS] Conectado a la mesa de Poker.`);
+            ws.send(JSON.stringify({
+                action: "join",
+                wallet: userWallet || "0xAnonymous"
+            }));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'state') {
+                    handlePokerStateUpdate(data);
+                }
+            } catch (e) {
+                console.error("[WS] Error:", e);
+            }
+        };
+
+        ws.onclose = () => {
+            if (currentMode === 'baraja') {
+                log(`[WS] Conexión perdida. Reintentando en 3s...`);
+                setTimeout(connectPokerWS, 3000);
+            }
+        };
+
+        ws.onerror = (err) => {
+            console.error("[WS] Error:", err);
+        };
+    }
+
+    function handlePokerStateUpdate(data) {
+        wsPlayers = data.players || {};
+        arPot = data.pot || 0;
+        wsBets = data.bets || {};
+        wsFolds = data.folds || {};
+        wsPhase = data.phase || "join";
+        wsTurn = data.turn || -1;
+        wsYourCards = data.yourCards || [];
+        wsOpponentsCount = data.opponents || {};
+        wsAllCards = data.allCards || {};
+
+        mySeat = -1;
+        for (let s in wsPlayers) {
+            if (wsPlayers[s] === userWallet) {
+                mySeat = parseInt(s);
+                break;
+            }
+        }
+
+        if (wsPhase !== prevPhase) {
+            if (wsPhase === "discard" || wsPhase === "betting") {
+                playSound('deal');
+            } else if (wsPhase === "showdown") {
+                playSound('win');
+                setTimeout(revealShowdownWinner, 500);
+            }
+            prevPhase = wsPhase;
+        }
+
+        // Update HUD
+        let playersTxt = "";
+        for (let s = 1; s <= 3; s++) {
+            const wallet = wsPlayers[s];
+            if (wallet) {
+                const isTurn = wsTurn === s ? "👉 " : "";
+                const isFolded = wsFolds[s] ? " (Retirado)" : "";
+                const bet = wsBets[s] || 0;
+                const shortWallet = wallet.substring(0, 6) + "..." + wallet.substring(wallet.length - 4);
+                playersTxt += `[Asiento ${s}] ${isTurn}${shortWallet} $${bet}${isFolded} | `;
+            } else {
+                playersTxt += `[Asiento ${s}] Libre | `;
+            }
+        }
+        document.getElementById('hud-opponent-panel').style.display = 'flex';
+        document.getElementById('hud-opponent-panel').innerText = playersTxt;
+
+        document.getElementById('hud-wager-panel').innerText = `💰 Pozo: $${arPot} DXT`;
+
+        const statusHUD = document.getElementById('hud-status');
+        if (wsPhase === "join") {
+            const count = Object.keys(wsPlayers).length;
+            statusHUD.innerText = `SALA DE ESPERA (${count}/3 Jugadores)`;
+        } else if (wsPhase === "discard") {
+            statusHUD.innerText = (wsTurn === mySeat) ? "TU TURNO: SELECCIONA Y DESCARTA" : `TURNO DE ASIENTO ${wsTurn} (Descarte)`;
+        } else if (wsPhase === "betting") {
+            statusHUD.innerText = (wsTurn === mySeat) ? "TU TURNO: APUESTA O PASA" : `TURNO DE ASIENTO ${wsTurn} (Apuestas)`;
+        } else if (wsPhase === "showdown") {
+            statusHUD.innerText = "MUESTRA DE CARTAS (Showdown)";
+        }
+
+        updateBarajaVisualsMultiplayer();
+        enableBarajaButtons();
+    }
+
+    function loadBarajaLayout() {
+        document.getElementById('hud-opponent-panel').style.display = 'none';
+        document.getElementById('hud-wager-panel').innerText = `💰 Pozo: $${arPot}`;
+        
+        // Show Poker Chips representation in 3D center
+        const potMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 0.8 });
+        const chipGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.03, 16);
+        for (let i = 0; i < 5; i++) {
+            const chip = new THREE.Mesh(chipGeo, potMat);
+            chip.position.set((Math.random() - 0.5) * 0.2, 0.01 + i * 0.03, (Math.random() - 0.5) * 0.2);
+            gameGroup.add(chip);
+        }
+
+        connectPokerWS();
+    }
+
+    function getArHandScore(h) {
+        let counts = {};
+        h.forEach(c => {
+            counts[c.rank] = (counts[c.rank] || 0) + 1;
+        });
+
+        let pairs = [];
+        let tercias = [];
+        let pokers = [];
+
+        for (let r in counts) {
+            let cnt = counts[r];
+            let rankNum = parseInt(r);
+            let rankName = briscaLabelNames[rankNum] || String(rankNum);
+            
+            if (cnt === 4) {
+                pokers.push({ rank: rankNum, name: rankName });
+            } else if (cnt === 3) {
+                tercias.push({ rank: rankNum, name: rankName });
+            } else if (cnt === 2) {
+                pairs.push({ rank: rankNum, name: rankName });
+            }
+        }
+
+        let score = 0;
+        let label = 'Carta Alta';
+
+        if (pokers.length > 0) {
+            pokers.sort((a,b) => b.rank - a.rank);
+            score = 500 + pokers[0].rank;
+            label = `Póker de ${pokers[0].name}s`;
+        } else if (tercias.length > 0) {
+            tercias.sort((a,b) => b.rank - a.rank);
+            score = 300 + tercias[0].rank;
+            label = `Tercia de ${tercias[0].name}s`;
+        } else if (pairs.length > 1) {
+            pairs.sort((a,b) => b.rank - a.rank);
+            score = 200 + pairs[0].rank * 10 + pairs[1].rank;
+            label = `Doble Par de ${pairs[0].name} y ${pairs[1].name}`;
+        } else if (pairs.length === 1) {
+            score = 100 + pairs[0].rank;
+            label = `Par de ${pairs[0].name}s`;
+        } else {
+            let sorted = [...h].sort((a,b) => b.rank - a.rank);
+            score = sorted[0].rank;
+            label = `Carta Alta ${sorted[0].label}`;
+        }
+
+        return { score: score, label: label };
+    }
+
+    function getArHandLabel(h) {
+        return getArHandScore(h).label;
+    }
+
+    function updateBarajaVisualsMultiplayer() {
+        // Clear existing cards
+        animatedCards = animatedCards.filter(c => {
+            if (c.mesh.userData.type && c.mesh.userData.type.startsWith('ar-')) {
+                gameGroup.remove(c.mesh);
+                return false;
+            }
+            return true;
+        });
+
+        if (wsPhase === "join") return;
+
+        for (let s = 1; s <= 3; s++) {
+            if (!wsPlayers[s]) continue;
+
+            const localSeat = getLocalSeat(s);
+            const isMe = (s === mySeat);
+            const folded = wsFolds[s];
+
+            if (folded && wsPhase !== "showdown") {
+                continue;
+            }
+
+            let cardsIndices = [];
+            let faceUp = false;
+
+            if (isMe) {
+                cardsIndices = wsYourCards;
+                faceUp = true;
+            } else {
+                if (wsPhase === "showdown") {
+                    cardsIndices = wsAllCards[s] || [];
+                    faceUp = true;
+                } else {
+                    const count = wsOpponentsCount[s] || 8;
+                    cardsIndices = Array(count).fill(-1);
+                    faceUp = false;
+                }
+            }
+
+            cardsIndices.forEach((cardIdx, idx) => {
+                let mesh;
+                if (faceUp && cardIdx !== -1) {
+                    const card = getCardFromIndex(cardIdx);
+                    mesh = createCardMesh(card.label, card.suit, card.symbol, card.val);
+                } else {
+                    const backTex = createCardTexture('', '', '', 0, true);
+                    mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.02), new THREE.MeshStandardMaterial({ map: backTex }));
+                }
+
+                mesh.position.set(-0.8, 0.4, 0);
+                mesh.rotation.set(Math.PI / 2, 0, 0);
+
+                if (isMe) {
+                    mesh.userData = { type: 'ar-player-card', index: idx };
+                } else {
+                    mesh.userData = { type: `ar-opponent-card-${s}` };
+                }
+                gameGroup.add(mesh);
+
+                let targetPos, targetRot;
+                if (localSeat === 1) {
+                    const isSelected = arDiscardSelection.includes(idx);
+                    const targetY = isSelected ? 0.35 : 0.2;
+                    targetPos = new THREE.Vector3(-1.25 + idx * 0.35, targetY, 1.2);
+                    targetRot = new THREE.Vector3(-Math.PI / 6, 0, 0);
+                } else if (localSeat === 2) {
+                    targetPos = new THREE.Vector3(-1.4 + idx * 0.25, 0.2, -1.0);
+                    targetRot = new THREE.Vector3(Math.PI / 6, Math.PI / 6, 0);
+                } else if (localSeat === 3) {
+                    targetPos = new THREE.Vector3(0.15 + idx * 0.25, 0.2, -1.0);
+                    targetRot = new THREE.Vector3(Math.PI / 6, -Math.PI / 6, 0);
+                }
+
+                animatedCards.push({
+                    mesh: mesh,
+                    targetPos: targetPos,
+                    targetRot: targetRot,
+                    lerpSpeed: 0.08
+                });
+            });
+        }
+    }
+
+    function toggleDiscardCard(idx) {
+        if (wsPhase !== "discard" || wsTurn !== mySeat) return;
+        
+        const pos = arDiscardSelection.indexOf(idx);
+        if (pos === -1) {
+            arDiscardSelection.push(idx);
+        } else {
+            arDiscardSelection.splice(pos, 1);
+        }
+        playSound('flip');
+        updateBarajaVisualsMultiplayer();
+        enableBarajaButtons();
+    }
+
+    function enableBarajaButtons() {
+        const btnMinus = document.getElementById('btn-bet-minus');
+        const btnPlus = document.getElementById('btn-bet-plus');
+        const btnMain = document.getElementById('btn-main-action');
+
+        btnMinus.onclick = null;
+        btnPlus.onclick = null;
+        btnMain.onclick = null;
+
+        if (currentMode === 'slots') {
+            btnMinus.innerText = "Cambiar Tema";
+            btnMinus.disabled = slotsSpinning || slotsBonusActive;
+            btnMinus.onclick = () => {
+                cycleSlotsTheme();
+            };
+
+            btnPlus.innerText = `Líneas: [ ${activePaylines} ]`;
+            btnPlus.disabled = slotsSpinning || slotsBonusActive;
+            btnPlus.onclick = () => {
+                cycleSlotsPaylines();
+            };
+
+            const totalWager = currentBet * activePaylines;
+            btnMain.innerText = freeSpinsLeft > 0 ? `Giro Gratis (${freeSpinsLeft})` : `Girar Rodillos ($${totalWager})`;
+            btnMain.disabled = slotsSpinning || slotsBonusActive || (balance < totalWager && freeSpinsLeft === 0);
+            btnMain.onclick = () => {
+                spinSlots();
+            };
+        } else if (currentMode === 'baraja') {
+            if (wsPhase === "join") {
+                btnMinus.innerText = "Salir de Baraja";
+                btnMinus.disabled = false;
+                btnMinus.onclick = () => {
+                    switchGame('brisca');
+                };
+
+                const playerCount = Object.keys(wsPlayers).length;
+                btnPlus.innerText = "Apuesta -";
+                btnPlus.disabled = true;
+
+                btnMain.innerText = `Iniciar Partida (${playerCount}/3)`;
+                btnMain.disabled = (playerCount < 2);
+                btnMain.onclick = () => {
+                    ws.send(JSON.stringify({ action: "start" }));
+                };
+            } else if (wsPhase === "discard") {
+                if (wsTurn === mySeat) {
+                    btnMinus.innerText = "Descartar";
+                    btnMinus.disabled = false;
+                    btnMinus.onclick = () => {
+                        ws.send(JSON.stringify({
+                            action: "discard",
+                            cards: arDiscardSelection
+                        }));
+                        arDiscardSelection = [];
+                    };
+
+                    btnPlus.innerText = "Mantener";
+                    btnPlus.disabled = false;
+                    btnPlus.onclick = () => {
+                        ws.send(JSON.stringify({
+                            action: "discard",
+                            cards: []
+                        }));
+                        arDiscardSelection = [];
+                    };
+
+                    btnMain.innerText = "Selecciona cartas en mesa";
+                    btnMain.disabled = true;
+                } else {
+                    btnMinus.innerText = "Descartar";
+                    btnMinus.disabled = true;
+                    btnPlus.innerText = "Mantener";
+                    btnPlus.disabled = true;
+                    btnMain.innerText = `Turno Asiento ${wsTurn}...`;
+                    btnMain.disabled = true;
+                }
+            } else if (wsPhase === "betting") {
+                if (wsTurn === mySeat) {
+                    const maxBet = Math.max(...Object.values(wsBets));
+                    const myCurrentBet = wsBets[mySeat] || 0;
+                    const callDiff = maxBet - myCurrentBet;
+
+                    btnMinus.innerText = "Retirarse";
+                    btnMinus.disabled = false;
+                    btnMinus.onclick = () => {
+                        ws.send(JSON.stringify({
+                            action: "bet",
+                            bet: -1
+                        }));
+                    };
+
+                    btnPlus.innerText = "Apostar +10";
+                    btnPlus.disabled = (balance < callDiff + 10);
+                    btnPlus.onclick = () => {
+                        const totalBet = callDiff + 10;
+                        balance -= totalBet;
+                        ws.send(JSON.stringify({
+                            action: "bet",
+                            bet: totalBet
+                        }));
+                    };
+
+                    btnMain.innerText = callDiff === 0 ? "Pasar" : `Pagar $${callDiff}`;
+                    btnMain.disabled = (balance < callDiff);
+                    btnMain.onclick = () => {
+                        balance -= callDiff;
+                        ws.send(JSON.stringify({
+                            action: "bet",
+                            bet: callDiff
+                        }));
+                    };
+                } else {
+                    btnMinus.innerText = "Retirarse";
+                    btnMinus.disabled = true;
+                    btnPlus.innerText = "Apostar";
+                    btnPlus.disabled = true;
+                    btnMain.innerText = `Turno Asiento ${wsTurn}...`;
+                    btnMain.disabled = true;
+                }
+            } else if (wsPhase === "showdown") {
+                btnMinus.innerText = "Salir de Baraja";
+                btnMinus.disabled = false;
+                btnMinus.onclick = () => {
+                    switchGame('brisca');
+                };
+
+                btnPlus.innerText = "Reiniciar Sala";
+                btnPlus.disabled = false;
+                btnPlus.onclick = () => {
+                    ws.send(JSON.stringify({ action: "reset" }));
+                };
+
+                btnMain.innerText = "Nueva Ronda";
+                btnMain.disabled = false;
+                btnMain.onclick = () => {
+                    ws.send(JSON.stringify({ action: "reset" }));
+                };
+            }
+        } else {
+            // Default fallback
+            btnMinus.innerText = "Apuesta -10";
+            btnMinus.disabled = false;
+            btnMinus.onclick = () => adjustBet(-10);
+
+            btnPlus.innerText = "Apuesta +10";
+            btnPlus.disabled = false;
+            btnPlus.onclick = () => adjustBet(10);
+
+            let actionText = "Jugar Ronda";
+            if (currentMode === 'brisca') actionText = "Reiniciar Brisca";
+            else if (currentMode === 'sudoku') actionText = "Nuevo Sudoku";
+            else if (currentMode === 'chess') actionText = "Nuevo Ajedrez";
+            else if (currentMode === 'bingo') actionText = "Nuevo Bingo";
+
+            btnMain.innerText = `${actionText} ($${currentBet})`;
+            btnMain.disabled = false;
+            btnMain.onclick = triggerMainGameAction;
+        }
+    }
+
+    function revealShowdownWinner() {
+        log(`[SISTEMA] --- REVELACIÓN DE CARTAS ---`);
+        let maxScore = -1;
+        let winners = [];
+
+        for (let s = 1; s <= 3; s++) {
+            if (!wsPlayers[s]) continue;
+            if (wsFolds[s]) {
+                log(`[SISTEMA] Asiento ${s} (${wsPlayers[s].substring(0, 6)}...) se retiró.`);
+                continue;
+            }
+
+            const cardsIdx = wsAllCards[s] || [];
+            if (cardsIdx.length === 0) continue;
+            const cardsObjects = cardsIdx.map(getCardFromIndex);
+            const scoreObj = getArHandScore(cardsObjects);
+            log(`[SISTEMA] Asiento ${s} (${wsPlayers[s].substring(0, 6)}...): ${scoreObj.label}`);
+
+            if (scoreObj.score > maxScore) {
+                maxScore = scoreObj.score;
+                winners = [s];
+            } else if (scoreObj.score === maxScore) {
+                winners.push(s);
+            }
+        }
+
+        if (winners.length > 0) {
+            const winWallets = winners.map(wSeat => {
+                const w = wsPlayers[wSeat];
+                return w.substring(0, 6) + "...";
+            });
+            const share = Math.floor(arPot / winners.length);
+            log(`[SISTEMA] GANADOR(ES): ${winWallets.join(' y ')} se llevan $${share} DXT.`);
+            
+            if (winners.includes(mySeat)) {
+                playSound('win');
+                balance += share;
+                document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+            } else {
+                playSound('lose');
+            }
+        }
+    }
+
+    // ── GAME 3: TRAGAMONEDAS 3D VR (WEBGL SLOTS MULTI-PAYLINE & THEMES) ──
+    const slotThemes = {
+        fruits: {
+            name: "Fruit Neon Classics",
+            symbols: ['🍒', '🍋', '🍇', '🍉', '🔔', '7️⃣', '⭐'],
+            wild: '⭐',
+            scatter: '🔔',
+            bonus: '7️⃣',
+            glowColor: 0xff3cac,
+            cabinetColor: 0x151528
+        },
+        space: {
+            name: "Dexter Space Odyssey",
+            symbols: ['🚀', '🪐', '👽', '☄️', '🛸', '⭐', '👾'],
+            wild: '⭐',
+            scatter: '🛸',
+            bonus: '👾',
+            glowColor: 0x00ffe5,
+            cabinetColor: 0x080816
+        },
+        quetzal: {
+            name: "Ancient Aztec Gods",
+            symbols: ['👑', '☀️', '🐍', '🏛️', '🪙', '💎', '🗿'],
+            wild: '💎',
+            scatter: '🏛️',
+            bonus: '🗿',
+            glowColor: 0xffd700,
+            cabinetColor: 0x2c1a0e
+        }
+    };
+
+    function createReelTexture(themeKey) {
+        const theme = slotThemes[themeKey];
+        const symbolsList = theme.symbols;
+        const strip = [];
+        for (let i = 0; i < 12; i++) {
+            strip.push(symbolsList[i % symbolsList.length]);
+        }
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 1024;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = '#0a0a14';
+        ctx.fillRect(0, 0, 128, 1024);
+        
+        let hexColor = '#' + theme.glowColor.toString(16).padStart(6, '0');
+        ctx.strokeStyle = hexColor;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, 124, 1020);
+
+        ctx.font = '72px Outfit';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        for (let i = 0; i < 12; i++) {
+            ctx.fillText(strip[i], 64, 42 + i * 85);
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.userData = { strip: strip };
+        return texture;
+    }
+
+    function loadSlotsLayout() {
+        document.getElementById('hud-opponent-panel').style.display = 'none';
+        
+        const theme = slotThemes[currentThemeKey];
+        document.getElementById('hud-wager-panel').innerText = `💰 Jackpot: 500 DXT | Tema: ${theme.name}`;
+
+        // 1. Render Slots Cabinet structure
+        const cabinetGeo = new THREE.BoxGeometry(1.6, 2.0, 0.8);
+        const cabinetMat = new THREE.MeshStandardMaterial({ color: theme.cabinetColor, roughness: 0.4 });
+        slotsCabinet = new THREE.Mesh(cabinetGeo, cabinetMat);
+        slotsCabinet.position.set(0, 1.0, -0.4);
+        gameGroup.add(slotsCabinet);
+
+        // Glowing border of Slots (flat plane positioned slightly behind the cabinet front face)
+        const glowGeo = new THREE.PlaneGeometry(1.68, 2.08);
+        const glowMat = new THREE.MeshBasicMaterial({ color: theme.glowColor, side: THREE.DoubleSide });
+        const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+        glowMesh.position.set(0, 1.0, -0.01);
+        gameGroup.add(glowMesh);
+
+        // Interactive Lever
+        const leverBaseGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8);
+        const leverBaseMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8 });
+        const lever = new THREE.Mesh(leverBaseGeo, leverBaseMat);
+        lever.position.set(0.95, 1.0, 0);
+        lever.rotation.z = Math.PI / 4;
+        lever.userData = { type: 'slots-lever' };
+        gameGroup.add(lever);
+
+        // Lever knob
+        const knobGeo = new THREE.SphereGeometry(0.12, 16, 16);
+        const knobMat = new THREE.MeshStandardMaterial({ color: theme.glowColor, roughness: 0.1 });
+        const knob = new THREE.Mesh(knobGeo, knobMat);
+        knob.position.set(1.1, 1.15, 0);
+        gameGroup.add(knob);
+
+        // 2. Render 3 Cylinder Reels
+        reelCylinders = [];
+        const reelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.3, 32);
+
+        for (let i = 0; i < 3; i++) {
+            const tex = createReelTexture(currentThemeKey);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            
+            const reelMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.2 });
+            const cylinder = new THREE.Mesh(reelGeo, reelMat);
+            cylinder.rotation.z = Math.PI / 2;
+            cylinder.position.set(-0.4 + i * 0.4, 1.0, 0.3);
+            gameGroup.add(cylinder);
+            reelCylinders.push(cylinder);
+        }
+
+        log(`[SLOTS] Tragamonedas '${theme.name}' cargada. Líneas activas: ${activePaylines}.`);
+        enableBarajaButtons();
+    }
+
+    function cycleSlotsPaylines() {
+        if (slotsSpinning || slotsBonusActive) return;
+        if (activePaylines === 1) activePaylines = 3;
+        else if (activePaylines === 3) activePaylines = 5;
+        else activePaylines = 1;
+
+        playSound('flip');
+        enableBarajaButtons();
+        log(`[SLOTS] Líneas de pago activas: ${activePaylines}. Apuesta total: $${currentBet * activePaylines} DXT`);
+    }
+
+    function cycleSlotsTheme() {
+        if (slotsSpinning || slotsBonusActive) return;
+        const currentIdx = themesList.indexOf(currentThemeKey);
+        currentThemeKey = themesList[(currentIdx + 1) % themesList.length];
+        
+        playSound('deal');
+        log(`[SLOTS] Cambiando tema a: ${slotThemes[currentThemeKey].name}`);
+        
+        clearGameScene();
+        loadSlotsLayout();
+        enableBarajaButtons();
+    }
+
+    function spinSlots() {
+        if (slotsSpinning || slotsBonusActive) return;
+        const totalBet = currentBet * activePaylines;
+        
+        if (freeSpinsLeft > 0) {
+            freeSpinsLeft--;
+            log(`[SLOTS] ¡Giro Gratis! Quedan: ${freeSpinsLeft} giros. (Ganancias x2)`);
+        } else {
+            if (balance < totalBet) {
+                log(`[SISTEMA] Saldo insuficiente.`);
+                return;
+            }
+            balance -= totalBet;
+            document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+            log(`[SLOTS] ¡Giro iniciado! Apuesta: $${totalBet} TK`);
+        }
+
+        // Clear winning payline laser meshes
+        animatedCards = animatedCards.filter(c => {
+            if (c.mesh.userData.type === 'slots-laser-line') {
+                gameGroup.remove(c.mesh);
+                return false;
+            }
+            return true;
+        });
+
+        slotsSpinning = true;
+        let finalIndexes = [];
+
+        for (let i = 0; i < 3; i++) {
+            const symIndex = Math.floor(Math.random() * 12);
+            finalIndexes.push(symIndex);
+
+            reelTargetRotations[i] = (symIndex * (Math.PI / 6)) + (Math.PI * 6);
+            reelSpeeds[i] = 0.4 + i * 0.1;
+        }
+
+        let count = 0;
+        const spinTick = setInterval(() => {
+            playSound('spin');
+            count++;
+            if (count > 15) clearInterval(spinTick);
+        }, 100);
+
+        setTimeout(() => {
+            log("[DEBUG] setTimeout callback ejecutado");
+            slotsSpinning = false;
+            evaluateSlotsResultMultiLine(finalIndexes);
+        }, 2200);
+    }
+
+    function draw3DPaylineLaser(lineIdx, hexColor) {
+        const mat = new THREE.MeshBasicMaterial({ color: hexColor });
+        let laser = null;
+
+        if (lineIdx === 1) { // Mid
+            laser = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 8), mat);
+            laser.rotation.z = Math.PI / 2;
+            laser.position.set(0, 1.0, 0.4);
+        } else if (lineIdx === 2) { // Top
+            laser = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 8), mat);
+            laser.rotation.z = Math.PI / 2;
+            laser.position.set(0, 1.15, 0.4);
+        } else if (lineIdx === 3) { // Bot
+            laser = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.2, 8), mat);
+            laser.rotation.z = Math.PI / 2;
+            laser.position.set(0, 0.85, 0.4);
+        } else if (lineIdx === 4) { // Diag 1 (Top-Left to Bottom-Right)
+            laser = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.3, 8), mat);
+            laser.rotation.z = Math.PI / 6;
+            laser.position.set(0, 1.0, 0.4);
+        } else if (lineIdx === 5) { // Diag 2 (Bottom-Left to Top-Right)
+            laser = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.3, 8), mat);
+            laser.rotation.z = -Math.PI / 6;
+            laser.position.set(0, 1.0, 0.4);
+        }
+
+        if (laser) {
+            laser.userData = { type: 'slots-laser-line' };
+            gameGroup.add(laser);
+        }
+    }
+
+    function evaluateSlotsResultMultiLine(indexes) {
+        log(`[DEBUG] evaluateSlotsResultMultiLine llamado con: ${JSON.stringify(indexes)}`);
+        if (currentMode !== 'slots' || !reelCylinders || reelCylinders.length === 0) {
+            log(`[SLOTS] Giro cancelado o juego cambiado.`);
+            return;
+        }
+        const theme = slotThemes[currentThemeKey];
+        const tex = reelCylinders[0].material.map;
+        const strip = tex.userData.strip;
+
+        const r1 = [strip[(indexes[0] - 1 + 12) % 12], strip[indexes[0]], strip[(indexes[0] + 1) % 12]];
+        const r2 = [strip[(indexes[1] - 1 + 12) % 12], strip[indexes[1]], strip[(indexes[1] + 1) % 12]];
+        const r3 = [strip[(indexes[2] - 1 + 12) % 12], strip[indexes[2]], strip[(indexes[2] + 1) % 12]];
+
+        const grid = [
+            [r1[0], r2[0], r3[0]], // Top Row
+            [r1[1], r2[1], r3[1]], // Mid Row
+            [r1[2], r2[2], r3[2]]  // Bot Row
+        ];
+
+        log(`[SLOTS] --- RESULTADOS DE GIRO ---`);
+        log(`[SLOTS]  (Arriba):  [ ${grid[0].join(' | ')} ]`);
+        log(`[SLOTS]  (Centro):  [ ${grid[1].join(' | ')} ]`);
+        log(`[SLOTS]  (Abajo):   [ ${grid[2].join(' | ')} ]`);
+
+        const paylines = {
+            1: { line: [grid[1][0], grid[1][1], grid[1][2]], name: "Línea 1 (Centro)", color: 0x00ffe5 },
+            2: { line: [grid[0][0], grid[0][1], grid[0][2]], name: "Línea 2 (Arriba)", color: 0xffd700 },
+            3: { line: [grid[2][0], grid[2][1], grid[2][2]], name: "Línea 3 (Abajo)", color: 0xff3cac },
+            4: { line: [grid[0][0], grid[1][1], grid[2][2]], name: "Línea 4 (Diag 📉)", color: 0xb06fff },
+            5: { line: [grid[2][0], grid[1][1], grid[0][2]], name: "Línea 5 (Diag 📈)", color: 0xa6e3a1 }
+        };
+
+        let totalWin = 0;
+        let bonusTriggered = false;
+
+        for (let l = 1; l <= activePaylines; l++) {
+            const p = paylines[l];
+            const evalResult = evaluatePayline(p.line, theme);
+            if (evalResult.win > 0) {
+                const multiplier = freeSpinsLeft > 0 ? 2 : 1;
+                const winAmount = evalResult.win * currentBet * multiplier;
+                totalWin += winAmount;
+                log(`[SLOTS] ¡GANADORA! ${p.name}: ${evalResult.label} -> +$${winAmount} DXT`);
+                
+                draw3DPaylineLaser(l, p.color);
+
+                if (p.line.every(s => s === theme.bonus || s === theme.wild)) {
+                    bonusTriggered = true;
+                }
+            }
+        }
+
+        let scatters = 0;
+        grid.forEach(row => {
+            row.forEach(s => { if (s === theme.scatter) scatters++; });
+        });
+
+        if (scatters >= 3) {
+            freeSpinsLeft += 10;
+            log(`[SLOTS] ¡¡¡LOGRASTE ${scatters} SCATTERS (${theme.scatter})!!! ¡GANAS 10 GIROS GRATIS!`);
+            playSound('win');
+        }
+
+        if (totalWin > 0) {
+            balance += totalWin;
+            playSound('win');
+            log(`[SLOTS] Recompensa total del giro: +$${totalWin} TK.`);
+        } else {
+            playSound('lose');
+        }
+
+        document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+        enableBarajaButtons();
+
+        if (bonusTriggered) {
+            setTimeout(startSlotsBonusGame, 2000);
+        }
+    }
+
+    function evaluatePayline(line, theme) {
+        const wild = theme.wild;
+        const counts = {};
+        line.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
+
+        const wildCount = counts[wild] || 0;
+        const nonWilds = line.filter(s => s !== wild);
+
+        if (nonWilds.length === 0) {
+            return { win: 5, label: "Triple Comodín (WILD!)" };
+        }
+
+        const uniqueNonWilds = [...new Set(nonWilds)];
+        if (uniqueNonWilds.length === 1) {
+            const symbol = uniqueNonWilds[0];
+            let baseWin = 3;
+            if (symbol === theme.bonus) baseWin = 15;
+            return { win: baseWin, label: `Triple ${symbol}` };
+        }
+
+        if (uniqueNonWilds.length === 2 && wildCount > 0) {
+            let matchSymbol = uniqueNonWilds[0];
+            if ((counts[uniqueNonWilds[1]] || 0) > (counts[uniqueNonWilds[0]] || 0)) {
+                matchSymbol = uniqueNonWilds[1];
+            }
+            let baseWin = 3;
+            if (matchSymbol === theme.bonus) baseWin = 15;
+            return { win: baseWin, label: `Triple ${matchSymbol} (con WILD)` };
+        }
+
+        if (uniqueNonWilds.length === 2) {
+            const matchSymbol = (counts[uniqueNonWilds[0]] || 0) > (counts[uniqueNonWilds[1]] || 0) ? uniqueNonWilds[0] : uniqueNonWilds[1];
+            return { win: 1, label: `Pareja de ${matchSymbol}` };
+        }
+
+        return { win: 0, label: "" };
+    }
+
+    function startSlotsBonusGame() {
+        slotsBonusActive = true;
+        clearGameScene();
+        log(`[SLOTS] ¡¡¡MINI-JUEGO DE BONUS ACTIVADO!!!`);
+        document.getElementById('hud-status').innerText = "¡BONUS CHEST! ELIGE UN COFRE";
+
+        bonusChestMeshes = [];
+
+        const chestGeo = new THREE.BoxGeometry(0.5, 0.4, 0.4);
+        const lidGeo = new THREE.BoxGeometry(0.52, 0.1, 0.42);
+        
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.8 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
+
+        for (let i = -1; i <= 1; i++) {
+            const chestGroup = new THREE.Group();
+            
+            const base = new THREE.Mesh(chestGeo, woodMat);
+            base.position.y = 0.2;
+            chestGroup.add(base);
+
+            const lid = new THREE.Mesh(lidGeo, woodMat);
+            lid.position.y = 0.45;
+            chestGroup.add(lid);
+
+            const band = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.42, 0.42), goldMat);
+            band.position.set(0, 0.22, 0);
+            chestGroup.add(band);
+
+            chestGroup.position.set(i * 1.2, 0.05, 0);
+            chestGroup.userData = { type: 'slots-bonus-chest', index: i + 1 };
+            
+            gameGroup.add(chestGroup);
+            bonusChestMeshes.push(chestGroup);
+        }
+
+        playSound('win');
+    }
+
+    function openBonusChest(idx, chestGroup) {
+        if (!slotsBonusActive) return;
+        slotsBonusActive = false;
+
+        playSound('win');
+
+        const lid = chestGroup.children[1];
+        animatedCards.push({
+            mesh: lid,
+            targetPos: new THREE.Vector3(chestGroup.position.x, 0.7, chestGroup.position.z - 0.15),
+            targetRot: new THREE.Vector3(-Math.PI / 4, 0, 0),
+            lerpSpeed: 0.1
+        });
+
+        const rewards = [50, 100, 200];
+        const reward = rewards[Math.floor(Math.random() * rewards.length)] * (currentBet / 10);
+        balance += reward;
+        document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+
+        log(`[BONUS] ¡Abriste el cofre ${idx}! Ganaste +$${reward} DXT.`);
+        document.getElementById('hud-status').innerText = `¡GANASTE +$${reward} DXT!`;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#020208'; ctx.fillRect(0, 0, 256, 64);
+        ctx.fillStyle = '#ffd700'; ctx.font = 'bold 36px Outfit';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`+$${reward} DXT`, 128, 32);
+
+        const textGeo = new THREE.PlaneGeometry(0.8, 0.2);
+        const textMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true });
+        const textMesh = new THREE.Mesh(textGeo, textMat);
+        textMesh.position.set(chestGroup.position.x, 1.2, chestGroup.position.z);
+        gameGroup.add(textMesh);
+
+        animatedCards.push({
+            mesh: textMesh,
+            targetPos: new THREE.Vector3(chestGroup.position.x, 1.6, chestGroup.position.z),
+            targetRot: new THREE.Vector3(0, 0, 0),
+            lerpSpeed: 0.05
+        });
+
+        setTimeout(() => {
+            clearGameScene();
+            loadSlotsLayout();
+        }, 3000);
+    }
+
+    // ── GAME 4: SUDOKU 3D VR (WEBGL GRID) ──
+    function createTextTexture(text, isFixed, isSelected) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = isSelected ? '#1a3a4a' : '#080814';
+        ctx.fillRect(0, 0, 128, 128);
+
+        ctx.strokeStyle = '#00ffe5';
+        ctx.lineWidth = isSelected ? 8 : 2;
+        ctx.strokeRect(4, 4, 120, 120);
+
+        if (text !== '0' && text !== '') {
+            ctx.fillStyle = isFixed ? '#b06fff' : '#ffffff';
+            ctx.font = 'bold 72px Outfit';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 64, 64);
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    function loadSudokuLayout() {
+        document.getElementById('hud-opponent-panel').style.display = 'none';
+        document.getElementById('hud-wager-panel').innerText = `🧩 Dificultad: Normal`;
+
+        // Mock board template
+        const template = [
+            5, 3, 0, 0, 7, 0, 0, 0, 0,
+            6, 0, 0, 1, 9, 5, 0, 0, 0,
+            0, 9, 8, 0, 0, 0, 0, 6, 0,
+            8, 0, 0, 0, 6, 0, 0, 0, 3,
+            4, 0, 0, 8, 0, 3, 0, 0, 1,
+            7, 0, 0, 0, 2, 0, 0, 0, 6,
+            0, 6, 0, 0, 0, 0, 2, 8, 0,
+            0, 0, 0, 4, 1, 9, 0, 0, 5,
+            0, 0, 0, 0, 8, 0, 0, 7, 9
+        ];
+        sudokuBoard = [...template];
+        sudokuSolution = [
+            5, 3, 4, 6, 7, 8, 9, 1, 2,
+            6, 7, 2, 1, 9, 5, 3, 4, 8,
+            1, 9, 8, 3, 4, 2, 5, 6, 7,
+            8, 5, 9, 7, 6, 1, 4, 2, 3,
+            4, 2, 6, 8, 5, 3, 7, 9, 1,
+            7, 1, 3, 9, 2, 4, 8, 5, 6,
+            9, 6, 5, 3, 7, 2, 8, 4, 1,
+            2, 8, 7, 4, 1, 9, 6, 3, 5,
+            3, 4, 1, 2, 8, 6, 5, 7, 9
+        ];
+
+        sudokuCellPlanes = [];
+        sudokuSelectedCellIdx = -1;
+
+        // Render Sudoku board flat on the table
+        const cellSize = 0.28;
+        const totalSize = cellSize * 9;
+
+        const boardPlateGeo = new THREE.BoxGeometry(totalSize + 0.1, 0.02, totalSize + 0.1);
+        const boardPlateMat = new THREE.MeshStandardMaterial({ color: 0x00ffe5, roughness: 0.8 });
+        const plate = new THREE.Mesh(boardPlateGeo, boardPlateMat);
+        plate.position.y = 0.005;
+        gameGroup.add(plate);
+
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const idx = r * 9 + c;
+                const isFixed = template[idx] !== 0;
+                
+                const tex = createTextTexture(String(template[idx]), isFixed, false);
+                const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.2 });
+                const cellMesh = new THREE.Mesh(new THREE.PlaneGeometry(cellSize - 0.02, cellSize - 0.02), mat);
+                
+                // Position grid centered
+                const x = -((totalSize / 2) - (cellSize / 2)) + (c * cellSize);
+                const z = -((totalSize / 2) - (cellSize / 2)) + (r * cellSize);
+                
+                cellMesh.rotation.x = -Math.PI / 2;
+                cellMesh.position.set(x, 0.02, z);
+                cellMesh.userData = { type: 'sudoku-cell', index: idx, isFixed: isFixed };
+                
+                gameGroup.add(cellMesh);
+                sudokuCellPlanes.push(cellMesh);
+            }
+        }
+
+        log(`[SUDOKU] Tablero 3D VR listo. Haz clic en una casilla vacía en la mesa y pulsa números (1-9) en tu teclado.`);
+    }
+
+    function selectSudokuCell(idx) {
+        if (sudokuCellPlanes[idx].userData.isFixed) {
+            sudokuSelectedCellIdx = -1;
+            return;
+        }
+
+        playSound('deal');
+        
+        // Remove selection highlight from previous cell
+        if (sudokuSelectedCellIdx !== -1) {
+            const oldIdx = sudokuSelectedCellIdx;
+            const oldMesh = sudokuCellPlanes[oldIdx];
+            const oldVal = sudokuBoard[oldIdx];
+            oldMesh.material.map = createTextTexture(String(oldVal), false, false);
+        }
+
+        sudokuSelectedCellIdx = idx;
+        const mesh = sudokuCellPlanes[idx];
+        const val = sudokuBoard[idx];
+        mesh.material.map = createTextTexture(String(val), false, true);
+
+        log(`[SUDOKU] Casilla seleccionada: Fila ${Math.floor(idx / 9) + 1}, Columna ${(idx % 9) + 1}`);
+    }
+
+    function inputSudokuNumber(num) {
+        if (sudokuSelectedCellIdx === -1) return;
+        
+        const idx = sudokuSelectedCellIdx;
+        const mesh = sudokuCellPlanes[idx];
+        
+        sudokuBoard[idx] = num;
+        mesh.material.map = createTextTexture(num === 0 ? '' : String(num), false, true);
+        
+        playSound('flip');
+        if (num === 0) {
+            log(`[SUDOKU] Casilla vaciada.`);
+        } else {
+            log(`[SUDOKU] Escribiste ${num} en Fila ${Math.floor(idx / 9) + 1}, Columna ${(idx % 9) + 1}`);
+            checkSudokuWin();
+        }
+    }
+
+    function checkSudokuWin() {
+        const filled = sudokuBoard.every(x => x !== 0);
+        if (!filled) return;
+
+        let solved = true;
+        for (let i = 0; i < 81; i++) {
+            if (sudokuBoard[i] !== sudokuSolution[i]) {
+                solved = false;
+                break;
+            }
+        }
+
+        if (solved) {
+            balance += currentBet * 5;
+            playSound('win');
+            log(`[SISTEMA] ¡¡SUDOKU COMPLETADO CON ÉXITO!! +$${currentBet * 5} DXT agregados.`);
+            document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+        } else {
+            playSound('lose');
+            log(`[SUDOKU] Tablero completo pero con errores. ¡Revísalo!`);
+        }
+    }
+
+    // ── GAME 5: AJEDREZ 3D VR (WEBGL CHESSBOARD) ──
+    const chessPiecesSymbols = {
+        'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+        'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙',
+        '': ''
+    };
+
+    function createChessSquareTexture(pieceSymbol, isLightSquare, isSelected) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+
+        // Draw base square
+        ctx.fillStyle = isLightSquare ? '#dcdcdc' : '#1e1e2e';
+        ctx.fillRect(0, 0, 128, 128);
+
+        if (isSelected) {
+            ctx.fillStyle = 'rgba(176, 111, 255, 0.45)';
+            ctx.fillRect(0, 0, 128, 128);
+            ctx.strokeStyle = '#b06fff';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(3, 3, 122, 122);
+        }
+
+        // Draw Piece Symbol
+        if (pieceSymbol) {
+            // Check color (lowercase: black pieces, uppercase: white pieces)
+            const isWhitePiece = pieceSymbol === pieceSymbol.toUpperCase();
+            ctx.fillStyle = isWhitePiece ? '#ffffff' : '#050510';
+            ctx.font = '84px Outfit';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Add a little drop-shadow to symbol
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 4;
+            ctx.fillText(chessPiecesSymbols[pieceSymbol], 64, 64);
+        }
+
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    function loadChessLayout() {
+        document.getElementById('hud-opponent-panel').style.display = 'none';
+        document.getElementById('hud-wager-panel').innerText = `♟️ Modo: VS Gemma-Bot`;
+
+        chessBoard = [
+            'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',
+            'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',
+            'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
+        ];
+
+        renderChess3DBoard();
+        log(`[AJEDREZ] Ajedrez 3D VR cargado. Juegas con blancas. Haz clic sobre una pieza blanca.`);
+    }
+
+    function renderChess3DBoard() {
+        // Clear previous meshes
+        chessSqPlanes.forEach(m => gameGroup.remove(m));
+        chessSqPlanes = [];
+
+        const cellSize = 0.32;
+        const totalSize = cellSize * 8;
+
+        const boardPlateGeo = new THREE.BoxGeometry(totalSize + 0.1, 0.02, totalSize + 0.1);
+        const boardPlateMat = new THREE.MeshStandardMaterial({ color: 0x3d2416, roughness: 0.8 });
+        const plate = new THREE.Mesh(boardPlateGeo, boardPlateMat);
+        plate.position.y = 0.005;
+        gameGroup.add(plate);
+
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const idx = r * 8 + c;
+                const isLight = (r + c) % 2 === 0;
+                const piece = chessBoard[idx];
+
+                const isSelected = (idx === chessSelectedSq);
+                const tex = createChessSquareTexture(piece, isLight, isSelected);
+                const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4 });
+                
+                const cellMesh = new THREE.Mesh(new THREE.PlaneGeometry(cellSize - 0.01, cellSize - 0.01), mat);
+                const x = -((totalSize / 2) - (cellSize / 2)) + (c * cellSize);
+                const z = -((totalSize / 2) - (cellSize / 2)) + (r * cellSize);
+                
+                cellMesh.rotation.x = -Math.PI / 2;
+                cellMesh.position.set(x, 0.02, z);
+                cellMesh.userData = { type: 'chess-square', index: idx };
+
+                gameGroup.add(cellMesh);
+                chessSqPlanes.push(cellMesh);
+            }
+        }
+    }
+
+    function handleChessSquareClick(idx) {
+        if (chessSelectedSq === -1) {
+            // First click: select piece (must be white - uppercase)
+            const piece = chessBoard[idx];
+            if (piece !== '' && piece === piece.toUpperCase()) {
+                chessSelectedSq = idx;
+                playSound('deal');
+                renderChess3DBoard();
+            }
+        } else {
+            // Second click: target destination
+            const origin = chessSelectedSq;
+            if (idx === origin) {
+                chessSelectedSq = -1;
+                renderChess3DBoard();
+                return;
+            }
+
+            // Move piece (simple mock move validator)
+            chessBoard[idx] = chessBoard[origin];
+            chessBoard[origin] = '';
+            playSound('flip');
+            
+            log(`[AJEDREZ] Moviste pieza a casilla [${8 - Math.floor(idx / 8)}, ${String.fromCharCode(97 + (idx % 8))}]`);
+            
+            chessSelectedSq = -1;
+            renderChess3DBoard();
+
+            // Auto response from Gemma-Bot
+            setTimeout(chessBotResponse, 1000);
+        }
+    }
+
+    function chessBotResponse() {
+        let botPieces = [];
+        for (let i = 0; i < 64; i++) {
+            const piece = chessBoard[i];
+            if (piece !== '' && piece === piece.toLowerCase()) {
+                botPieces.push(i);
+            }
+        }
+
+        if (botPieces.length === 0) return;
+
+        // Perform basic legal pawn/piece push forward
+        botPieces.sort(() => Math.random() - 0.5);
+        let moved = false;
+        for (let i = 0; i < botPieces.length; i++) {
+            const origin = botPieces[i];
+            const target = origin + 8;
+            if (target < 64 && chessBoard[target] === '') {
+                chessBoard[target] = chessBoard[origin];
+                chessBoard[origin] = '';
+                playSound('deal');
+                log(`[GEMMA] Gemma-Bot juega su pieza en respuesta.`);
+                moved = true;
+                break;
+            }
+        }
+
+        renderChess3DBoard();
+    }
+
+    // ── GAME 6: BINGO 3D VR (WEBGL TÓMBOLA Cage) ──
+    let bingoCard = [];
+    let bingoDrawnNumbers = [];
+    let bingoCurrentBall = null;
+
+    function loadBingoLayout() {
+        document.getElementById('hud-opponent-panel').style.display = 'none';
+        document.getElementById('hud-wager-panel').innerText = `🎯 Bingo 3D`;
+
+        // 1. Render spherical wireframe cage (Tómbola)
+        bingoCage = new THREE.Group();
+        
+        const outerSphereGeo = new THREE.SphereGeometry(0.6, 12, 12);
+        const cageMat = new THREE.MeshStandardMaterial({ color: 0xff3cac, wireframe: true });
+        const cageMesh = new THREE.Mesh(outerSphereGeo, cageMat);
+        bingoCage.add(cageMesh);
+
+        // Add rings to cage
+        const ringGeo = new THREE.TorusGeometry(0.6, 0.015, 8, 32);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x00ffe5 });
+        const ring1 = new THREE.Mesh(ringGeo, ringMat);
+        ring1.rotation.y = Math.PI / 2;
+        bingoCage.add(ring1);
+        
+        const ring2 = new THREE.Mesh(ringGeo, ringMat);
+        ring2.rotation.x = Math.PI / 2;
+        bingoCage.add(ring2);
+
+        bingoCage.position.set(0, 0.8, -0.2);
+        bingoCage.userData = { type: 'bingo-tombola' };
+        gameGroup.add(bingoCage);
+
+        // Spawn interactive draw lever/button next to tómbola
+        const tombolaBase = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.1, 0.3),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        tombolaBase.position.set(0, 0.05, 0.6);
+        gameGroup.add(tombolaBase);
+
+        const pushBtn = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.1, 0.08, 16),
+            new THREE.MeshStandardMaterial({ color: 0xff3cac, roughness: 0.1 })
+        );
+        pushBtn.position.set(0, 0.12, 0.6);
+        pushBtn.userData = { type: 'bingo-tombola' };
+        gameGroup.add(pushBtn);
+
+        // 2. Spawn 15 colorful bouncing small spheres inside tómbola cage
+        bingoBalls = [];
+        const ballMatColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+        const ballGeo = new THREE.SphereGeometry(0.06, 8, 8);
+
+        for (let i = 0; i < 15; i++) {
+            const mat = new THREE.MeshStandardMaterial({ color: ballMatColors[i % ballMatColors.length], roughness: 0.1 });
+            const mesh = new THREE.Mesh(ballGeo, mat);
+            mesh.position.set(
+                (Math.random() - 0.5) * 0.4,
+                (Math.random() - 0.5) * 0.4,
+                (Math.random() - 0.5) * 0.4
+            );
+            bingoCage.add(mesh); // Add to cage so they rotate along with cage
+
+            bingoBalls.push({
+                mesh: mesh,
+                velocity: new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02)
+            });
+        }
+
+        bingoTómbolaActive = true;
+        initBingoCard();
+    }
+
+    function initBingoCard() {
+        bingoCard = [];
+        bingoDrawnNumbers = [];
+        bingoCurrentBall = null;
+
+        // Generate Bingo Columns
+        const cols = [
+            [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+            [16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],
+            [31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],
+            [46,47,48,49,50,51,52,53,54,55,56,57,58,59,60],
+            [61,62,63,64,65,66,67,68,69,70,71,72,73,74,75]
+        ];
+
+        let drawnCols = cols.map(c => {
+            c.sort(() => Math.random() - 0.5);
+            return c.slice(0, 5);
+        });
+        drawnCols[2][2] = 'FREE';
+
+        // Display panel card layout on the side in 3D Table
+        log(`[BINGO] Nuevo cartón generado. Pulsa el botón rosa en la mesa o 'Sacar Balón' para girar la tómbola.`);
+    }
+
+    function drawBingoBall() {
+        if (bingoDrawnNumbers.length >= 75) {
+            log(`[BINGO] Ya salieron todos los balones.`);
+            return;
+        }
+
+        // Fast tómbola spin sound
+        playSound('spin');
+
+        let ball;
+        do {
+            ball = Math.floor(Math.random() * 75) + 1;
+        } while (bingoDrawnNumbers.includes(ball));
+
+        bingoDrawnNumbers.push(ball);
+        bingoCurrentBall = ball;
+        
+        let letter = 'B';
+        if (ball >= 16 && ball <= 30) letter = 'I';
+        else if (ball >= 31 && ball <= 45) letter = 'N';
+        else if (ball >= 46 && ball <= 60) letter = 'G';
+        else if (ball >= 61 && ball <= 75) letter = 'O';
+
+        // Animate a 3D ball flying towards the player camera
+        if (bingoDrawnBallMesh) scene.remove(bingoDrawnBallMesh);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 128; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 128, 128);
+        ctx.fillStyle = '#000000'; ctx.font = 'bold 64px Outfit';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`${letter}${ball}`, 64, 64);
+        const tex = new THREE.CanvasTexture(canvas);
+
+        const ballGeo = new THREE.SphereGeometry(0.18, 32, 32);
+        const ballMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.1 });
+        bingoDrawnBallMesh = new THREE.Mesh(ballGeo, ballMat);
+        
+        // Spawn from tómbola position
+        bingoDrawnBallMesh.position.set(0, 0.8, -0.2);
+        scene.add(bingoDrawnBallMesh);
+
+        // Animate flight to screen foreground
+        animatedCards.push({
+            mesh: bingoDrawnBallMesh,
+            targetPos: new THREE.Vector3(1.2, 0.8, 1.5),
+            targetRot: new THREE.Vector3(0.5, 0, 0),
+            lerpSpeed: 0.08
+        });
+
+        playSound('deal');
+        log(`[TÓMBOLA] Ha salido el balón: [ ${letter}-${ball} ]`);
+
+        // Check if player has it on card (Auto check for simplified UX in VR space)
+        log(`[BINGO] Marcado automático de ${letter}-${ball} si existe en tu cartón.`);
+        
+        // Simulating auto check for simple web representation
+        checkBingoWin();
+    }
+
+    function checkBingoWin() {
+        // Dummy check simulated win probability based on drawn balls
+        if (bingoDrawnNumbers.length >= 10 && Math.random() < 0.25) {
+            const winAmt = currentBet * 12;
+            balance += winAmt;
+            playSound('win');
+            log(`[BINGO] ¡¡¡BINGO!!! ¡Línea completada! Has ganado +$${winAmt} DXT.`);
+            document.getElementById('player-balance-txt').innerText = `${balance} TK`;
+            setTimeout(initBingoCard, 2000);
+        }
+    }
+
+    // ── MAIN ACTIONS / BUTTON CONTROLLERS ──
+    function triggerMainGameAction() {
+        if (currentMode === 'slots') {
+            spinSlots();
+        } else if (currentMode === 'brisca') {
+            clearGameScene();
+            loadBriscaLayout();
+            log(`[SISTEMA] Partida de Brisca reiniciada.`);
+        } else if (currentMode === 'baraja') {
+            clearGameScene();
+            loadBarajaLayout();
+        } else if (currentMode === 'sudoku') {
+            clearGameScene();
+            loadSudokuLayout();
+        } else if (currentMode === 'chess') {
+            clearGameScene();
+            loadChessLayout();
+        } else if (currentMode === 'bingo') {
+            clearGameScene();
+            loadBingoLayout();
+        }
+    }
+
+    // Bind key events for Sudoku inputs (1-9 or Backspace/Delete to clear)
+    window.addEventListener('keydown', (e) => {
+        if (currentMode === 'sudoku') {
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= 9) {
+                inputSudokuNumber(num);
+            } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                inputSudokuNumber(0);
+            }
+        }
+    });
+
+    // Start 3D Engine on page load
+    window.onload = init3D;
+</script>
+
+</body>
+</html>

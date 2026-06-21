@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -2798,6 +2800,378 @@ func cargarEnv() {
 		}
 	}
 }
+// ── CUSTOM WEBSOCKET IMPLEMENTATION FOR MULTIPLAYER ──
+
+type PokerMessage struct {
+	Action string `json:"action"` // "join", "start", "discard", "bet", "reset"
+	Seat   int    `json:"seat"`
+	Wallet string `json:"wallet"`
+	Bet    int    `json:"bet"`
+	Cards  []int  `json:"cards"` // indices of cards to discard
+}
+
+type PokerRoomPlayer struct {
+	Conn   net.Conn
+	Wallet string
+	Seat   int
+}
+
+type PokerRoomState struct {
+	Players map[int]*PokerRoomPlayer
+	Deck    []int
+	Cards   map[int][]int
+	Pot     int
+	Bets    map[int]int
+	Folds   map[int]bool
+	Phase   string // "join", "discard", "betting", "showdown"
+	Turn    int
+	Mutex   sync.Mutex
+}
+
+var pokerRoom = PokerRoomState{
+	Players: make(map[int]*PokerRoomPlayer),
+	Cards:   make(map[int][]int),
+	Bets:    make(map[int]int),
+	Folds:   make(map[int]bool),
+	Phase:   "join",
+}
+
+func websocketHandshake(w http.ResponseWriter, r *http.Request) (net.Conn, error) {
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		return nil, fmt.Errorf("webserver does not support hijacking")
+	}
+	conn, bufrw, err := hj.Hijack()
+	if err != nil {
+		return nil, err
+	}
+
+	key := r.Header.Get("Sec-WebSocket-Key")
+	hash := sha1.New()
+	hash.Write([]byte(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+	acceptKey := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+
+	bufrw.WriteString("HTTP/1.1 101 Switching Protocols\r\n")
+	bufrw.WriteString("Upgrade: websocket\r\n")
+	bufrw.WriteString("Connection: Upgrade\r\n")
+	bufrw.WriteString("Sec-WebSocket-Accept: " + acceptKey + "\r\n\r\n")
+	bufrw.Flush()
+
+	return conn, nil
+}
+
+func readWebsocketTextMessage(conn net.Conn) (string, error) {
+	header := make([]byte, 2)
+	_, err := io.ReadFull(conn, header)
+	if err != nil {
+		return "", err
+	}
+
+	opcode := header[0] & 0x0f
+	if opcode == 8 {
+		return "", io.EOF
+	}
+
+	mask := (header[1] & 0x80) != 0
+	length := int(header[1] & 0x7f)
+
+	if length == 126 {
+		lenBuf := make([]byte, 2)
+		_, err = io.ReadFull(conn, lenBuf)
+		if err != nil {
+			return "", err
+		}
+		length = int(lenBuf[0])<<8 | int(lenBuf[1])
+	} else if length == 127 {
+		lenBuf := make([]byte, 8)
+		_, err = io.ReadFull(conn, lenBuf)
+		if err != nil {
+			return "", err
+		}
+		length = int(lenBuf[4])<<24 | int(lenBuf[5])<<16 | int(lenBuf[6])<<8 | int(lenBuf[7])
+	}
+
+	var maskKey []byte
+	if mask {
+		maskKey = make([]byte, 4)
+		_, err = io.ReadFull(conn, maskKey)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	payload := make([]byte, length)
+	_, err = io.ReadFull(conn, payload)
+	if err != nil {
+		return "", err
+	}
+
+	if mask {
+		for i := 0; i < length; i++ {
+			payload[i] ^= maskKey[i%4]
+		}
+	}
+
+	return string(payload), nil
+}
+
+func writeWebsocketTextMessage(conn net.Conn, msg string) error {
+	payload := []byte(msg)
+	length := len(payload)
+
+	var header []byte
+	if length <= 125 {
+		header = []byte{0x81, byte(length)}
+	} else if length <= 65535 {
+		header = []byte{0x81, 126, byte(length >> 8), byte(length & 0xff)}
+	} else {
+		header = []byte{0x81, 127, 0, 0, 0, 0, byte(length >> 24), byte(length >> 16), byte(length >> 8), byte(length & 0xff)}
+	}
+
+	_, err := conn.Write(append(header, payload...))
+	return err
+}
+
+func broadcastPokerState() {
+	pokerRoom.Mutex.Lock()
+	defer pokerRoom.Mutex.Unlock()
+
+	playersMap := make(map[int]string)
+	opponentsCount := make(map[int]int)
+	for seat, p := range pokerRoom.Players {
+		if p != nil {
+			playersMap[seat] = p.Wallet
+			opponentsCount[seat] = len(pokerRoom.Cards[seat])
+		}
+	}
+
+	for seat, p := range pokerRoom.Players {
+		if p == nil || p.Conn == nil {
+			continue
+		}
+
+		state := struct {
+			Type      string         `json:"type"`
+			Players   map[int]string `json:"players"`
+			Pot       int            `json:"pot"`
+			Bets      map[int]int    `json:"bets"`
+			Folds     map[int]bool   `json:"folds"`
+			Phase     string         `json:"phase"`
+			Turn      int            `json:"turn"`
+			YourCards []int          `json:"yourCards"`
+			Opponents map[int]int    `json:"opponents"`
+			AllCards  map[int][]int  `json:"allCards,omitempty"`
+		}{
+			Type:      "state",
+			Players:   playersMap,
+			Pot:       pokerRoom.Pot,
+			Bets:      pokerRoom.Bets,
+			Folds:     pokerRoom.Folds,
+			Phase:     pokerRoom.Phase,
+			Turn:      pokerRoom.Turn,
+			YourCards: pokerRoom.Cards[seat],
+			Opponents: opponentsCount,
+		}
+
+		if pokerRoom.Phase == "showdown" {
+			state.AllCards = pokerRoom.Cards
+		}
+
+		jsonData, err := json.Marshal(state)
+		if err == nil {
+			writeWebsocketTextMessage(p.Conn, string(jsonData))
+		}
+	}
+}
+
+func manejadorWsPoker(w http.ResponseWriter, r *http.Request) {
+	conn, err := websocketHandshake(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer conn.Close()
+
+	var mySeat int = -1
+	var myWallet string = ""
+
+	defer func() {
+		pokerRoom.Mutex.Lock()
+		if mySeat != -1 {
+			pokerRoom.Players[mySeat] = nil
+			delete(pokerRoom.Cards, mySeat)
+			
+			anyConnected := false
+			for _, p := range pokerRoom.Players {
+				if p != nil {
+					anyConnected = true
+				}
+			}
+			if !anyConnected {
+				pokerRoom.Phase = "join"
+				pokerRoom.Pot = 0
+			}
+		}
+		pokerRoom.Mutex.Unlock()
+		broadcastPokerState()
+	}()
+
+	for {
+		msgStr, err := readWebsocketTextMessage(conn)
+		if err != nil {
+			break
+		}
+
+		var msg PokerMessage
+		if err := json.Unmarshal([]byte(msgStr), &msg); err != nil {
+			continue
+		}
+
+		switch msg.Action {
+		case "join":
+			pokerRoom.Mutex.Lock()
+			seatFound := -1
+			for s := 1; s <= 3; s++ {
+				if pokerRoom.Players[s] == nil {
+					seatFound = s
+					break
+				}
+			}
+
+			if seatFound != -1 && pokerRoom.Phase == "join" {
+				mySeat = seatFound
+				myWallet = msg.Wallet
+				if myWallet == "" {
+					myWallet = fmt.Sprintf("Anon-%d", seatFound)
+				}
+				pokerRoom.Players[mySeat] = &PokerRoomPlayer{
+					Conn:   conn,
+					Wallet: myWallet,
+					Seat:   mySeat,
+				}
+			}
+			pokerRoom.Mutex.Unlock()
+			broadcastPokerState()
+
+		case "start":
+			pokerRoom.Mutex.Lock()
+			playerCount := 0
+			for s := 1; s <= 3; s++ {
+				if pokerRoom.Players[s] != nil {
+					playerCount++
+				}
+			}
+			if playerCount >= 2 && pokerRoom.Phase == "join" {
+				deck := make([]int, 40)
+				for i := 0; i < 40; i++ {
+					deck[i] = i
+				}
+				// Shuffle
+				for i := len(deck) - 1; i > 0; i-- {
+					j := int(time.Now().UnixNano()) % (i + 1)
+					deck[i], deck[j] = deck[j], deck[i]
+				}
+
+				for s := 1; s <= 3; s++ {
+					if pokerRoom.Players[s] != nil {
+						pokerRoom.Cards[s] = make([]int, 8)
+						for c := 0; c < 8; c++ {
+							pokerRoom.Cards[s][c] = deck[len(deck)-1]
+							deck = deck[:len(deck)-1]
+						}
+						pokerRoom.Bets[s] = 5
+						pokerRoom.Folds[s] = false
+					}
+				}
+
+				pokerRoom.Deck = deck
+				pokerRoom.Pot = playerCount * 5
+				pokerRoom.Phase = "discard"
+				pokerRoom.Turn = 1
+
+				for s := 1; s <= 3; s++ {
+					if pokerRoom.Players[s] != nil {
+						pokerRoom.Turn = s
+						break
+					}
+				}
+			}
+			pokerRoom.Mutex.Unlock()
+			broadcastPokerState()
+
+		case "discard":
+			pokerRoom.Mutex.Lock()
+			if pokerRoom.Phase == "discard" && mySeat == pokerRoom.Turn {
+				hand := pokerRoom.Cards[mySeat]
+				for _, cardIdx := range msg.Cards {
+					if cardIdx >= 0 && cardIdx < len(hand) {
+						hand[cardIdx] = pokerRoom.Deck[len(pokerRoom.Deck)-1]
+						pokerRoom.Deck = pokerRoom.Deck[:len(pokerRoom.Deck)-1]
+					}
+				}
+				pokerRoom.Cards[mySeat] = hand
+
+				nextTurn := -1
+				for s := mySeat + 1; s <= 3; s++ {
+					if pokerRoom.Players[s] != nil {
+						nextTurn = s
+						break
+					}
+				}
+
+				if nextTurn != -1 {
+					pokerRoom.Turn = nextTurn
+				} else {
+					pokerRoom.Phase = "betting"
+					for s := 1; s <= 3; s++ {
+						if pokerRoom.Players[s] != nil {
+							pokerRoom.Turn = s
+							break
+						}
+					}
+				}
+			}
+			pokerRoom.Mutex.Unlock()
+			broadcastPokerState()
+
+		case "bet":
+			pokerRoom.Mutex.Lock()
+			if pokerRoom.Phase == "betting" && mySeat == pokerRoom.Turn {
+				if msg.Bet == -1 {
+					pokerRoom.Folds[mySeat] = true
+				} else {
+					pokerRoom.Bets[mySeat] += msg.Bet
+					pokerRoom.Pot += msg.Bet
+				}
+
+				nextTurn := -1
+				for s := mySeat + 1; s <= 3; s++ {
+					if pokerRoom.Players[s] != nil && !pokerRoom.Folds[s] {
+						nextTurn = s
+						break
+					}
+				}
+
+				if nextTurn != -1 {
+					pokerRoom.Turn = nextTurn
+				} else {
+					pokerRoom.Phase = "showdown"
+				}
+			}
+			pokerRoom.Mutex.Unlock()
+			broadcastPokerState()
+
+		case "reset":
+			pokerRoom.Mutex.Lock()
+			if pokerRoom.Phase == "showdown" {
+				pokerRoom.Phase = "join"
+				pokerRoom.Pot = 0
+			}
+			pokerRoom.Mutex.Unlock()
+			broadcastPokerState()
+		}
+	}
+}
 
 func main() {
 	cargarEnv()
@@ -2823,7 +3197,7 @@ func main() {
 	http.HandleFunc("/api/confirm-donation", manejadorConfirmDonation)
 	http.HandleFunc("/api/nft/metadata/", manejadorNFTMetadata)
 	http.HandleFunc("/api/ai/chat", manejadorAIChat)
-	http.HandleFunc("/api/ai/general-chat", manejadorAIGeneralChat)
+	// http.HandleFunc("/api/ai/general-chat", manejadorAIGeneralChat) (Removido para la burbuja independiente)
 	http.HandleFunc("/api/ai/chat-threads/save", manejadorSaveChatThreads)
 	http.HandleFunc("/api/ai/chat-threads/load", manejadorLoadChatThreads)
 	http.HandleFunc("/api/battle/reward", manejadorBattleReward)
@@ -2844,7 +3218,15 @@ func main() {
 	http.HandleFunc("/login", manejadorLogin)
 	http.HandleFunc("/capacitacion", manejadorCapacitacion)
 	http.HandleFunc("/market", manejadorMarket)
-	http.HandleFunc("/gemma-chat", manejadorGemmaChat)
+	http.HandleFunc("/juegos", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "juegos.html") })
+	http.HandleFunc("/ajedrez", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "ajedrez.html") })
+	http.HandleFunc("/damas", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "damas.html") })
+	http.HandleFunc("/baraja", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "baraja.html") })
+	http.HandleFunc("/brisca", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "brisca.html") })
+	http.HandleFunc("/sudoku", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "sudoku.html") })
+	http.HandleFunc("/cartas3d", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "cartas3d.html") })
+	http.HandleFunc("/ws/poker", manejadorWsPoker)
+	// http.HandleFunc("/gemma-chat", manejadorGemmaChat) (Removido para la burbuja independiente)
 	http.HandleFunc("/", manejadorPrincipal)
 	
 	port := os.Getenv("PORT")
